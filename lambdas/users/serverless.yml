@@ -1,0 +1,211 @@
+service: edubit-security
+org: edubit
+
+frameworkVersion: '3'
+configValidationMode: error
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+custom:
+  target-env: ${opt:stage, 'dev'}
+  stack-name: ${self:service}-${self:custom.target-env}
+  api-gateway-resource: users
+  # Password policies
+  passwordMinimumSize: 8
+  passwordMaximumSize: 64
+  # AWS Infrastructure stack names and imports
+  ## Database
+  commonsDatabaseStackName: ${self:org}-commons-database
+  commonsDatabaseLambdaName:
+    Fn::ImportValue: ${self:custom.commonsDatabaseStackName}-${self:custom.target-env}-commonsDatabaseLambdaName
+  # AWS infrastructure
+  cognitoUserPoolName: ${self:custom.stack-name}-cognitoUserPool
+  cognitoUserPoolClientName: ${self:custom.stack-name}-cognitoUserPoolClient
+  createUserQueueName: ${self:custom.stack-name}-create-users-queue
+  sesVerifiedIdentity: arn:aws:ses:us-east-1:145474475850:identity/edubit360.com
+  # Packaging
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    #keepOutputDirectory: true
+  # Serverless offline
+  serverless-offline:
+    httpPort: 4000
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs18.x
+  environment: ${file(./envs/${self:custom.target-env}.json)}
+  timeout: 15
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "lambda:InvokeFunction"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "sqs:SendMessage"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - cognito-idp:AdminInitiateAuth
+            - cognito-idp:AdminCreateUser
+            - cognito-idp:AdminSetUserPassword
+            - cognito-idp:ChangePassword
+          Resource: "*"
+
+package:
+  individually: true
+
+resources:
+  Resources:
+    CreateUserQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.createUserQueueName}
+    CognitoUserPoolEdubitUserPool: #This is referenced as EdubitUserPool in lambdas triggers
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:custom.cognitoUserPoolName}
+        AutoVerifiedAttributes:
+          - email
+        EmailConfiguration:
+          EmailSendingAccount: DEVELOPER
+          From: no-reply@edubit360.com
+          SourceArn: ${self:custom.sesVerifiedIdentity}
+        Policies:
+          PasswordPolicy:
+            MinimumLength: ${self:custom.passwordMinimumSize}
+            RequireLowercase: True
+            RequireNumbers: True
+            RequireSymbols: True
+            RequireUppercase: True
+        Schema:
+          - Name: email
+            Required: true
+            Mutable: false
+        VerificationMessageTemplate:
+          DefaultEmailOption: CONFIRM_WITH_LINK
+          EmailMessageByLink: Haz click {##aquí##} para confirmar que eres el (la) proprietario(a) de esta cuenta de correo. 👍
+          EmailSubjectByLink: Confirma tu correo para ingresar a edubit360.com
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:custom.cognitoUserPoolClientName}
+        GenerateSecret: false
+        UserPoolId: { Ref: CognitoUserPoolEdubitUserPool }
+        AccessTokenValidity: 1
+        IdTokenValidity: 4
+        ExplicitAuthFlows:
+          - "ADMIN_NO_SRP_AUTH"
+    CognitoUserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        Domain: ${self:custom.stack-name}
+        UserPoolId: { Ref: CognitoUserPoolEdubitUserPool }
+  Outputs:
+    CognitoUserPoolEdubitUserPoolArn:
+      Value: !GetAtt CognitoUserPoolEdubitUserPool.Arn
+      Export:
+        Name: ${self:service}-${self:custom.target-env}-cognitoUserPoolArn
+
+functions:
+  signUpParticipant:
+    name: ${self:custom.stack-name}-sign-up-participant
+    handler: handlers/enrollment/signUpParticipant.handler
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaName}
+      password_minimum_size: ${self:custom.passwordMinimumSize}
+      password_maximum_size: ${self:custom.passwordMaximumSize}
+      user_pool_id: { Ref: CognitoUserPoolEdubitUserPool }
+      user_pool_client_id: { Ref: CognitoUserPoolClient }
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/signup/participant
+          method: post
+          cors: true
+  signUpMentor:
+    name: ${self:custom.stack-name}-sign-up-mentor
+    handler: handlers/enrollment/signUpMentor.handler
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaName}
+      password_minimum_size: ${self:custom.passwordMinimumSize}
+      password_maximum_size: ${self:custom.passwordMaximumSize}
+      user_pool_id: { Ref: CognitoUserPoolEdubitUserPool }
+      user_pool_client_id: { Ref: CognitoUserPoolClient }
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/signup/mentor
+          method: post
+          cors: true
+  signUpAdmin:
+    name: ${self:custom.stack-name}-sign-up-admin
+    handler: handlers/enrollment/signUpAdmin.handler
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaName}
+      password_minimum_size: ${self:custom.passwordMinimumSize}
+      password_maximum_size: ${self:custom.passwordMaximumSize}
+      user_pool_id: { Ref: CognitoUserPoolEdubitUserPool }
+      user_pool_client_id: { Ref: CognitoUserPoolClient }
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/signup/admin
+          method: post
+          cors: true
+  logIn:
+    name: ${self:custom.stack-name}-log-in
+    handler: handlers/enrollment/logIn.handler
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaName}
+      password_minimum_size: ${self:custom.passwordMinimumSize}
+      password_maximum_size: ${self:custom.passwordMaximumSize}
+      user_pool_id: { Ref: CognitoUserPoolEdubitUserPool }
+      user_pool_client_id: { Ref: CognitoUserPoolClient }
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/login
+          method: post
+          cors: true
+  changePassword:
+    name: ${self:custom.stack-name}-change-password
+    description: lambda to create users on repositories
+    handler: handlers/password/changePassword.handler
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      user_pool_client_id: { Ref: CognitoUserPoolClient }
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/password/change
+          method: post
+          cors: true
+  confirmChangePassword:
+    name: ${self:custom.stack-name}-confirm-change-password
+    description: lambda to confirm password change
+    handler: handlers/password/confirmChangePassword.handler
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      user_pool_client_id: { Ref: CognitoUserPoolClient }
+      password_minimum_size: ${self:custom.passwordMinimumSize}
+      password_maximum_size: ${self:custom.passwordMaximumSize}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/password/change/confirm
+          method: post
+          cors: true

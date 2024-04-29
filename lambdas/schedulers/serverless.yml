@@ -1,0 +1,227 @@
+service: edubit-schedulers
+org: edubit
+
+frameworkVersion: '3'
+configValidationMode: error
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+custom:
+  target-env: ${opt:stage, 'dev'}
+  stack-name: ${self:service}-${self:custom.target-env}
+  api-gateway-resource: schedulers
+  # AWS Infrastructure stack names and imports
+  ## Database
+  commonsDatabaseStackName: ${self:org}-commons-database
+  commonsDatabaseLambdaNameImport:
+    Fn::ImportValue: ${self:custom.commonsDatabaseStackName}-${self:custom.target-env}-commonsDatabaseLambdaName
+  commonsDatabaseQueueNameImport:
+    Fn::ImportValue: ${self:custom.commonsDatabaseStackName}-${self:custom.target-env}-commonsDatabaseQueueName
+  ## Cognito
+  cognitoStackName: ${self:org}-security
+  cognitoUserPoolArnImport:
+    Fn::ImportValue: ${self:custom.cognitoStackName}-${self:custom.target-env}-cognitoUserPoolArn
+  ## SQS
+  schedulersTargetQueueName: ${self:custom.stack-name}-target-queue
+  schedulersTargetQueueArn:
+    Fn::Join:
+      - ''
+      - - 'arn:aws:sqs:'
+        - Ref: AWS::Region
+        - ":"
+        - Ref: AWS::AccountId
+        - ":"
+        - ${self:custom.schedulersTargetQueueName}
+  ## Scheduler
+  schedulersExecutionRoleName: ${self:custom.stack-name}-schedulers-execution-role
+  schedulersExecutionRoleArn:
+    Fn::Join:
+      - ''
+      - - 'arn:aws:iam::'
+        - Ref: AWS::AccountId
+        - ":role/"
+        - ${self:custom.schedulersExecutionRoleName}
+  # Packaging
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    #keepOutputDirectory: true
+  # Serverless offline
+  serverless-offline-sqs:
+    autoCreate: true
+    apiVersion: '2012-11-05'
+    endpoint: http://0.0.0.0:9324    # Endpoint where you will publish SQS message
+    region: eu-west-1            # Your preferred AWS region
+    accessKeyId: root
+    secretAccessKey: root
+    skipCacheInvalidation: false
+  serverless-offline:
+    httpPort: 4000
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs18.x
+  environment: ${file(./envs/${self:custom.target-env}.json)}
+  timeout: 15
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "lambda:InvokeFunction"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "sqs:SendMessage"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "scheduler:CreateSchedule"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "scheduler:DeleteSchedule"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "scheduler:GetSchedule"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "scheduler:UpdateSchedule"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "iam:PassRole"
+          Resource: "*"
+
+resources:
+  Resources:
+    SchedulersTargetQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.schedulersTargetQueueName}
+    SchedulersExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:custom.schedulersExecutionRoleName}
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                Service:
+                  - "scheduler.amazonaws.com"
+              Action:
+                - "sts:AssumeRole"
+        Policies:
+          - PolicyName: ${self:custom.stack-name}-scheduler-sendSqsMessage-policy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: "Allow"
+                  Action:
+                    - "sqs:SendMessage"
+                  Resource: "*"
+
+functions:
+  startScheduler:
+    name: ${self:custom.stack-name}-start-scheduler
+    description: lambda to start a scheduler
+    handler: handlers/startScheduler.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      schedulers_target_queue_arn: ${self:custom.schedulersTargetQueueArn}
+      schedulers_execution_role_arn: ${self:custom.schedulersExecutionRoleArn}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/{id}/start
+          method: post
+          cors: true
+          #authorizer:
+          #  name: PrivateAuthorizer
+          #  type: COGNITO_USER_POOLS
+          #  arn: ${self:custom.cognitoUserPoolArnImport}
+  pauseScheduler:
+    name: ${self:custom.stack-name}-pause-scheduler
+    description: lambda to pause a scheduler
+    handler: handlers/pauseScheduler.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      schedulers_target_queue_arn: ${self:custom.schedulersTargetQueueArn}
+      schedulers_execution_role_arn: ${self:custom.schedulersExecutionRoleArn}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/{id}/pause
+          method: patch
+          cors: true
+          #authorizer:
+          #  name: PrivateAuthorizer
+          #  type: COGNITO_USER_POOLS
+          #  arn: ${self:custom.cognitoUserPoolArnImport}
+  resumeScheduler:
+    name: ${self:custom.stack-name}-resume-scheduler
+    description: lambda to resume a scheduler
+    handler: handlers/resumeScheduler.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      schedulers_target_queue_arn: ${self:custom.schedulersTargetQueueArn}
+      schedulers_execution_role_arn: ${self:custom.schedulersExecutionRoleArn}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/{id}/resume
+          method: patch
+          cors: true
+          #authorizer:
+          #  name: PrivateAuthorizer
+          #  type: COGNITO_USER_POOLS
+          #  arn: ${self:custom.cognitoUserPoolArnImport}
+  stopScheduler:
+    name: ${self:custom.stack-name}-stop-scheduler
+    description: lambda to stop a scheduler
+    handler: handlers/stopScheduler.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/{id}/stop
+          method: delete
+          cors: true
+          #authorizer:
+          #  name: PrivateAuthorizer
+          #  type: COGNITO_USER_POOLS
+          #  arn: ${self:custom.cognitoUserPoolArnImport}
+  doSomething:
+    name: ${self:custom.stack-name}-do-something
+    description: lambda to do something
+    handler: handlers/doSomething.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - SchedulersTargetQueue
+              - Arn
+          batchSize: 1
+

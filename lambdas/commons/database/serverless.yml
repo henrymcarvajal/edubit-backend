@@ -1,0 +1,84 @@
+service: edubit-commons-database
+org: edubit
+
+frameworkVersion: "3"
+configValidationMode: error
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+custom:
+  target-env: ${opt:stage, 'dev'}
+  stack-name: ${self:service}-${self:custom.target-env}
+  # AWS Infrastructure
+  commonsDatabaseLambdaName: ${self:custom.stack-name}-lambda
+  commonsDatabaseQueueName: ${self:custom.stack-name}-queue
+  # Packaging
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    #keepOutputDirectory: true
+  # Serverless offline
+  serverless-offline-sqs:
+    autoCreate: true
+    apiVersion: '2012-11-05'
+    endpoint: http://0.0.0.0:9324    # Endpoint where you will publish SQS message
+    region: eu-west-1            # Your preferred AWS region
+    accessKeyId: root
+    secretAccessKey: root
+    skipCacheInvalidation: false
+  serverless-offline:
+    httpPort: 4000
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs18.x
+  environment: ${file(./envs/${self:custom.target-env}.json)}
+  timeout: 15
+
+resources:
+  Resources:
+    CommonsDatabaseQueueDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.commonsDatabaseQueueName}-dlq
+    CommonsDatabaseQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.commonsDatabaseQueueName}
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+              - CommonsDatabaseQueueDLQ
+              - Arn
+          maxReceiveCount: 3
+  Outputs:
+    commonsDatabaseStackName:
+      Value: ${self:service}
+      Export:
+        Name: commonsDatabaseStackName-${self:custom.target-env}
+    commonsDatabaseLambdaName:
+      Value: ${self:custom.commonsDatabaseLambdaName}
+      Export:
+        Name: ${self:custom.stack-name}-commonsDatabaseLambdaName
+    commonsDatabaseQueueName:
+      Value: ${self:custom.commonsDatabaseQueueName}
+      Export:
+        Name: ${self:custom.stack-name}-commonsDatabaseQueueName
+
+functions:
+  commonsDatabase:
+    name: ${self:custom.commonsDatabaseLambdaName}
+    description: reusable lambda to execute SQL statements against database
+    handler: handler/databaseHandler.execute
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - CommonsDatabaseQueue
+              - Arn
+          batchSize: 1

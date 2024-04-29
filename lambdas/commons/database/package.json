@@ -1,0 +1,29 @@
+{
+  "name": "edubit-database-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "serverless offline -s dev",
+    "debug": "export SLS_DEBUG=* && node --inspect /usr/local/bin/serverless offline",
+    "start-elastic-mq": "docker run --name Offline-SQS --rm -it -p 9324:9324 -p 9325:9325 softwaremill/elasticmq-native"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pg-promise": "^11.5.3",
+    "dotenv": "^16.0.1",
+    "glob": "^8.0.3",
+    "source-map-support": "^0.5.21"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.6",
+    "aws-sdk": "^2.1352.0",
+    "babel-loader": "^8.2.5",
+    "serverless-offline": "^10.0.2",
+    "copy-webpack-plugin": "^11.0.0",
+    "serverless-webpack": "^5.7.1",
+    "webpack": "^5.73.0"
+  }
+}
