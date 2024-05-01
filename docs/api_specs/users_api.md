@@ -1,7 +1,7 @@
-# <span style="color:#83A2FF">Users</span>
+# ${\textsf{\color{#83A2FF}Users}}$
 Operations related to security operations like signing up, logging in, password change, etc.
 
-- ### <span style="color:#FFE3BB">Sign up participant</span>
+- ### ${\textsf{\color{#FFE3BB}Sign up participant}}$
    curl --request POST \ <br/>
 --url https://3392q94usk.execute-api.us-east-1.amazonaws.com/dev/users/signup/participant \ <br/>
 --header 'Content-Type: application/json' \ <br/>
@@ -20,7 +20,7 @@ Operations related to security operations like signing up, logging in, password 
 }<br/>
 }'
 
-- ### <span style="color:#FFE3BB">Sign up mentor</span>
+- ### ${\textsf{\color{#FFE3BB}Sign up mentor}}$
    curl --request POST \ <br/>
 --url https://3392q94usk.execute-api.us-east-1.amazonaws.com/dev/users/signup/mentor \ <br/>
 --header 'Content-Type: application/json' \ <br/>
@@ -37,7 +37,7 @@ Operations related to security operations like signing up, logging in, password 
 }<br/>
 }'
 
-- ### <span style="color:#FFE3BB">Log in</span>
+- ### ${\textsf{\color{#FFE3BB}Log in}}$
    curl --request POST \ <br/>
 --url https://3392q94usk.execute-api.us-east-1.amazonaws.com/dev/users/login \ <br/>
 --header 'Content-Type: application/json' \ <br/>
@@ -46,7 +46,7 @@ Operations related to security operations like signing up, logging in, password 
 "password": "{password}"<br/>
 }'
 
-- ### <span style="color:#FFE3BB">Change password</span>
+- ### ${\textsf{\color{#FFE3BB}Change password}}$
    curl --request POST \ <br/>
 --url https://3392q94usk.execute-api.us-east-1.amazonaws.com/dev/users/password/change \ <br/>
 --header 'Content-Type: application/json' \ <br/>
@@ -54,7 +54,7 @@ Operations related to security operations like signing up, logging in, password 
 "email": "{email}"<br/>
 }'
 
-- ### <span style="color:#FFE3BB">Confirm change password</span>
+- ### ${\textsf{\color{#FFE3BB}Confirm change password}}$
    curl --request POST \ <br/>
 --url https://3392q94usk.execute-api.us-east-1.amazonaws.com/dev/users/password/change/confirm \ <br/>
 --header 'Content-Type: application/json' \ <br/>

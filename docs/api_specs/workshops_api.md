@@ -1,15 +1,15 @@
-# <span style="color:#83A2FF">Workshops</span>
+# ${\textsf{\color{#83A2FF}Workshops}}$
 All operations related with workshop (their definitions and instances).
 
-## <span style="color:#FD8A8A">Definitions</span>
+## ${\textsf{\color{#FD8A8A}Definitions}}$
 All operations specific to workshop definitions.
 
-- ### <span style="color:#FFE3BB">Get definition</span>
+- ### ${\textsf{\color{#FFE3BB}Get definition}}$
    curl --request GET \ <br/>
 --url https://ohfjp11sb7.execute-api.us-east-1.amazonaws.com/dev/workshops/definitions \ <br/>
 --header 'Authorization: Bearer {token}'
 
-- ### <span style="color:#FFE3BB">Update definition</span>
+- ### ${\textsf{\color{#FFE3BB}Update definition}}$
    curl --request PATCH \ <br/>
 --url https://ohfjp11sb7.execute-api.us-east-1.amazonaws.com/dev/workshops/definitions/{id} \ <br/>
 --header 'Authorization: Bearer {token}' \ <br/>
@@ -34,20 +34,20 @@ All operations specific to workshop definitions.
 }<br/>
 }'
 
-- ### <span style="color:#FFE3BB">Delete definition (Logical)</span>
+- ### ${\textsf{\color{#FFE3BB}Delete definition (Logical)}}$
    curl --request DELETE \ <br/>
 --url https://ohfjp11sb7.execute-api.us-east-1.amazonaws.com/dev/workshops/definitions/{id} \ <br/>
 --header 'Authorization: Bearer {token}'
 
-## <span style="color:#FD8A8A">Executions</span>
+## ${\textsf{\color{#FD8A8A}Executions}}$
 All operations specific to the dates the workshop is scheduled 
 
-- ### <span style="color:#FFE3BB">Get execution</span>
+- ### ${\textsf{\color{#FFE3BB}Get execution}}$
    curl --request GET \ <br/>
 --url https://ohfjp11sb7.execute-api.us-east-1.amazonaws.com/dev/workshops/executions/{id} \ <br/>
 --header 'Authorization: Bearer {token}'
 
-- ### <span style="color:#FFE3BB">Update execution</span>
+- ### ${\textsf{\color{#FFE3BB}Update execution}}$
    curl --request PATCH \ <br/>
 --url https://ohfjp11sb7.execute-api.us-east-1.amazonaws.com/dev/workshops/executions/{id} \ <br/>
 --header 'Authorization: Bearer {token}' \ <br/>

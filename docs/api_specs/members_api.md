@@ -1,15 +1,15 @@
-# <span style="color:#83A2FF">Members</span>
+# ${\textsf{\color{#83A2FF}Members}}$
 All operations related to involved members related to workshop executions.
 
-## <span style="color:#FD8A8A">Participants</span>
+## ${\textsf{\color{#FD8A8A}Participants}}$
 All operations specific to participants, who are the people taking the workshop for learning.
 
-- ### <span style="color:#FFE3BB">Get participant</span>
+- ### ${\textsf{\color{#FFE3BB}Get participant}}$
    curl --request GET \ <br/>
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/{id} \ <br/>
 --header 'Authorization: Bearer {token}'
 
-- ### <span style="color:#FFE3BB">Update participant</span>
+- ### ${\textsf{\color{#FFE3BB}Update participant}}$
    curl --request PATCH \ <br/>
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/ef7d63e2-a1c9-42c3-9b56-b6b539d76010 \ <br/>
 --header 'Authorization: Bearer {token}' \ <br/>
@@ -27,7 +27,7 @@ All operations specific to participants, who are the people taking the workshop 
 }<br/>
 }'
 
-- ### <span style="color:#FFE3BB">Enroll participant</span>
+- ### ${\textsf{\color{#FFE3BB}Enroll participant}}$
    curl --request POST \ <br/>
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/{id}/enrollment \ <br/>
 --header 'Authorization: Bearer {token}' \ <br/>
@@ -42,20 +42,20 @@ All operations specific to participants, who are the people taking the workshop 
 "workshopExecutionId": "{uuid}"<br/>
 }'
 
-- ### <span style="color:#FFE3BB">Delete participant (Logical)</span>
+- ### ${\textsf{\color{#FFE3BB}Delete participant (Logical)}}$
    curl --request DELETE \ <br/>
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/{id} \ <br/>
 --header 'Authorization: Bearer {token}'
 
-## <span style="color:#FD8A8A">Mentors</span>
+## ${\textsf{\color{#FD8A8A}Mentors}}$
 All operations specific to the members that will act as authority to participants
 
-- ### <span style="color:#FFE3BB">Get mentor</span>
+- ### ${\textsf{\color{#FFE3BB}Get mentor}}$
    curl --request GET \ <br/>
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/mentors/{id} \ <br/>
 --header 'Authorization: Bearer {token}'
 
-- ### <span style="color:#FFE3BB">Update mentor</span>
+- ### ${\textsf{\color{#FFE3BB}Update mentor}}$
    curl --request PATCH \ <br/>
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/mentors/{id} \ <br/>
 --header 'Authorization: Bearer {token}' \ <br/>
@@ -72,7 +72,7 @@ All operations specific to the members that will act as authority to participant
 }<br/>
 }'
 
-- ### <span style="color:#FFE3BB">Enroll mentor</span>
+- ### ${\textsf{\color{#FFE3BB}Enroll mentor}}$
   curl --request POST \ <br/>
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/mentors/{id}/enrollment \ <br/>
 --header 'Authorization: Bearer {token}' \ <br/>
@@ -87,7 +87,7 @@ All operations specific to the members that will act as authority to participant
 "workshopExecutionId": "{uuid}"<br/>
 }'
 
-- ### <span style="color:#FFE3BB">Delete mentor (Logical)</span>
+- ### ${\textsf{\color{#FFE3BB}Delete mentor (Logical)}}$
    curl --request DELETE \ <br/>
 --url https://ar0elk0gz9**.execute-api.us-east-1.amazonaws.com/dev/admin/mentors/{id}  \ <br/>
 --header 'Authorization: Bearer {token}'

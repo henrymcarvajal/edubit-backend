@@ -1,20 +1,20 @@
-# <span style="color:#83A2FF">Admin</span>
+# ${\textsf{\color{#83A2FF}Admin}}$
 All operations related to managed entities, like activities, institutions, etc.
 
-## <span style="color:#FD8A8A">Activities</span>
+## ${\textsf{\color{#FD8A8A}Activities}}$
 All operations specific to the activities participants can carry out during a workshop 
 
-- ### <span style="color:#FFE3BB">Get all activities</span>
+- ### ${\textsf{\color{#FFE3BB}Get all activities}}$
    curl --request GET \ <br/> 
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/activities \ <br/>
 --header 'Authorization: Bearer {token}'
 
-- ### <span style="color:#FFE3BB">Get activity</span>
+- ### ${\textsf{\color{#FFE3BB}Get activity}}$
    curl --request GET \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/activities/{id} \ <br/>
 --header 'Authorization: Bearer {token}'
 
-- ### <span style="color:#FFE3BB">Update activity</span>
+- ### ${\textsf{\color{#FFE3BB}Update activity}}$
    curl --request PATCH \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/activities/{id} \ <br/>
 --header 'Authorization: Bearer {token}' \ <br/>
@@ -27,25 +27,25 @@ All operations specific to the activities participants can carry out during a wo
 "description": "{description}"<br/>
 }'
 
-- ### <span style="color:#FFE3BB">Disable activity (Logical)</span>
+- ### ${\textsf{\color{#FFE3BB}Disable activity (Logical)}}$
    curl --request DELETE \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/activities/{id} \ <br/>
 --header 'Authorization: Bearer {token}'
 
-## <span style="color:#FD8A8A">Assets</span>
+## ${\textsf{\color{#FD8A8A}Assets}}$
 All operations specific to the assets participants can buy during a workshop
 
-- ### <span style="color:#FFE3BB">Get all assets</span>
+- ### ${\textsf{\color{#FFE3BB}Get all assets}}$
    curl --request GET \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/assets \ <br/>
 --header 'Authorization: Bearer {token}'
 
-- ### <span style="color:#FFE3BB">Get asset</span>
+- ### ${\textsf{\color{#FFE3BB}Get asset}}$
    curl --request GET \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/assets/{id} \ <br/>
 --header 'Authorization: Bearer {token}'
 
-- ### <span style="color:#FFE3BB">Update asset</span>
+- ### ${\textsf{\color{#FFE3BB}Update asset}}$
    curl --request PATCH \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/assets/{id} \ <br/>
 --header 'Authorization: Bearer {token}' \ <br/>
@@ -57,25 +57,25 @@ All operations specific to the assets participants can buy during a workshop
 "price": "{price}"<br/>
 }'
 
-- ### <span style="color:#FFE3BB">Delete asset (Logical)</span>
+- ### ${\textsf{\color{#FFE3BB}Delete asset (Logical)}}$
    curl --request DELETE \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/assets/{id} \ <br/>
 --header 'Authorization: Bearer {token}'
 
-## <span style="color:#FD8A8A">Improvements</span>
+## ${\textsf{\color{#FD8A8A}Improvements}}$
 All operations specific to the improvements participants can acquire during a workshop
 
-- ### <span style="color:#FFE3BB">Get all improvements</span>
+- ### ${\textsf{\color{#FFE3BB}Get all improvements}}$
    curl --request GET \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/improvements \ <br/>
 --header 'Authorization: Bearer {token}'
 
-- ### <span style="color:#FFE3BB">Get improvement</span>
+- ### ${\textsf{\color{#FFE3BB}Get improvement}}$
    curl --request GET \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/improvements/{id} \ <br/>
 --header 'Authorization: Bearer {token}'
 
-- ### <span style="color:#FFE3BB">Update improvement</span>
+- ### ${\textsf{\color{#FFE3BB}Update improvement}}$
    curl --request PATCH \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/improvements/{id} \ <br/>
 --header 'Authorization: Bearer {token}' \ <br/>
@@ -87,25 +87,25 @@ All operations specific to the improvements participants can acquire during a wo
 "price": "{price}"<br/>
 }'
 
-- ### <span style="color:#FFE3BB">Delete improvement (Logical)</span>
+- ### ${\textsf{\color{#FFE3BB}Delete improvement (Logical)}}$
    curl --request DELETE \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/improvements/{id} \ <br/>
 --header 'Authorization: Bearer {token}'
 
-## <span style="color:#FD8A8A">Institutions</span>
+## ${\textsf{\color{#FD8A8A}Institutions}}$
 All operations specific to the institutions where workshops can take place at
 
-- ### <span style="color:#FFE3BB">Get all institutions</span>
+- ### ${\textsf{\color{#FFE3BB}Get all institutions}}$
    curl --request GET \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/institutions \ <br/>
 --header 'Authorization: Bearer {token}'
 
-- ### <span style="color:#FFE3BB">Get institution</span>
+- ### ${\textsf{\color{#FFE3BB}Get institution}}$
    curl --request GET \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/institutions/{id} \ <br/>
 --header 'Authorization: Bearer {token}'
 
-- ### <span style="color:#FFE3BB">Update institution</span>
+- ### ${\textsf{\color{#FFE3BB}Update institution}}$
    curl --request PATCH \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/institutions/{id} \ <br/>
 --header 'Authorization: Bearer {token}' \ <br/>
@@ -115,7 +115,7 @@ All operations specific to the institutions where workshops can take place at
 "name": "{name}"<br/>
 }'
 
-- ### <span style="color:#FFE3BB">Delete institution (Logical)</span>
+- ### ${\textsf{\color{#FFE3BB}Delete institution (Logical)}}$
    curl --request DELETE \ <br/>
 --url https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/institutions/{id} \ <br/>
 --header 'Authorization: Bearer {token}'
