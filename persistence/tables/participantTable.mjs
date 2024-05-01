@@ -23,7 +23,6 @@ export const  ParticipantTable = {
   },
 
   rowToObject: (row) => {
-    console.log("row", row)
     return rowToObject(row, ParticipantTable.columnToFieldMappings);
   }
 };

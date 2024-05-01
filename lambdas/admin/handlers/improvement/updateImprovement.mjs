@@ -12,7 +12,7 @@ import { setFields } from '../../../commons/fieldOperations.mjs';
 export const handle = async (event) => {
 
   const roles = event.requestContext.authorizer.claims.profile;
-  if (roles !== UserRoles.ADMIN) sendResponse(HttpResponseCodes.FORBIDDEN);
+  if (roles !== UserRoles.ADMIN) return sendResponse(HttpResponseCodes.FORBIDDEN);
 
   const id = event.pathParameters.id;
 
