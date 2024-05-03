@@ -1,9 +1,11 @@
 import { DatabaseErrorType } from '../../../commons/database/handler/errorMapper.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
+import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 import { WorkshopDefinitionRepository } from '../../../../persistence/repositories/workshopDefinitionRepository.mjs';
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
+import { isUUID } from '../../../../commons/validations.mjs';
 import { sendErrorResponse, sendResponse } from '../../../../util/lambdaHelper.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 
@@ -38,6 +40,7 @@ const sorter = (a, b) => {
 export const handle = async (event) => {
 
   const id = event.pathParameters.id;
+  if (!isUUID(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
   const {body} = extractBody(event);
 
   if (!body) return sendResponse(204, null);

@@ -2,10 +2,12 @@ import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { ImprovementRepository } from '../../../../persistence/repositories/improvementRepository.mjs';
 import { ImprovementTable } from '../../../../persistence/tables/improvementTable.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
+import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { handleAdminError } from '../errorHandling.mjs';
+import { isUUID } from '../../../../commons/validations.mjs';
 import { sendResponse } from '../../../../util/lambdaHelper.mjs';
 import { setFields } from '../../../commons/fieldOperations.mjs';
 
@@ -15,9 +17,9 @@ export const handle = async (event) => {
   if (roles !== UserRoles.ADMIN) return sendResponse(HttpResponseCodes.FORBIDDEN);
 
   const id = event.pathParameters.id;
+  if (!isUUID(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
 
   const {body: modifiedImprovement} = extractBody(event);
-
   if (!modifiedImprovement) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: 'Missing data'});
   if (modifiedImprovement.id !== id) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: 'Wrong data'});
 

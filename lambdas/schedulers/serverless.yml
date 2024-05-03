@@ -97,6 +97,10 @@ provider:
           Resource: "*"
         - Effect: "Allow"
           Action:
+            - "scheduler:ListSchedules"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
             - "iam:PassRole"
           Resource: "*"
 
@@ -130,6 +134,26 @@ resources:
                   Resource: "*"
 
 functions:
+  getScheduler:
+    name: ${self:custom.stack-name}-get-scheduler
+    description: lambda to get a scheduler
+    handler: handlers/getScheduler.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      schedulers_target_queue_arn: ${self:custom.schedulersTargetQueueArn}
+      schedulers_execution_role_arn: ${self:custom.schedulersExecutionRoleArn}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/{id}
+          method: get
+          cors: true
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
   startScheduler:
     name: ${self:custom.stack-name}-start-scheduler
     description: lambda to start a scheduler
@@ -146,10 +170,10 @@ functions:
           path: ${self:custom.api-gateway-resource}/{id}/start
           method: post
           cors: true
-          #authorizer:
-          #  name: PrivateAuthorizer
-          #  type: COGNITO_USER_POOLS
-          #  arn: ${self:custom.cognitoUserPoolArnImport}
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
   pauseScheduler:
     name: ${self:custom.stack-name}-pause-scheduler
     description: lambda to pause a scheduler
@@ -166,10 +190,10 @@ functions:
           path: ${self:custom.api-gateway-resource}/{id}/pause
           method: patch
           cors: true
-          #authorizer:
-          #  name: PrivateAuthorizer
-          #  type: COGNITO_USER_POOLS
-          #  arn: ${self:custom.cognitoUserPoolArnImport}
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
   resumeScheduler:
     name: ${self:custom.stack-name}-resume-scheduler
     description: lambda to resume a scheduler
@@ -186,10 +210,10 @@ functions:
           path: ${self:custom.api-gateway-resource}/{id}/resume
           method: patch
           cors: true
-          #authorizer:
-          #  name: PrivateAuthorizer
-          #  type: COGNITO_USER_POOLS
-          #  arn: ${self:custom.cognitoUserPoolArnImport}
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
   stopScheduler:
     name: ${self:custom.stack-name}-stop-scheduler
     description: lambda to stop a scheduler
@@ -204,10 +228,10 @@ functions:
           path: ${self:custom.api-gateway-resource}/{id}/stop
           method: delete
           cors: true
-          #authorizer:
-          #  name: PrivateAuthorizer
-          #  type: COGNITO_USER_POOLS
-          #  arn: ${self:custom.cognitoUserPoolArnImport}
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
   doSomething:
     name: ${self:custom.stack-name}-do-something
     description: lambda to do something

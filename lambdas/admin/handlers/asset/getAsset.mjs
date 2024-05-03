@@ -1,12 +1,15 @@
 import { AssetRepository } from '../../../../persistence/repositories/assetRepository.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
+import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
 import { handleAdminError } from '../errorHandling.mjs';
 import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { isUUID } from '../../../../commons/validations.mjs';
 
 export const handle = async (event) => {
 
   const id = event.pathParameters.id;
+  if (!isUUID(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
 
   try {
     const [asset] = await AssetRepository.findById(id);

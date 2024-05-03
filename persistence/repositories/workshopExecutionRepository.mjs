@@ -18,8 +18,6 @@ export const WorkshopExecutionRepository = {
   findByCriteria: async (...criteria) => {
     const [keys, operators, values] = parseCriteria(criteria);
 
-    WorkshopExecutionRepository.values = values;
-
     const statement = WorkshopExecutionRepository.selectStatement(keys, operators);
     const rows = await invokeDatabaseLambda({statement: statement, parameters: values});
 

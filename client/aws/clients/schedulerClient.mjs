@@ -1,4 +1,4 @@
-import { AwsInfo } from './constants.mjs';
+import { AwsInfo } from '../AwsInfo.mjs';
 
 import { SchedulerClient } from "@aws-sdk/client-scheduler";
 
