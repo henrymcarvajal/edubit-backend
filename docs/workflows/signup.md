@@ -10,9 +10,9 @@
 
 En su orden los endpoints son:
 
-- Get all institutions ([curl](../api_specs/admin_api#Get-all-institutions))
-- Sign up participant ([curl](../api_specs/users_api#Sign-up-participant))
-- Update participant ([curl](../api_specs/members_api#Update-participant))
-- Get workshop execution by institution id ([curl](../api_specs/workshops_api#Get-execution-by-institution-id))
-- Enroll participant ([curl](../api_specs/workshops_api#Enroll-participant))
+- Get all institutions ([curl](../api_specs/admin_api.md#Get-all-institutions))
+- Sign up participant ([curl](../api_specs/users_api.md#Sign-up-participant))
+- Update participant ([curl](../api_specs/members_api.md#Update-participant))
+- Get workshop execution by institution id ([curl](../api_specs/workshops_api.md#Get-execution-by-institution-id))
+- Enroll participant ([curl](../api_specs/workshops_api.md#Enroll-participant))
 
