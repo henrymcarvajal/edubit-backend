@@ -4,91 +4,107 @@ All operations related to involved members related to workshop executions.
 ## ${\textsf{\color{#FD8A8A}Participants}}$
 All operations specific to participants, who are the people taking the workshop for learning.
 
-- ### ${\textsf{\color{#FFE3BB}Get participant}}$
-   curl --request GET \ <br/>
---url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/{id} \ <br/>
+### ${\textsf{\color{#FFE3BB}Get participant}}$
+```bash
+curl --request GET \
+--url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/{id} \
 --header 'Authorization: Bearer {token}'
+```
 
-- ### ${\textsf{\color{#FFE3BB}Update participant}}$
-   curl --request PATCH \ <br/>
---url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/ef7d63e2-a1c9-42c3-9b56-b6b539d76010 \ <br/>
---header 'Authorization: Bearer {token}' \ <br/>
---header 'Content-Type: application/json' \ <br/>
---data '{<br/>
-"id": "{id}",<br/>
-"name": "{name}",<br/>
-"email": "{email}",<br/>
-"grade": {grade},<br/>
-"activities": {<br/>
-"0": "{uuid}",<br/>
-"1": "{uuid}",<br/>
-"2": "{uuid}",
-...<br/>
-}<br/>
+### ${\textsf{\color{#FFE3BB}Update participant}}$
+```bash
+curl --request PATCH \
+--url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/ef7d63e2-a1c9-42c3-9b56-b6b539d76010 \
+--header 'Authorization: Bearer {token}' \
+--header 'Content-Type: application/json' \
+--data '{
+  "id": "{id}",
+  "name": "{name}",
+  "email": "{email}",
+  "grade": {grade},
+  "activities": {
+    "0": "{uuid}",
+    "1": "{uuid}",
+    "2": "{uuid}",
+    ...
+  }
 }'
+```
 
-- ### ${\textsf{\color{#FFE3BB}Enroll participant}}$
-   curl --request POST \ <br/>
---url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/{id}/enrollment \ <br/>
---header 'Authorization: Bearer {token}' \ <br/>
---header 'Content-Type: application/json' \ <br/>
---data '{<br/>
-"activities": {<br/>
-"0": "{uuid}",<br/>
-"1": "{uuid}",<br/>
-**"2": "{uuid}",
-...<br/>
-},<br/>
-"workshopExecutionId": "{uuid}"<br/>
+### ${\textsf{\color{#FFE3BB}Enroll participant}}$
+```bash
+curl --request POST \
+--url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/{id}/enrollment \
+--header 'Authorization: Bearer {token}' \
+--header 'Content-Type: application/json' \
+--data '{
+  "activities": {
+    "0": "{uuid}",
+    "1": "{uuid}",
+    "2": "{uuid}",
+    ...
+  },
+  "workshopExecutionId": "{uuid}"
 }'
+```
 
-- ### ${\textsf{\color{#FFE3BB}Delete participant (Logical)}}$
-   curl --request DELETE \ <br/>
---url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/{id} \ <br/>
+### ${\textsf{\color{#FFE3BB}Delete participant (Logical)}}$
+```bash
+curl --request DELETE \
+--url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/{id} \
 --header 'Authorization: Bearer {token}'
+```
 
 ## ${\textsf{\color{#FD8A8A}Mentors}}$
 All operations specific to the members that will act as authority to participants
 
-- ### ${\textsf{\color{#FFE3BB}Get mentor}}$
-   curl --request GET \ <br/>
---url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/mentors/{id} \ <br/>
+### ${\textsf{\color{#FFE3BB}Get mentor}}$
+```bash
+curl --request GET \
+--url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/mentors/{id} \
 --header 'Authorization: Bearer {token}'
+```
 
-- ### ${\textsf{\color{#FFE3BB}Update mentor}}$
-   curl --request PATCH \ <br/>
---url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/mentors/{id} \ <br/>
---header 'Authorization: Bearer {token}' \ <br/>
---header 'Content-Type: application/json' \ <br/>
---data '{<br/>
-"id": "{id}",<br/>
-"email": "{email}",<br/>
-"phone": {phone},<br/>
-"activities": {<br/>
-"0": "{uuid}",<br/>
-"1": "{uuid}",<br/>
-"2": "{uuid}",
-...<br/>
-}<br/>
+### ${\textsf{\color{#FFE3BB}Update mentor}}$
+```bash
+curl --request PATCH \
+--url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/mentors/{id} \
+--header 'Authorization: Bearer {token}' \
+--header 'Content-Type: application/json' \
+--data '{
+  "id": "{id}",
+  "email": "{email}",
+  "phone": {phone},
+  "activities": {
+    "0": "{uuid}",
+    "1": "{uuid}",
+    "2": "{uuid}",
+    ...
+  }
 }'
+```
 
-- ### ${\textsf{\color{#FFE3BB}Enroll mentor}}$
-  curl --request POST \ <br/>
---url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/mentors/{id}/enrollment \ <br/>
---header 'Authorization: Bearer {token}' \ <br/>
---header 'Content-Type: application/json' \ <br/>
---data '{<br/>
-"activities": {<br/>
-"0": "{uuid}",<br/>
-"1": "{uuid}",<br/>
-"2": "{uuid}",
-...<br/>
-},<br/>
-"workshopExecutionId": "{uuid}"<br/>
+### ${\textsf{\color{#FFE3BB}Enroll mentor}}$
+```bash
+curl --request POST \
+--url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/mentors/{id}/enrollment \
+--header 'Authorization: Bearer {token}' \
+--header 'Content-Type: application/json' \
+--data '{
+  "activities": {
+    "0": "{uuid}",
+    "1": "{uuid}",
+    "2": "{uuid}",
+    ...
+  },
+  "workshopExecutionId": "{uuid}"
 }'
+```
 
-- ### ${\textsf{\color{#FFE3BB}Delete mentor (Logical)}}$
-   curl --request DELETE \ <br/>
---url https://ar0elk0gz9**.execute-api.us-east-1.amazonaws.com/dev/admin/mentors/{id}  \ <br/>
+### ${\textsf{\color{#FFE3BB}Delete mentor (Logical)}}$
+```bash
+curl --request DELETE \
+--url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/admin/mentors/{id}  \
 --header 'Authorization: Bearer {token}'
+```
 
