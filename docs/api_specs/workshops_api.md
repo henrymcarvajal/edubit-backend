@@ -4,14 +4,14 @@ All operations related with workshop (their definitions and instances).
 ## ${\textsf{\color{#FD8A8A}Definitions}}$
 All operations specific to workshop definitions.
 
-### ${\textsf{\color{#FFE3BB}Get definition}}$
+### Get definition
 ```bash
 curl --request GET \
 --url https://ohfjp11sb7.execute-api.us-east-1.amazonaws.com/dev/workshops/definitions \
 --header 'Authorization: Bearer {token}'
 ```
 
-### ${\textsf{\color{#FFE3BB}Update definition}}$
+### Update definition
 ```bash
 curl --request PATCH \
 --url https://ohfjp11sb7.execute-api.us-east-1.amazonaws.com/dev/workshops/definitions/{id} \
@@ -41,7 +41,7 @@ curl --request PATCH \
   }
 }'
 ```
-### ${\textsf{\color{#FFE3BB}Delete definition (Logical)}}$
+### Delete definition (Logical)
 ```bash
 curl --request DELETE \
 --url https://ohfjp11sb7.execute-api.us-east-1.amazonaws.com/dev/workshops/definitions/{id} \
@@ -51,20 +51,20 @@ curl --request DELETE \
 ## ${\textsf{\color{#FD8A8A}Executions}}$
 All operations specific to the dates the workshop is scheduled
 
-### ${\textsf{\color{#FFE3BB}Get execution}}$
+### Get execution
 ```bash
 curl --request GET \
 --url https://ohfjp11sb7.execute-api.us-east-1.amazonaws.com/dev/workshops/executions/{id} \
 --header 'Authorization: Bearer {token}'
 ```
-### ${\textsf{\color{#FFE3BB}Get execution by institution id}}$
+### Get execution by institution id
 ```bash
 curl --request GET \
 --url https://ohfjp11sb7.execute-api.us-east-1.amazonaws.com/dev/workshops/executions/institution/{id} \
 --header 'Authorization: Bearer {token}'
 ```
 
-### ${\textsf{\color{#FFE3BB}Update execution}}$
+### Update execution
 ```bash
 curl --request PATCH \
 --url https://ohfjp11sb7.execute-api.us-east-1.amazonaws.com/dev/workshops/executions/{id} \

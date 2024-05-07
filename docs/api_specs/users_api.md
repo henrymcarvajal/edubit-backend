@@ -1,7 +1,7 @@
 # ${\textsf{\color{#83A2FF}Users}}$
 Operations related to security operations like signing up, logging in, password change, etc.
 
-### ${\textsf{\color{#FFE3BB}Sign up participant}}$
+### Sign up participant
 ```bash
 curl --request POST \
 --url https://3392q94usk.execute-api.us-east-1.amazonaws.com/dev/users/signup/participant \
@@ -22,7 +22,7 @@ curl --request POST \
 }'
 ```
 
-### ${\textsf{\color{#FFE3BB}Sign up mentor}}$
+### Sign up mentor
 ```bash
 curl --request POST \
 --url https://3392q94usk.execute-api.us-east-1.amazonaws.com/dev/users/signup/mentor \
@@ -41,7 +41,7 @@ curl --request POST \
 }'
 ```
 
-### ${\textsf{\color{#FFE3BB}Log in}}$
+### Log in
 ```bash
 curl --request POST \
 --url https://3392q94usk.execute-api.us-east-1.amazonaws.com/dev/users/login \
@@ -52,7 +52,7 @@ curl --request POST \
 }'
 ```
 
-### ${\textsf{\color{#FFE3BB}Change password}}$
+### Change password
 ```bash
 curl --request POST \
 --url https://3392q94usk.execute-api.us-east-1.amazonaws.com/dev/users/password/change \
@@ -62,7 +62,7 @@ curl --request POST \
 }'
 ```
 
-### ${\textsf{\color{#FFE3BB}Confirm change password}}$
+### Confirm change password
 ```bash
 curl --request POST \
 --url https://3392q94usk.execute-api.us-east-1.amazonaws.com/dev/users/password/change/confirm \

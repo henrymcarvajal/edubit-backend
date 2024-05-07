@@ -4,14 +4,14 @@ All operations related to involved members related to workshop executions.
 ## ${\textsf{\color{#FD8A8A}Participants}}$
 All operations specific to participants, who are the people taking the workshop for learning.
 
-### ${\textsf{\color{#FFE3BB}Get participant}}$
+### Get participant
 ```bash
 curl --request GET \
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/{id} \
 --header 'Authorization: Bearer {token}'
 ```
 
-### ${\textsf{\color{#FFE3BB}Update participant}}$
+### Update participant
 ```bash
 curl --request PATCH \
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/ef7d63e2-a1c9-42c3-9b56-b6b539d76010 \
@@ -31,7 +31,7 @@ curl --request PATCH \
 }'
 ```
 
-### ${\textsf{\color{#FFE3BB}Enroll participant}}$
+### Enroll participant
 ```bash
 curl --request POST \
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/{id}/enrollment \
@@ -48,7 +48,7 @@ curl --request POST \
 }'
 ```
 
-### ${\textsf{\color{#FFE3BB}Delete participant (Logical)}}$
+### Delete participant (Logical)
 ```bash
 curl --request DELETE \
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/participants/{id} \
@@ -58,14 +58,14 @@ curl --request DELETE \
 ## ${\textsf{\color{#FD8A8A}Mentors}}$
 All operations specific to the members that will act as authority to participants
 
-### ${\textsf{\color{#FFE3BB}Get mentor}}$
+### Get mentor
 ```bash
 curl --request GET \
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/mentors/{id} \
 --header 'Authorization: Bearer {token}'
 ```
 
-### ${\textsf{\color{#FFE3BB}Update mentor}}$
+### Update mentor
 ```bash
 curl --request PATCH \
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/mentors/{id} \
@@ -84,7 +84,7 @@ curl --request PATCH \
 }'
 ```
 
-### ${\textsf{\color{#FFE3BB}Enroll mentor}}$
+### Enroll mentor
 ```bash
 curl --request POST \
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/mentors/{id}/enrollment \
@@ -101,7 +101,7 @@ curl --request POST \
 }'
 ```
 
-### ${\textsf{\color{#FFE3BB}Delete mentor (Logical)}}$
+### Delete mentor (Logical)
 ```bash
 curl --request DELETE \
 --url https://ar0elk0gz9.execute-api.us-east-1.amazonaws.com/dev/admin/mentors/{id}  \
