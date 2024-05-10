@@ -1,7 +1,11 @@
-import { Engine } from 'json-rules-engine';
-import { extractBody } from '../../../client/aws/utils/bodyExtractor.mjs';
 import { AwsInfo } from '../../../client/aws/AwsInfo.mjs';
+import { WorkshopExecutionRepository } from '../../../persistence/repositories/workshopExecutionRepository.mjs';
+
+import { extractBody } from '../../../client/aws/utils/bodyExtractor.mjs';
 import { publishMessageToTopic } from '../../../client/aws/clients/snsClient.mjs';
+
+import { Engine } from 'json-rules-engine';
+import { execOnDatabase } from '../../../util/dbHelper.mjs';
 
 const engine = new Engine();
 
@@ -77,7 +81,7 @@ engine.addRule({
           {
             fact: 'remainingTime',
             operator: 'multipleOf',
-            value: 3
+            value: 13
           },
           {
             fact: 'remainingTime',
@@ -96,11 +100,25 @@ engine.addRule({
 
 exports.handle = async (event) => {
 
+  console.log('event', event);
+
   const {body} = extractBody(event);
 
+  const [workshopExecution] = await WorkshopExecutionRepository.findById(body.id);
+
+  workshopExecution.remainingTime-- ;
+  workshopExecution.elapsedTime++;
+
+  const {entity, statement} = WorkshopExecutionRepository.upsertStatement(workshopExecution);
+
+  const [savedWorkshopExecution] =
+      await execOnDatabase({statement: statement, parameters: entity});
+
+  console.log("savedWorkshopExecution", savedWorkshopExecution);
+
   console.log("Sending SNS notification...")
-  await publishMessageToTopic(AwsInfo.TIMER_NOTIFICATION_TOPIC_ARN, "tick");
-  console.log("Notification sent!")
+  //await publishMessageToTopic(AwsInfo.TIMER_NOTIFICATION_TOPIC_ARN, {id: workshopExecution.id});
+  console.log("Notification sent!");
   /*let facts = {
     remainingTime: new Date().getTime()
   }

@@ -11,6 +11,7 @@ import { WorkshopExecutionRepository } from '../../../persistence/repositories/w
 import { getDeployedSchedulesNames, getScheduleName } from './getSchedulerList.mjs';
 import { isUUID } from '../../../commons/validations.mjs';
 import { sendErrorResponse, sendResponse } from '../../../util/lambdaHelper.mjs';
+import { execOnDatabase } from '../../../util/dbHelper.mjs';
 
 const createCreateScheduleCommandInput = (id) => {
   return {
@@ -22,7 +23,7 @@ const createCreateScheduleCommandInput = (id) => {
     Target: {
       Arn: AwsInfo.SCHEDULERS_TARGET_QUEUE_ARN,
       RoleArn: AwsInfo.SCHEDULERS_EXECUTION_ROLE_ARN,
-      Input: `{id: ${id}, currentTimestamp: ${new Date().getTime()}}`,
+      Input: `{"id": "${id}"}`,
     },
     FlexibleTimeWindow: {
       Mode: 'OFF',
@@ -45,6 +46,8 @@ exports.handle = async (event) => {
     const [workshopExecution] = await WorkshopExecutionRepository.findById(id);
     if (!workshopExecution) return sendResponse(HttpResponseCodes.NOT_FOUND, {message: `${SchedulerMessages.WORKSHOP_EXECUTION_NOT_FOUND}: ${id}`});
 
+    if (!workshopExecution.remainingTime) return sendResponse(HttpResponseCodes.CONFLICT, {message: `${SchedulerMessages.NO_REMAINING_TIME_FOR_WORKSHOP}: ${id}`});
+
     const schedulesNames = await getDeployedSchedulesNames();
 
     if (!schedulesNames.includes(getScheduleName(id))) {
@@ -55,6 +58,11 @@ exports.handle = async (event) => {
       const response = {};
       response.scheduleArn = createResponse.ScheduleArn;
       response.remainingTime = workshopExecution.remainingTime;
+
+      workshopExecution.startTimestamp = new Date();
+      const {entity, statement} = WorkshopExecutionRepository.upsertStatement(workshopExecution);
+
+      await execOnDatabase({statement: statement, parameters: entity});
 
       return sendResponse(HttpResponseCodes.CREATED, response);
 

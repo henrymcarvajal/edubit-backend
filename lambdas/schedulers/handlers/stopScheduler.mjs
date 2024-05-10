@@ -10,6 +10,7 @@ import { WorkshopExecutionRepository } from '../../../persistence/repositories/w
 import { isUUID } from '../../../commons/validations.mjs';
 import { sendResponse } from '../../../util/lambdaHelper.mjs';
 import { getDeployedSchedulesNames, getScheduleName } from './getSchedulerList.mjs';
+import { execOnDatabase } from '../../../util/dbHelper.mjs';
 
 const createDeleteScheduleCommandInput = (id) => {
   return {
@@ -39,10 +40,15 @@ exports.handle = async (event) => {
       const deleteScheduleCommand = new DeleteScheduleCommand(deleteInput);
       await schedulerClient.send(deleteScheduleCommand);
 
+      workshopExecution.endTimestamp = new Date();
+      const {entity, statement} = WorkshopExecutionRepository.upsertStatement(workshopExecution);
+
+      await execOnDatabase({statement: statement, parameters: entity});
+
       return sendResponse(HttpResponseCodes.OK);
 
     } else {
-      return sendResponse(HttpResponseCodes.NOT_FOUND, {message: `${SchedulerMessages.WORKSHOP_EXECUTION_NOT_FOUND}: ${id}`});
+      return sendResponse(HttpResponseCodes.NOT_FOUND, {message: `${SchedulerMessages.SCHEDULER_NOT_FOUND}: ${id}`});
     }
 
   } catch (error) {

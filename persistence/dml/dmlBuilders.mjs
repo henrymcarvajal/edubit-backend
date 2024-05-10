@@ -17,6 +17,19 @@ export const selectClauseBuilder = (schemaName, tableName, tableMappings, column
       orderClauseBuilder();
 };
 
+export const selectClauseBuilderWithTypes = (schemaName, tableName, tableMappings, columnTypes, columns, operators) => {
+  const qualifiedTableName = `${schemaName}.${tableName}`;
+  const tableAlias = `${schemaName.substring(0, 1)}${tableName.substring(0, 1)}`;
+  const columnSeparator = ',';
+
+  const castedColumns = Object.keys(tableMappings).map(k => columnTypes[k]? `${k}::${columnTypes[k]}`:`${k}`);
+
+  return `SELECT ${castedColumns.map((k) => `${tableAlias}.${k}`).join(columnSeparator)}
+          FROM ${qualifiedTableName} ${tableAlias}
+          WHERE ` + whereClauseBuilder(tableAlias, columns, operators) +
+      orderClauseBuilder();
+};
+
 export const orderClauseBuilder = (alias, columns) => {
   let orderClause = '';
   //conditionClauseBuilder(alias, columns[0], operators[0], 1);

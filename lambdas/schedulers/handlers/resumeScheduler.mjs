@@ -57,7 +57,7 @@ exports.handle = async (event) => {
       return sendResponse(HttpResponseCodes.OK, response);
 
     } else {
-      return sendResponse(HttpResponseCodes.NOT_FOUND, {message: `${SchedulerMessages.WORKSHOP_EXECUTION_NOT_FOUND}: ${id}`});
+      return sendResponse(HttpResponseCodes.NOT_FOUND, {message: `${SchedulerMessages.SCHEDULER_NOT_FOUND}: ${id}`});
     }
 
   } catch (error) {

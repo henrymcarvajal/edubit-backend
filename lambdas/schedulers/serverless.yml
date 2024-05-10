@@ -24,7 +24,7 @@ custom:
   cognitoUserPoolArnImport:
     Fn::ImportValue: ${self:custom.cognitoStackName}-${self:custom.target-env}-cognitoUserPoolArn
   ## SQS
-  schedulersTargetQueueName: ${self:custom.stack-name}-target-queue
+  schedulersTargetQueueName: ${self:custom.stack-name}-schedulers-target-queue
   schedulersTargetQueueArn:
     Fn::Join:
       - ''
@@ -34,7 +34,9 @@ custom:
         - Ref: AWS::AccountId
         - ":"
         - ${self:custom.schedulersTargetQueueName}
-  ## Scheduler
+  incomeCalculatorQueueName: ${self:custom.stack-name}-income-calculator
+  expenseCalculatorQueueName: ${self:custom.stack-name}-expense-calculator
+  ## EventBridge Scheduler
   schedulersExecutionRoleName: ${self:custom.stack-name}-schedulers-execution-role
   schedulersExecutionRoleArn:
     Fn::Join:
@@ -43,6 +45,8 @@ custom:
         - Ref: AWS::AccountId
         - ":role/"
         - ${self:custom.schedulersExecutionRoleName}
+  ## SNS
+  TimerNotificationTopicName: ${self:custom.stack-name}-timer-notification
   # Packaging
   webpack:
     webpackConfig: ./webpack.config.js
@@ -78,26 +82,23 @@ provider:
         - Effect: "Allow"
           Action:
             - "sqs:SendMessage"
+            - "sqs:ReceiveMessage"
+            - "sqs:DeleteMessage"
+            - "sqs:GetQueueAttributes"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "sns:ConfirmSubscription"
+            - "sns:Publish"
+            - "sns:Subscribe"
           Resource: "*"
         - Effect: "Allow"
           Action:
             - "scheduler:CreateSchedule"
-          Resource: "*"
-        - Effect: "Allow"
-          Action:
             - "scheduler:DeleteSchedule"
-          Resource: "*"
-        - Effect: "Allow"
-          Action:
             - "scheduler:GetSchedule"
-          Resource: "*"
-        - Effect: "Allow"
-          Action:
-            - "scheduler:UpdateSchedule"
-          Resource: "*"
-        - Effect: "Allow"
-          Action:
             - "scheduler:ListSchedules"
+            - "scheduler:UpdateSchedule"
           Resource: "*"
         - Effect: "Allow"
           Action:
@@ -132,6 +133,65 @@ resources:
                   Action:
                     - "sqs:SendMessage"
                   Resource: "*"
+    TimerNotificationTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: ${self:custom.TimerNotificationTopicName}
+        TopicName: ${self:custom.TimerNotificationTopicName}
+    IncomeCalculatorQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.incomeCalculatorQueueName}
+    ExpenseCalculatorQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.expenseCalculatorQueueName}
+    IncomeCalculatorQueueSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint:
+          Fn::GetAtt:
+            - IncomeCalculatorQueue
+            - Arn
+        TopicArn:
+          Ref: TimerNotificationTopic
+    ExpenseCalculatorQueueSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint:
+          Fn::GetAtt:
+            - ExpenseCalculatorQueue
+            - Arn
+        TopicArn:
+          Ref: TimerNotificationTopic
+    TimerNotificationTopicToQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: 'allow-sns-messages'
+              Effect: Allow
+              Principal:
+                Service: 'sns.amazonaws.com'
+              Resource:
+                - Fn::GetAtt:
+                  - IncomeCalculatorQueue
+                  - Arn
+                - Fn::GetAtt:
+                  - ExpenseCalculatorQueue
+                  - Arn
+              Action: 'SQS:SendMessage'
+                # COMMENT THIS IN IF YOU WANT IT TO ONLY ALLOW A CERTAIN SNS TOPIC
+                # Condition:
+                # ArnEquals:
+                # 'aws:SourceArn':
+              # Ref: MySNSTopic
+        Queues:
+          - Ref: IncomeCalculatorQueue
+          - Ref: ExpenseCalculatorQueue
 
 functions:
   getScheduler:
@@ -232,10 +292,27 @@ functions:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
             arn: ${self:custom.cognitoUserPoolArnImport}
-  doSomething:
-    name: ${self:custom.stack-name}-do-something
-    description: lambda to do something
-    handler: handlers/doSomething.handle
+  updateTime:
+    name: ${self:custom.stack-name}-update-time
+    description: lambda to register time and notify the change
+    handler: handlers/updateTime.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      timer_notification_topic_arn: !Ref TimerNotificationTopic
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - SchedulersTargetQueue
+              - Arn
+          batchSize: 1
+  incomeCalculator:
+    name: ${self:custom.stack-name}-income-calculator
+    description: lambda to calculate participants incomes
+    handler: handlers/incomeCalculator.handle
     environment:
       region: ${self:provider.region}
       environment: ${self:custom.target-env}
@@ -245,7 +322,23 @@ functions:
       - sqs:
           arn:
             Fn::GetAtt:
-              - SchedulersTargetQueue
+              - IncomeCalculatorQueue
+              - Arn
+          batchSize: 1
+  expenseCalculator:
+    name: ${self:custom.stack-name}-expense-calculator
+    description: lambda to calculate participants expenses
+    handler: handlers/expenseCalculator.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - ExpenseCalculatorQueue
               - Arn
           batchSize: 1
 

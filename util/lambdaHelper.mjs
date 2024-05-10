@@ -14,12 +14,7 @@ export const sendErrorResponse = (statusCode, error) => {
     return {
         statusCode: statusCode,
         body: JSON.stringify(error, replacer, 10),
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Credentials': true,
-            'Access-Control-Allow-Methods': '*'
-        }
+        headers: responseHeaders
     }
 }
 
@@ -27,11 +22,13 @@ export const sendResponse = (statusCode, body) => {
     return {
         statusCode: statusCode,
         body: JSON.stringify(body),
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Credentials': true,
-            'Access-Control-Allow-Methods': '*'
-        }
+        headers: responseHeaders
     }
+}
+
+const responseHeaders= {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Credentials': true,
+    'Access-Control-Allow-Methods': '*'
 }

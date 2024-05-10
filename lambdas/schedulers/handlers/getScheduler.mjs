@@ -52,7 +52,10 @@ exports.handle = async (event) => {
 
       const response = {};
       response.state = getResponse.State;
+      response.elapsedTime = workshopExecution.elapsedTime;
       response.remainingTime = workshopExecution.remainingTime;
+      response.creationDate = getResponse.CreationDate;
+      response.LastModificationDate = getResponse.LastModificationDate;
 
       return sendResponse(HttpResponseCodes.OK, response);
 

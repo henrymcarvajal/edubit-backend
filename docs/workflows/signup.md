@@ -14,5 +14,6 @@ En su orden los endpoints son:
 - Sign up participant ([curl](../api_specs/users_api.md#sign-up-participant))
 - Update participant ([curl](../api_specs/members_api.md#update-participant))
 - Get workshop execution by institution id ([curl](../api_specs/workshops_api.md#get-execution-by-institution-id))
+- Get workshop definition by id ([curl](../api_specs/workshops_api.md#get-definition-by-id))
 - Enroll participant ([curl](../api_specs/members_api.md#enroll-participant))
 

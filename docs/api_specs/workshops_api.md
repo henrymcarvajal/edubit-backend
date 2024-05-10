@@ -4,10 +4,10 @@ All operations related with workshop (their definitions and instances).
 ## ${\textsf{\color{#FD8A8A}Definitions}}$
 All operations specific to workshop definitions.
 
-### Get definition
+### Get definition by id
 ```bash
 curl --request GET \
---url https://ohfjp11sb7.execute-api.us-east-1.amazonaws.com/dev/workshops/definitions \
+--url https://ohfjp11sb7.execute-api.us-east-1.amazonaws.com/dev/workshops/definitions/{id} \
 --header 'Authorization: Bearer {token}'
 ```
 

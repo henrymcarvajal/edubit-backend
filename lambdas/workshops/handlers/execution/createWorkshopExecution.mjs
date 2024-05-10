@@ -1,5 +1,6 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
+import { WorkshopDefinitionRepository } from '../../../../persistence/repositories/workshopDefinitionRepository.mjs';
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { WorkshopExecutionTable } from '../../../../persistence/tables/workshopExecutionTable.mjs';
 
@@ -8,6 +9,13 @@ import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { handleWorkshopError } from '../errorHandling.mjs';
 import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+
+const getTotalRunningTime = (workshopDefinition) => {
+  return Object
+      .values(workshopDefinition.schedule)
+      .map(r => r.duration)
+      .reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+}
 
 export const handle = async (event) => {
 
@@ -22,6 +30,12 @@ export const handle = async (event) => {
 
     let props = ['scheduledDate', 'institutionId', 'workshopDefinitionId', 'activities'];
     checkProps(workshopExecution, props);
+
+    const [workshopDefinition] = await WorkshopDefinitionRepository.findById(workshopExecution.workshopDefinitionId);
+    if (!workshopDefinition) return sendResponse(HttpResponseCodes.NOT_FOUND);
+
+    workshopExecution.elapsedTime = 0;
+    workshopExecution.remainingTime = getTotalRunningTime(workshopDefinition);
 
     const {statement, entity} = WorkshopExecutionRepository.insertStatement(workshopExecution);
 

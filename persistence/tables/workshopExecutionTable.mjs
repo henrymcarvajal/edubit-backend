@@ -13,13 +13,18 @@ export const WorkshopExecutionTable = {
     id: 'id',
     workshop_definition_id: 'workshopDefinitionId',
     institution_id: 'institutionId',
+    participants: 'participants',
+    mentors: 'mentors',
+    activities: 'activities',
     scheduled_date: 'scheduledDate',
     start_timestamp: 'startTimestamp',
     end_timestamp: 'endTimestamp',
-    remaining_time: 'remainingTime',
-    participants: 'participants',
-    mentors: 'mentors',
-    activities: 'activities'
+    elapsed_time: 'elapsedTime',
+    remaining_time: 'remainingTime'
+  },
+  columnTypesMappings: {
+    elapsed_time: 'int',
+    remaining_time: 'int'
   },
 
   rowToObject: (row) => {

@@ -60,6 +60,28 @@ provider:
             - "sqs:SendMessage"
           Resource: "*"
 
+resources:
+  Resources:
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    GatewayResponseDefault5XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'*'"
+        ResponseType: DEFAULT_5XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+
 functions:
   createWorkshopDefinition:
     name: ${self:custom.stack-name}-create-workshop-definition
@@ -92,6 +114,7 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/definitions/{id}
           method: get
+          cors: true
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -114,7 +137,6 @@ functions:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
             arn: ${self:custom.cognitoUserPoolArnImport}
-
   createWorkshopExecution:
     name: ${self:custom.stack-name}-create-workshop-execution
     description: lambda to create workshops' executions
@@ -146,6 +168,34 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/executions/{id}
           method: get
+          cors: true
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  getWorkshopExecutionByInstitution:
+    name: ${self:custom.stack-name}-get-workshop-execution-by-institution
+    description: lambda to query workshops' executions by institution
+    handler: handlers/execution/getWorkshopExecutionByInstitution.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/executions/institution/{id}
+          method: get
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
