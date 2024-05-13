@@ -12,6 +12,7 @@ custom:
   target-env: ${opt:stage, 'dev'}
   stack-name: ${self:service}-${self:custom.target-env}
   api-gateway-resource: schedulers
+  api-gateway-allowed-origins: '*'
   # AWS Infrastructure stack names and imports
   ## Database
   commonsDatabaseStackName: ${self:org}-commons-database
@@ -107,6 +108,25 @@ provider:
 
 resources:
   Resources:
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    GatewayResponseDefault5XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'*'"
+        ResponseType: DEFAULT_5XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
     SchedulersTargetQueue:
       Type: AWS::SQS::Queue
       Properties:
@@ -209,7 +229,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/{id}
           method: get
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -229,7 +258,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/{id}/start
           method: post
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -249,7 +287,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/{id}/pause
           method: patch
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -269,7 +316,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/{id}/resume
           method: patch
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -287,7 +343,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/{id}/stop
           method: delete
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS

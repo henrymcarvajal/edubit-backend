@@ -12,6 +12,7 @@ custom:
   target-env: ${opt:stage, 'dev'}
   stack-name: ${self:service}-${self:custom.target-env}
   api-gateway-resource: users
+  api-gateway-allowed-origins: '*'
   # Password policies
   passwordMinimumSize: 8
   passwordMaximumSize: 64
@@ -110,6 +111,26 @@ resources:
       Properties:
         Domain: ${self:custom.stack-name}
         UserPoolId: { Ref: CognitoUserPoolEdubitUserPool }
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    GatewayResponseDefault5XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'*'"
+        ResponseType: DEFAULT_5XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+
   Outputs:
     CognitoUserPoolEdubitUserPoolArn:
       Value: !GetAtt CognitoUserPoolEdubitUserPool.Arn
@@ -132,7 +153,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/signup/participant
           method: post
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
   signUpMentor:
     name: ${self:custom.stack-name}-sign-up-mentor
     handler: handlers/enrollment/signUpMentor.handler
@@ -148,7 +178,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/signup/mentor
           method: post
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
   signUpAdmin:
     name: ${self:custom.stack-name}-sign-up-admin
     handler: handlers/enrollment/signUpAdmin.handler
@@ -164,7 +203,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/signup/admin
           method: post
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
   logIn:
     name: ${self:custom.stack-name}-log-in
     handler: handlers/enrollment/logIn.handler
@@ -180,7 +228,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/login
           method: post
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
   changePassword:
     name: ${self:custom.stack-name}-change-password
     description: lambda to create users on repositories
@@ -193,7 +250,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/password/change
           method: post
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
   confirmChangePassword:
     name: ${self:custom.stack-name}-confirm-change-password
     description: lambda to confirm password change
@@ -208,4 +274,13 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/password/change/confirm
           method: post
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false

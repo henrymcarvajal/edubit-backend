@@ -12,6 +12,7 @@ custom:
   target-env: ${opt:stage, 'dev'}
   stack-name: ${self:service}-${self:custom.target-env}
   api-gateway-resource: admin
+  api-gateway-allowed-origins: '*'
   # AWS Infrastructure stack names and imports
   ## Database
   commonsDatabaseStackName: ${self:org}-commons-database
@@ -74,7 +75,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/activities/{id}
           method: get
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -92,7 +102,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/activities
           method: get
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -110,7 +129,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/activities/{id}
           method: patch
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -128,7 +156,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/activities/{id}
           method: delete
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -146,7 +183,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/assets/{id}
           method: get
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -164,7 +210,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/assets
           method: get
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -182,7 +237,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/assets/{id}
           method: patch
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -200,7 +264,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/assets/{id}
           method: delete
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -218,7 +291,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/improvements/{id}
           method: get
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -236,7 +318,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/improvements
           method: get
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -254,7 +345,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/improvements/{id}
           method: patch
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -272,7 +372,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/improvements/{id}
           method: delete
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -290,7 +399,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/institutions/{id}
           method: get
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -308,7 +426,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/institutions
           method: get
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -326,7 +453,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/institutions/{id}
           method: patch
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
@@ -344,7 +480,16 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/institutions/{id}
           method: delete
-          cors: true
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
           authorizer:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
