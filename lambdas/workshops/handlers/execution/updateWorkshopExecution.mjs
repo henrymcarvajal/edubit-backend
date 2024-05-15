@@ -2,7 +2,7 @@ import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
-import { WorkshopExecutionTable } from '../../../../persistence/tables/workshopExecutionTable.mjs';
+import { WorkshopExecutionTable } from '../../../../persistence/tables/workshopExecutionModel.mjs';
 
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';

@@ -2,7 +2,7 @@ import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 import { WorkshopDefinitionRepository } from '../../../../persistence/repositories/workshopDefinitionRepository.mjs';
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
-import { WorkshopExecutionTable } from '../../../../persistence/tables/workshopExecutionTable.mjs';
+import { WorkshopExecutionTable } from '../../../../persistence/tables/workshopExecutionModel.mjs';
 
 import { checkProps } from '../../../../util/propsGetter.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';

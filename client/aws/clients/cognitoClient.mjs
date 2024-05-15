@@ -1,4 +1,4 @@
-import { AwsInfo } from './constants.mjs';
+import { AwsInfo } from '../AwsInfo.mjs';
 
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 

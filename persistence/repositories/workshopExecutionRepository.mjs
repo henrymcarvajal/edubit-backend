@@ -1,10 +1,9 @@
 import { DmlOperators } from '../dml/dmlOperators.mjs';
-import { WorkshopExecutionTable } from '../tables/workshopExecutionTable.mjs';
+import { WorkshopExecutionTable, WorkshopExecutionView } from '../tables/workshopExecutionModel.mjs';
 
 import {
   insertClauseBuilder,
   parseCriteria,
-  selectClauseBuilder,
   selectClauseBuilderWithTypes,
   upsertClauseBuilder
 } from '../dml/dmlBuilders.mjs';
@@ -13,14 +12,12 @@ import { objectToRow } from '../ormMapper.mjs';
 
 export const WorkshopExecutionRepository = {
 
-  //select * from workshop_
-
   findById: async (id) => {
     return WorkshopExecutionRepository.findByCriteria(['id', DmlOperators.EQUALS, id]);
   },
 
   findByInstitutionId: async (id) => {
-    return WorkshopExecutionRepository.findByCriteria(['institution_id', DmlOperators.EQUALS, id]);
+    return WorkshopExecutionRepository.findViewByCriteria(WorkshopExecutionView, ['id', DmlOperators.EQUALS, id]);
   },
 
   findAll: async () => {
@@ -36,6 +33,19 @@ export const WorkshopExecutionRepository = {
     let result = [];
     for (let row of rows) {
       result.push(WorkshopExecutionTable.rowToObject(row));
+    }
+
+    return result;
+  },
+
+  findViewByCriteria: async (view, ...criteria) => {
+    const [_, __, values] = parseCriteria(criteria);
+
+    const rows = await invokeDatabaseLambda({statement: view.selectStatement, parameters: values});
+
+    let result = [];
+    for (let row of rows) {
+      result.push(view.rowToObject(row));
     }
 
     return result;
