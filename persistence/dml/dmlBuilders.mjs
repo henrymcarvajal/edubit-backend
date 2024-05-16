@@ -7,38 +7,22 @@ export const parseCriteria = (criteria) => {
   return [keys, operators, values];
 };
 
-export const selectClauseBuilder = (schemaName, tableName, tableMappings, columns, operators) => {
-  const qualifiedTableName = `${schemaName}.${tableName}`;
-  const tableAlias = `${schemaName.substring(0, 1)}${tableName.substring(0, 1)}`;
-  const columnSeparator = ',';
-  return `SELECT ${Object.keys(tableMappings).map((k) => `${tableAlias}.${k}`).join(columnSeparator)}
-          FROM ${qualifiedTableName} ${tableAlias}
-          WHERE ` + whereClauseBuilder(tableAlias, columns, operators) +
-      orderClauseBuilder();
-};
-
-export const selectClauseBuilderWithTypes = (schemaName, tableName, tableMappings, columnTypes, columns, operators) => {
-  const qualifiedTableName = `${schemaName}.${tableName}`;
-  const tableAlias = `${schemaName.substring(0, 1)}${tableName.substring(0, 1)}`;
+export const selectClauseBuilder = (tableDefinition, columns, operators) => {
+  const qualifiedTableName = `${tableDefinition.schemaName}.${tableDefinition.tableName}`;
+  const tableAlias = `${tableDefinition.schemaName.substring(0, 1)}${tableDefinition.tableName.substring(0, 1)}`;
   const columnSeparator = ',';
 
-  const castedColumns = Object.keys(tableMappings).map(k => columnTypes[k]? `${k}::${columnTypes[k]}`:`${k}`);
+  const castedColumns = selectColumnsWithTypes(tableDefinition.columnToFieldMappings, tableDefinition.columnTypes);
 
-  return `SELECT ${castedColumns.map((k) => `${tableAlias}.${k}`).join(columnSeparator)}
+  return `SELECT ${castedColumns.map((column) => `${tableAlias}.${column}`).join(columnSeparator)}
           FROM ${qualifiedTableName} ${tableAlias}
-          WHERE ` + whereClauseBuilder(tableAlias, columns, operators) +
+          WHERE ` +
+      whereClauseBuilder(tableAlias, columns, operators) +
       orderClauseBuilder();
 };
 
 export const orderClauseBuilder = (alias, columns) => {
-  let orderClause = '';
-  //conditionClauseBuilder(alias, columns[0], operators[0], 1);
-  /*for (const [i, column] of columns.entries()) {
-    if (i > 0) {
-      orderClause = orderClause + ` AND ${conditionClauseBuilder(alias, column, operators[i], i + 1)}`;
-    }
-  }*/
-  return orderClause;
+  return '';
 };
 
 export const whereClauseBuilder = (alias, columns, operators) => {
@@ -87,3 +71,10 @@ const extractEntityKeys = (entity, tableMappings) => {
   }
   return keys;
 };
+
+const selectColumnsWithTypes = (columnToFieldMappings, columnTypes) => {
+  if (columnTypes) {
+    return Object.keys(columnToFieldMappings).map(k => columnTypes[k] ? `${k}::${columnTypes[k]}` : `${k}`);
+  }
+  return Object.keys(columnToFieldMappings).map(k => `${k}`);
+}

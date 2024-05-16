@@ -35,7 +35,7 @@ export const InstitutionRepository = {
   },
 
   selectStatement: (columns, operators) => {
-    return selectClauseBuilder(InstitutionTable.schemaName, InstitutionTable.tableName, InstitutionTable.columnToFieldMappings, columns, operators);
+    return selectClauseBuilder(InstitutionTable, columns, operators);
   },
 
   insertStatement: (object) => {

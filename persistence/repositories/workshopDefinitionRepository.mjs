@@ -26,7 +26,7 @@ export const WorkshopDefinitionRepository = {
   },
 
   selectStatement: (columns, operators) => {
-    return selectClauseBuilder(WorkshopDefinitionTable.schemaName, WorkshopDefinitionTable.tableName, WorkshopDefinitionTable.columnToFieldMappings, columns, operators);
+    return selectClauseBuilder(WorkshopDefinitionTable, columns, operators);
   },
 
   insertStatement: (object) => {

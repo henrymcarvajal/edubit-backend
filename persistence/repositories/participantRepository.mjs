@@ -33,7 +33,7 @@ export const ParticipantRepository = {
   },
 
   selectStatement: (columns, operators) => {
-    return selectClauseBuilder(ParticipantTable.schemaName, ParticipantTable.tableName, ParticipantTable.columnToFieldMappings, columns, operators);
+    return selectClauseBuilder(ParticipantTable, columns, operators);
   },
 
   insertStatement: (object) => {

@@ -1,12 +1,7 @@
 import { DmlOperators } from '../dml/dmlOperators.mjs';
 import { WorkshopExecutionTable, WorkshopExecutionView } from '../tables/workshopExecutionModel.mjs';
 
-import {
-  insertClauseBuilder,
-  parseCriteria,
-  selectClauseBuilderWithTypes,
-  upsertClauseBuilder
-} from '../dml/dmlBuilders.mjs';
+import { insertClauseBuilder, parseCriteria, selectClauseBuilder, upsertClauseBuilder } from '../dml/dmlBuilders.mjs';
 import { invokeDatabaseLambda } from '../../util/dbHelper.mjs';
 import { objectToRow } from '../ormMapper.mjs';
 
@@ -52,14 +47,7 @@ export const WorkshopExecutionRepository = {
   },
 
   selectStatement: (columns, operators) => {
-    return selectClauseBuilderWithTypes(
-        WorkshopExecutionTable.schemaName,
-        WorkshopExecutionTable.tableName,
-        WorkshopExecutionTable.columnToFieldMappings,
-        WorkshopExecutionTable.columnTypesMappings,
-        columns,
-        operators
-    );
+    return selectClauseBuilder(WorkshopExecutionTable, columns, operators);
   },
 
   insertStatement: (object) => {

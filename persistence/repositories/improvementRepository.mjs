@@ -35,7 +35,7 @@ export const ImprovementRepository = {
   },
 
   selectStatement: (columns, operators) => {
-    return selectClauseBuilder(ImprovementTable.schemaName, ImprovementTable.tableName, ImprovementTable.columnToFieldMappings, columns, operators);
+    return selectClauseBuilder(ImprovementTable, columns, operators);
   },
 
   insertStatement: (object) => {

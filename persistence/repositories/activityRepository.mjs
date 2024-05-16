@@ -35,7 +35,7 @@ export const ActivityRepository = {
   },
 
   selectStatement: (columns, operators) => {
-    return selectClauseBuilder(ActivityTable.schemaName, ActivityTable.tableName, ActivityTable.columnToFieldMappings, columns, operators);
+    return selectClauseBuilder(ActivityTable, columns, operators);
   },
 
   insertStatement: (object) => {

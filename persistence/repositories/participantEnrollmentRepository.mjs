@@ -27,7 +27,7 @@ export const ParticipantEnrollmentRepository = {
   },
 
   selectStatement: (columns, operators) => {
-    return selectClauseBuilder(ParticipantEnrollmentTable.schemaName, ParticipantEnrollmentTable.tableName, ParticipantEnrollmentTable.columnToFieldMappings, columns, operators);
+    return selectClauseBuilder(ParticipantEnrollmentTable, columns, operators);
   },
 
   insertStatement: (object) => {

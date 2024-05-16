@@ -4,12 +4,17 @@ import { AwsInfo } from '../AwsInfo.mjs';
 
 export const snsClient = new SNSClient({region: AwsInfo.REGION});
 
-export const publishMessageToTopic = async (topicArn, message) => {
+export const publishMessageToTopic = async (topicArn, message, rawMessageAttributes) => {
+
+  const messageAttributes = formatAttributes(rawMessageAttributes);
 
   const params = {
     Message: message,
-    TopicArn: topicArn
+    TopicArn: topicArn,
+    MessageAttributes: messageAttributes
   };
+
+  console.log('params', JSON.stringify(params));
 
   try {
     const command = new PublishCommand(params);
@@ -19,3 +24,17 @@ export const publishMessageToTopic = async (topicArn, message) => {
     return error;
   }
 };
+
+const formatAttributes = (rawMessageAttributes) => {
+  const messageAttributes = {};
+  Object.keys(rawMessageAttributes).forEach(key => {
+    if (typeof rawMessageAttributes[key] === 'number') {
+      messageAttributes[key] = {DataType: 'Number', StringValue: JSON.stringify(rawMessageAttributes[key])};
+    } else if (typeof rawMessageAttributes[key] === 'string') {
+      messageAttributes[key] = {DataType: 'String', StringValue: rawMessageAttributes[key]};
+    } else {
+      messageAttributes[key] = {DataType: 'String', StringValue: JSON.stringify(rawMessageAttributes[key])};
+    }
+  });
+  return messageAttributes
+}

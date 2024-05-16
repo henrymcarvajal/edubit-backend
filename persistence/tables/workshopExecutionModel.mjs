@@ -22,9 +22,12 @@ export const WorkshopExecutionTable = {
     elapsed_time: 'elapsedTime',
     remaining_time: 'remainingTime'
   },
-  columnTypesMappings: {
+  columnTypes: {
     elapsed_time: 'int',
-    remaining_time: 'int'
+    remaining_time: 'int',
+    participants: 'json',
+    mentors: 'json',
+    activities: 'json'
   },
 
   rowToObject: (row) => {
@@ -52,13 +55,16 @@ export const WorkshopExecutionView = {
     end_timestamp: 'endTimestamp',
     elapsed_time: 'elapsedTime',
     remaining_time: 'remainingTime',
-    name: 'institutionName',
+    workshop_name: 'workshopName',
   },
   columnTypesMappings: {
     elapsed_time: 'int',
     remaining_time: 'int'
   },
-  selectStatement: `select we.*, i.name from edubit.workshop_execution we join edubit.institution i on i.id = we.institution_id where i.id = $1`,
+  selectStatement: `select we.*, wd."name" as workshop_name
+                    from edubit.workshop_execution we
+                    join edubit.workshop_definition wd on wd.id = we.workshop_definition_id
+                    join edubit.institution i on i.id = we.institution_id where i.id = $1`,
 
   rowToObject: (row) => {
     return rowToObject(row, WorkshopExecutionView.columnToFieldMappings);

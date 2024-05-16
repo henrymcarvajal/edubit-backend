@@ -27,7 +27,7 @@ export const UserRepository = {
   },
 
   selectStatement: (columns, operators) => {
-    return selectClauseBuilder(UserTable.schemaName, UserTable.tableName, UserTable.columnToFieldMappings, columns, operators);
+    return selectClauseBuilder(UserTable, columns, operators);
   },
 
   insertStatement: (object) => {

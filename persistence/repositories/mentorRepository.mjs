@@ -31,7 +31,7 @@ export const MentorRepository = {
   },
 
   selectStatement: (columns, operators) => {
-    return selectClauseBuilder(MentorTable.schemaName, MentorTable.tableName, MentorTable.columnToFieldMappings, columns, operators);
+    return selectClauseBuilder(MentorTable, columns, operators);
   },
 
   insertStatement: (object) => {

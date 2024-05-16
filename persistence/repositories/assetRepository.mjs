@@ -35,7 +35,7 @@ export const AssetRepository = {
   },
 
   selectStatement: (columns, operators) => {
-    return selectClauseBuilder(AssetTable.schemaName, AssetTable.tableName, AssetTable.columnToFieldMappings, columns, operators);
+    return selectClauseBuilder(AssetTable, columns, operators);
   },
 
   insertStatement: (object) => {
