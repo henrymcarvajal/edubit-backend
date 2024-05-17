@@ -11,6 +11,17 @@ export const ActivityRepository = {
     return ActivityRepository.findByCriteria(['id', DmlOperators.EQUALS, id]);
   },
 
+  findByIdIn: async (ids) => {
+    return ActivityRepository.findByCriteria(['id', DmlOperators.IN, ids]);
+  },
+
+  findByIdInEnabled: async (ids) => {
+    return ActivityRepository.findByCriteria(
+        ['ids', DmlOperators.IN, ids],
+        ['enabled', DmlOperators.EQUALS, true]
+    );
+  },
+
   findAll: async () => {
     return ActivityRepository.findByCriteria(['id', DmlOperators.NOT_NULL]);
   },

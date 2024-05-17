@@ -16,7 +16,8 @@ export const  ActivityTable = {
     name: 'name',
     levels: 'levels',
     abilities: 'abilities',
-    description: 'description'
+    description: 'description',
+    image_url: 'imageUrl'
   },
 
   rowToObject: (row) => {

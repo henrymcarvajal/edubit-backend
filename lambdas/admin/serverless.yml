@@ -116,6 +116,60 @@ functions:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
             arn: ${self:custom.cognitoUserPoolArnImport}
+  getActivitiesInBatch:
+    name: ${self:custom.stack-name}-get-activities-in-batch
+    description: lambda to retrieve a list of activities given a list of ids
+    handler: handlers/activity/getActivitiesInBatch.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/activities/batch/{ids}
+          method: get
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  createActivity:
+    name: ${self:custom.stack-name}-create-activity
+    description: lambda to create one activity
+    handler: handlers/activity/createActivity.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/activities
+          method: post
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
   updateActivity:
     name: ${self:custom.stack-name}-update-activity
     description: lambda to update one activity
@@ -210,6 +264,33 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/assets
           method: get
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  createAsset:
+    name: ${self:custom.stack-name}-create-asset
+    description: lambda to create one asset
+    handler: handlers/asset/createAsset.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/assets
+          method: post
           cors:
             origins:
               - ${self:custom.api-gateway-allowed-origins}
@@ -332,6 +413,33 @@ functions:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
             arn: ${self:custom.cognitoUserPoolArnImport}
+  createImprovement:
+    name: ${self:custom.stack-name}-create-improvement
+    description: lambda to create one improvement
+    handler: handlers/improvement/createImprovement.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/improvements
+          method: post
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
   updateImprovement:
     name: ${self:custom.stack-name}-update-improvement
     description: lambda to update one improvement
@@ -426,6 +534,33 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/institutions
           method: get
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  createInstitution:
+    name: ${self:custom.stack-name}-create-institution
+    description: lambda to create one institution
+    handler: handlers/institution/createInstitution.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/institutions
+          method: post
           cors:
             origins:
               - ${self:custom.api-gateway-allowed-origins}

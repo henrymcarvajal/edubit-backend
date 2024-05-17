@@ -14,10 +14,12 @@ export const selectClauseBuilder = (tableDefinition, columns, operators) => {
 
   const castedColumns = selectColumnsWithTypes(tableDefinition.columnToFieldMappings, tableDefinition.columnTypes);
 
+  const whereClause = whereClauseBuilder(tableAlias, columns, operators);
+
   return `SELECT ${castedColumns.map((column) => `${tableAlias}.${column}`).join(columnSeparator)}
           FROM ${qualifiedTableName} ${tableAlias}
           WHERE ` +
-      whereClauseBuilder(tableAlias, columns, operators) +
+      whereClause +
       orderClauseBuilder();
 };
 
