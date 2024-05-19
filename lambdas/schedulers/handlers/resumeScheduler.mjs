@@ -3,7 +3,7 @@ import { UpdateScheduleCommand } from '@aws-sdk/client-scheduler';
 import { AwsInfo } from '../../../client/aws/AwsInfo.mjs';
 import { HttpResponseCodes } from '../../../commons/web/webResponses.mjs';
 import { schedulerClient } from '../../../client/aws/clients/schedulerClient.mjs';
-import { SchedulerMessages } from './message.mjs';
+import { SchedulerMessages } from './messages.mjs';
 import { UserRoles } from '../../users/handlers/enrollment/constants.mjs';
 import { ValueValidationMessages } from '../../../commons/messages.mjs';
 import { WorkshopExecutionRepository } from '../../../persistence/repositories/workshopExecutionRepository.mjs';
@@ -20,7 +20,7 @@ const createUpdateScheduleCommandInput = (id) => {
     Target: {
       Arn: AwsInfo.SCHEDULERS_TARGET_QUEUE_ARN,
       RoleArn: AwsInfo.SCHEDULERS_EXECUTION_ROLE_ARN,
-      Input: `{id: ${id}, currentTimestamp: ${new Date().getTime()}}`,
+      Input: `{"id": "${id}"}`,
     },
     FlexibleTimeWindow: {
       Mode: 'OFF',

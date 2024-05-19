@@ -2,7 +2,7 @@ import { DeleteScheduleCommand } from '@aws-sdk/client-scheduler';
 
 import { HttpResponseCodes } from '../../../commons/web/webResponses.mjs';
 import { schedulerClient } from '../../../client/aws/clients/schedulerClient.mjs';
-import { SchedulerMessages } from './message.mjs';
+import { SchedulerMessages } from './messages.mjs';
 import { UserRoles } from '../../users/handlers/enrollment/constants.mjs';
 import { ValueValidationMessages } from '../../../commons/messages.mjs';
 import { WorkshopExecutionRepository } from '../../../persistence/repositories/workshopExecutionRepository.mjs';

@@ -2,14 +2,20 @@ import { schedulerClient } from '../../../client/aws/clients/schedulerClient.mjs
 
 import { ListSchedulesCommand } from '@aws-sdk/client-scheduler';
 
-const createListSchedulesCommandInput = () => {
+const SCHEDULER_NAME_PREFIX = 'edubit-timer-workshop-';
+
+export const createListSchedulesCommandInput = () => {
   return {
     GroupName: `default`
   };
 };
 
 export const getScheduleName = (id) => {
-  return `edubit-timer-workshop-${id}`;
+  return `${SCHEDULER_NAME_PREFIX}${id}`;
+};
+
+export const getScheduleId = (name) => {
+  return name.replace(SCHEDULER_NAME_PREFIX, '');
 };
 
 export const getDeployedSchedulesNames = async () => {

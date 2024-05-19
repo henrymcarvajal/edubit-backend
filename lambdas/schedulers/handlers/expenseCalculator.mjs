@@ -4,5 +4,7 @@ exports.handle = async (event) => {
 
   const {body} = extractBody(event);
 
+  console.log('body', body);
+
   console.log("Calculating expense...");
 };

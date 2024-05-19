@@ -1,9 +1,8 @@
 import { GetScheduleCommand } from '@aws-sdk/client-scheduler';
 
-import { AwsInfo } from '../../../client/aws/AwsInfo.mjs';
 import { HttpResponseCodes } from '../../../commons/web/webResponses.mjs';
 import { schedulerClient } from '../../../client/aws/clients/schedulerClient.mjs';
-import { SchedulerMessages } from './message.mjs';
+import { SchedulerMessages } from './messages.mjs';
 import { UserRoles } from '../../users/handlers/enrollment/constants.mjs';
 import { ValueValidationMessages } from '../../../commons/messages.mjs';
 import { WorkshopExecutionRepository } from '../../../persistence/repositories/workshopExecutionRepository.mjs';
@@ -14,17 +13,7 @@ import { sendResponse } from '../../../util/lambdaHelper.mjs';
 
 const createGetScheduleCommandInput = (id) => {
   return {
-    Name: getScheduleName(id),
-    ScheduleExpression: 'rate(1 minute)',
-    State: 'DISABLED',
-    Target: {
-      Arn: AwsInfo.SCHEDULERS_TARGET_QUEUE_ARN,
-      RoleArn: AwsInfo.SCHEDULERS_EXECUTION_ROLE_ARN,
-      Input: `{id: ${id}, currentTimestamp: ${new Date().getTime()}}`,
-    },
-    FlexibleTimeWindow: {
-      Mode: 'OFF',
-    },
+    Name: getScheduleName(id)
   };
 };
 

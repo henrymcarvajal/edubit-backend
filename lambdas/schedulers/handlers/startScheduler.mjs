@@ -4,7 +4,7 @@ import { AwsInfo } from '../../../client/aws/AwsInfo.mjs';
 import { HttpResponseCodes } from '../../../commons/web/webResponses.mjs';
 import { UserRoles } from '../../users/handlers/enrollment/constants.mjs';
 import { schedulerClient } from '../../../client/aws/clients/schedulerClient.mjs';
-import { SchedulerMessages } from './message.mjs';
+import { SchedulerMessages } from './messages.mjs';
 import { ValueValidationMessages } from '../../../commons/messages.mjs';
 import { WorkshopExecutionRepository } from '../../../persistence/repositories/workshopExecutionRepository.mjs';
 
@@ -58,6 +58,7 @@ exports.handle = async (event) => {
       const response = {};
       response.scheduleArn = createResponse.ScheduleArn;
       response.remainingTime = workshopExecution.remainingTime;
+      response.elapsedTime = workshopExecution.elapsedTime;
 
       workshopExecution.startTimestamp = new Date();
       const {entity, statement} = WorkshopExecutionRepository.upsertStatement(workshopExecution);

@@ -9,12 +9,10 @@ export const publishMessageToTopic = async (topicArn, message, rawMessageAttribu
   const messageAttributes = formatAttributes(rawMessageAttributes);
 
   const params = {
-    Message: message,
+    Message: JSON.stringify(message),
     TopicArn: topicArn,
     MessageAttributes: messageAttributes
   };
-
-  console.log('params', JSON.stringify(params));
 
   try {
     const command = new PublishCommand(params);

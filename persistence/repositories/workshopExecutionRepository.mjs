@@ -11,6 +11,10 @@ export const WorkshopExecutionRepository = {
     return WorkshopExecutionRepository.findByCriteria(['id', DmlOperators.EQUALS, id]);
   },
 
+  findByIdIn: async (ids) => {
+    return WorkshopExecutionRepository.findByCriteria(['id', DmlOperators.IN, ids]);
+  },
+
   findByInstitutionId: async (id) => {
     return WorkshopExecutionRepository.findViewByCriteria(WorkshopExecutionView, ['id', DmlOperators.EQUALS, id]);
   },

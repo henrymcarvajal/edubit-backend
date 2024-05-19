@@ -17,8 +17,6 @@ export const handle = async (event) => {
     return sendResponse(HttpResponseCodes.BAD_REQUEST, "Malformed input");
   }
 
-  console.log("decodeURIComponent(ids)", ids);
-
   try {
     let activities;
     if (roles === UserRoles.ADMIN) {

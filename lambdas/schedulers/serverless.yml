@@ -35,6 +35,7 @@ custom:
         - Ref: AWS::AccountId
         - ":"
         - ${self:custom.schedulersTargetQueueName}
+  timerCleanerQueueName: ${self:custom.stack-name}-timer-cleaner
   incomeCalculatorQueueName: ${self:custom.stack-name}-income-calculator
   expenseCalculatorQueueName: ${self:custom.stack-name}-expense-calculator
   ## EventBridge Scheduler
@@ -48,6 +49,8 @@ custom:
         - ${self:custom.schedulersExecutionRoleName}
   ## SNS
   TimerNotificationTopicName: ${self:custom.stack-name}-timer-notification
+  TimerCleanerQueueSubscriptionFilterPolicyValue: cleanup
+  WorkshopsQueueSubscriptionFilterPolicyValue: workshops
   # Packaging
   webpack:
     webpackConfig: ./webpack.config.js
@@ -158,6 +161,10 @@ resources:
       Properties:
         DisplayName: ${self:custom.TimerNotificationTopicName}
         TopicName: ${self:custom.TimerNotificationTopicName}
+    TimerCleanerQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.timerCleanerQueueName}
     IncomeCalculatorQueue:
       Type: AWS::SQS::Queue
       Properties:
@@ -166,6 +173,19 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: ${self:custom.expenseCalculatorQueueName}
+    TimerCleanerQueueSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint:
+          Fn::GetAtt:
+            - TimerCleanerQueue
+            - Arn
+        TopicArn:
+          Ref: TimerNotificationTopic
+        FilterPolicy:
+          topic:
+            - ${self:custom.TimerCleanerQueueSubscriptionFilterPolicyValue}
     IncomeCalculatorQueueSubscription:
       Type: AWS::SNS::Subscription
       Properties:
@@ -176,6 +196,9 @@ resources:
             - Arn
         TopicArn:
           Ref: TimerNotificationTopic
+        FilterPolicy:
+          topic:
+            - ${self:custom.WorkshopsQueueSubscriptionFilterPolicyValue}
     ExpenseCalculatorQueueSubscription:
       Type: AWS::SNS::Subscription
       Properties:
@@ -186,6 +209,9 @@ resources:
             - Arn
         TopicArn:
           Ref: TimerNotificationTopic
+        FilterPolicy:
+          topic:
+            - ${self:custom.WorkshopsQueueSubscriptionFilterPolicyValue}
     TimerNotificationTopicToQueuePolicy:
       Type: AWS::SQS::QueuePolicy
       Properties:
@@ -197,6 +223,9 @@ resources:
               Principal:
                 Service: 'sns.amazonaws.com'
               Resource:
+                - Fn::GetAtt:
+                  - TimerCleanerQueue
+                  - Arn
                 - Fn::GetAtt:
                   - IncomeCalculatorQueue
                   - Arn
@@ -210,10 +239,30 @@ resources:
                 # 'aws:SourceArn':
               # Ref: MySNSTopic
         Queues:
+          - Ref: TimerCleanerQueue
           - Ref: IncomeCalculatorQueue
           - Ref: ExpenseCalculatorQueue
 
 functions:
+  updateTime:
+    name: ${self:custom.stack-name}-update-time
+    description: lambda to register time and notify the change
+    handler: handlers/updateTime.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      timer_notification_topic_arn: !Ref TimerNotificationTopic
+      clean_scheduler_topic_name: ${self:custom.TimerCleanerQueueSubscriptionFilterPolicyValue}
+      workshops_topic_name: ${self:custom.WorkshopsQueueSubscriptionFilterPolicyValue}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - SchedulersTargetQueue
+              - Arn
+          batchSize: 1
   getScheduler:
     name: ${self:custom.stack-name}-get-scheduler
     description: lambda to get a scheduler
@@ -228,6 +277,35 @@ functions:
     events:
       - http:
           path: ${self:custom.api-gateway-resource}/{id}
+          method: get
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  getDeployedSchedulers:
+    name: ${self:custom.stack-name}-get-deployed-schedulers
+    description: lambda to get a list of deployed schedulers
+    handler: handlers/getDeployedSchedulers.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      schedulers_target_queue_arn: ${self:custom.schedulersTargetQueueArn}
+      schedulers_execution_role_arn: ${self:custom.schedulersExecutionRoleArn}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}
           method: get
           cors:
             origins:
@@ -357,21 +435,20 @@ functions:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
             arn: ${self:custom.cognitoUserPoolArnImport}
-  updateTime:
-    name: ${self:custom.stack-name}-update-time
-    description: lambda to register time and notify the change
-    handler: handlers/updateTime.handle
+  cleanScheduler:
+    name: ${self:custom.stack-name}-clean-scheduler
+    description: lambda to clean up a scheduler
+    handler: handlers/cleanScheduler.handle
     environment:
       region: ${self:provider.region}
       environment: ${self:custom.target-env}
       commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
       commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
-      timer_notification_topic_arn: !Ref TimerNotificationTopic
     events:
       - sqs:
           arn:
             Fn::GetAtt:
-              - SchedulersTargetQueue
+              - TimerCleanerQueue
               - Arn
           batchSize: 1
   incomeCalculator:
