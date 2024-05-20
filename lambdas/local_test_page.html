@@ -1,31 +1,35 @@
 <html lang="en">
-<script>
+<head>
+    <title>Test from Localhost</title>
+    <script>
 
-  const url = "https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/activities/batch/%5B%2259319c7b-0398-4dc1-a8a6-ff1811eab7db%22,%224e096d2b-4c28-4c3f-93a8-bea8ee6479a6%22,%22b95f67d5-78ad-4131-bf82-339377ebfd46%22%5D";
-  const token = "eyJraWQiOiJHdUpxWitYc09IQ1lEZGl4S1JiSEN5ZlFIXC94UGplUEZ6MXdFdGVKQzZ0VT0iLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIzNDk4MjQwOC01MDExLTcwMTctZDQzNC1hYzg3ZDkxYjU4ODIiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicHJvZmlsZSI6IkFETUlOIiwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tXC91cy1lYXN0LTFfaUkwWWZOeTJDIiwiY29nbml0bzp1c2VybmFtZSI6ImhlbnJ5bWNhcnZhamFsQG91dGxvb2suY29tIiwib3JpZ2luX2p0aSI6IjUyODgwM2Q5LTVkYmMtNDM4ZC1iYmFhLWI1Mzg2MDNkNmVjNyIsImF1ZCI6IjJsdWx2OHJmY284ajQ0OG9wNmYxOG5rZzM2IiwiZXZlbnRfaWQiOiI1NTUxNDljNC01M2U4LTQwYmUtODc4Ny1iYzExNDZhNjI1NzkiLCJ0b2tlbl91c2UiOiJpZCIsImF1dGhfdGltZSI6MTcxNTk3NjM1MCwiZXhwIjoxNzE1OTkwNzQ5LCJpYXQiOjE3MTU5NzYzNTAsImp0aSI6IjIyZjE4ZTg0LWM3MjgtNDI0My05N2Y4LTIyN2E3MjkwNmIwZCIsImVtYWlsIjoiaGVucnltY2FydmFqYWxAb3V0bG9vay5jb20ifQ.BhbnG5PKwsYNVZfgNIL3YWnTESnpsjedCW2Hdv751fVEBDEStjVkLdyClhqO8RM3qlAh0MfjMi99ULM59O6ruYydAYyG05SyE6snycxaEELX6Tp7-QiGIM8UoVV18FtGUnvni7jPTQKQssl6yVnBM7EPm8QqkPoBILEIAWbRLmZs-zDJMzxT-QqnDuiUxW7KYJdFHHTlNw7_K3DVXszwQEHYJfW8w7e4cayd07qlEu6ET_bVzxsU5XeSv1IU6aZ2f-Bd8ZJvIqf8sOOMA4Yq5ArSXoPdGA5hT2cUrc8p7dsTT28ZuHt_uE6JRUaliysuFpJpe1cPjd2lGgobrALG3A";
+      const id = '8d813d27-9680-4040-9580-c970fb486d43';
+      const url = `https://78vxincnn2.execute-api.us-east-1.amazonaws.com/dev/admin/activities/batch/%5B%2259319c7b-0398-4dc1-a8a6-ff1811eab7db%22,%224e096d2b-4c28-4c3f-93a8-bea8ee6479a6%22,%22b95f67d5-78ad-4131-bf82-339377ebfd46%22,%229d15a7fd-11de-46ef-ae4a-05810a0b3706%22,%22d3053a7f-f27f-4041-a087-98c403172886%22,%22b8e090cf-543c-4747-88b7-d8ae9a5de901%22,%227c0566a7-6e5b-441e-89ed-4ac839841a5d%22%5D`;
+      const token = "eyJraWQiOiJHdUpxWitYc09IQ1lEZGl4S1JiSEN5ZlFIXC94UGplUEZ6MXdFdGVKQzZ0VT0iLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhNDk4ZTRkOC03MGYxLTcwNjUtNzIzZi0wYWQ0NTA4ODkwOTEiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicHJvZmlsZSI6Ik1FTlRPUiIsImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy1lYXN0LTEuYW1hem9uYXdzLmNvbVwvdXMtZWFzdC0xX2lJMFlmTnkyQyIsImNvZ25pdG86dXNlcm5hbWUiOiJoZW5yeW1jYXJ2YWphbEBnbWFpbC5jb20iLCJvcmlnaW5fanRpIjoiOTAxMjQ3MzgtMTA4MC00NzVkLWIwNWUtODdhNWVhODdjNmExIiwiYXVkIjoiMmx1bHY4cmZjbzhqNDQ4b3A2ZjE4bmtnMzYiLCJldmVudF9pZCI6IjkwODk4NmZmLTNhZTctNGRlNS05N2ZiLTBkMDUzNjYxMzBkMiIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNzE2MjIwODUzLCJleHAiOjE3MTYyMzUyNTMsImlhdCI6MTcxNjIyMDg1MywianRpIjoiN2M5NzEzMTktNTViYy00OThiLWFjZjktNDY3MjUwM2VmOTA3IiwiZW1haWwiOiJoZW5yeW1jYXJ2YWphbEBnbWFpbC5jb20ifQ.JpBrBqCSRVMZZS0IIrUfzKqkracwlQhZaI1G1xO4he7inZhnWZj_tRI9-xa3xe5ZnLR1evZUHqYHYkeToDRD2Vj4_iDYTg1f8ykUugOuLKMXQN5hFklBYxQyQ2rw11rTzBHoaDDV-DaqFKtNs4yWNFS2HQujJAtS3hBCi1fZq4OlDU2QReDAOAO1fIMs_PsBE34HDUPyzRhnqQT2EOxxwpglC0sEai6V0df_SGAwIpwfbmeZdC8WAi9dXwUmlzZW9VCeCFkYiHBGnfVVMgV8onnSQ4hCmK07v3ND-NAvrYds7LXCBVwZZdUydqK5whDA64p26b8S90hcXDMa7XPijw";
 
-  async function logData() {
-    const response = await fetch(
-        url,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          }
-        }
-    );
-    const data = await response.json();
-    console.log(data);
+      async function logData() {
+        const response = await fetch(
+            url,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              }
+            }
+        );
+        const data = await response.json();
+        console.log(data);
 
-    const contents = document.getElementById("contents");
+        const contents = document.getElementById("contents");
 
-    contents.innerText = JSON.stringify(data);
+        contents.innerText = JSON.stringify(data, null, 4);
 
-  }
+      }
 
-  logData();
-</script>
+      logData();
+    </script>
+</head>
 <body>
 <div><pre id="contents"></pre></div>
 </body>
