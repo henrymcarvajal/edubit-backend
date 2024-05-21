@@ -1,5 +1,5 @@
 import { DmlOperators } from '../dml/dmlOperators.mjs';
-import { UserTable } from '../tables/userTable.mjs';
+import { User_UserMemberView, UserTable } from '../tables/userTable.mjs';
 
 import { insertClauseBuilder, parseCriteria, selectClauseBuilder, upsertClauseBuilder} from '../dml/dmlBuilders.mjs';
 import { invokeDatabaseLambda } from '../../util/dbHelper.mjs';
@@ -7,8 +7,8 @@ import { objectToRow } from '../ormMapper.mjs';
 
 export const UserRepository = {
 
-  findByEmail: async (email) => {
-    return UserRepository.findByCriteria(['email', DmlOperators.EQUALS, email]);
+  findViewByEmail: async (email) => {
+    return UserRepository.findViewByCriteria(User_UserMemberView, ['email', DmlOperators.EQUALS, email]);
   },
 
   findByCriteria: async (...criteria) => {
@@ -21,6 +21,19 @@ export const UserRepository = {
     let result = [];
     for (let row of rows) {
       result.push(UserTable.rowToObject(row));
+    }
+
+    return result;
+  },
+
+  findViewByCriteria: async (view, ...criteria) => {
+    const [_, __, values] = parseCriteria(criteria);
+
+    const rows = await invokeDatabaseLambda({statement: view.selectStatement, parameters: values});
+
+    let result = [];
+    for (let row of rows) {
+      result.push(view.rowToObject(row));
     }
 
     return result;

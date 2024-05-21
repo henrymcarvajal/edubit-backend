@@ -34,13 +34,13 @@ export const handler = async (event) => {
 
     const cognitoResponse = await cognito.adminInitiateAuth(params).promise();
 
-    const user = await UserRepository.findByEmail(email);
+    const [user] = await UserRepository.findViewByEmail(email);
     if (!user) {
-      return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: LoginMessages.USER_NOT_FOUND});
+      return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: LoginMessages.BAD_CREDENTIALS});
     }
 
     const response = {};
-    response.roles = user.roles;
+    response.memberId = user.memberId;
     response.token = cognitoResponse.AuthenticationResult.IdToken;
 
 
