@@ -28,6 +28,7 @@ export const handle = async (event) => {
     return sendResponse(HttpResponseCodes.OK, activities);
 
   } catch (error) {
+    console.log("Error on getActivitiesInBatch", error);
     return handleAdminError(error);
   }
 };

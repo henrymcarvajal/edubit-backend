@@ -21,8 +21,6 @@ exports.handle = async (event) => {
     const listCommand = new ListSchedulesCommand(listInput);
     const listResponse = await schedulerClient.send(listCommand);
 
-    console.log('listResponse.Schedules', listResponse.Schedules);
-
     const ids = listResponse.Schedules.length ? listResponse.Schedules.map(s => getScheduleId(s.Name)) : null;
 
     if (!ids) return sendResponse(HttpResponseCodes.NOT_FOUND);

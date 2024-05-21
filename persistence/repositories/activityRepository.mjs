@@ -17,7 +17,7 @@ export const ActivityRepository = {
 
   findByIdInEnabled: async (ids) => {
     return ActivityRepository.findByCriteria(
-        ['ids', DmlOperators.IN, ids],
+        ['id', DmlOperators.IN, ids],
         ['enabled', DmlOperators.EQUALS, true]
     );
   },
