@@ -1,5 +1,9 @@
 import { DmlOperators } from '../dml/dmlOperators.mjs';
-import { WorkshopExecutionTable, WorkshopExecutionView } from '../tables/workshopExecutionModel.mjs';
+import {
+  WorkshopExecutionTable,
+  WorkshopExecution_InstitutionView,
+  WorkshopExecution_ScheduleView
+} from '../tables/workshopExecutionModel.mjs';
 
 import { insertClauseBuilder, parseCriteria, selectClauseBuilder, upsertClauseBuilder } from '../dml/dmlBuilders.mjs';
 import { invokeDatabaseLambda } from '../../util/dbHelper.mjs';
@@ -16,7 +20,18 @@ export const WorkshopExecutionRepository = {
   },
 
   findByInstitutionId: async (id) => {
-    return WorkshopExecutionRepository.findViewByCriteria(WorkshopExecutionView, ['id', DmlOperators.EQUALS, id]);
+    return WorkshopExecutionRepository.findViewByCriteria(WorkshopExecution_InstitutionView, ['id', DmlOperators.EQUALS, id]);
+  },
+
+  findScheduleById: async (id) => {
+    return WorkshopExecutionRepository.findViewByCriteria(WorkshopExecution_ScheduleView, ['id', DmlOperators.EQUALS, id]);
+  },
+
+  findEnrollmentByParticipantId: async (id) => {
+    return WorkshopExecutionRepository.findByCriteria(
+        ['participants', DmlOperators.HAS_AS_TOP_LEVEL_KEY, id],
+        ['scheduled_date', DmlOperators.GREATER_THAN_OR_EQUAL_TO, new Date()]
+    );
   },
 
   findAll: async () => {

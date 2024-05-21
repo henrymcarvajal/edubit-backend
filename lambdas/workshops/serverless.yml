@@ -219,6 +219,35 @@ functions:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
             arn: ${self:custom.cognitoUserPoolArnImport}
+  getWorkshopExecutionTiming:
+    name: ${self:custom.stack-name}-get-workshop-execution-timing
+    description: lambda to query workshop execution timing
+    handler: handlers/execution/getWorkshopExecutionTiming.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/executions/{id}/timing
+          method: get
+          cors:
+            origins:
+              - http://localhost:8080
+              - http://localhost:63342
+              - http://localhost:99999
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
   getWorkshopExecutionByInstitution:
     name: ${self:custom.stack-name}-get-workshop-execution-by-institution
     description: lambda to query workshops' executions by institution

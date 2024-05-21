@@ -8,6 +8,7 @@ export const DmlOperators = {
   LESS_THAN: '<',
   LIKE: 'like',
   LEFT_CONTAINS: '@>',
+  HAS_AS_TOP_LEVEL_KEY: '?',
   NOT_NULL: 'is not null',
   NULL: 'is null'
 };

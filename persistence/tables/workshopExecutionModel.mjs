@@ -35,10 +35,8 @@ export const WorkshopExecutionTable = {
   }
 }
 
-export const WorkshopExecutionView = {
+export const WorkshopExecution_InstitutionView = {
   schemaName: DbConfig.SCHEMA,
-  tableName: 'workshop_execution',
-  qualifiedTableName: `${DbConfig.SCHEMA}.workshop_execution`,
   columnToFieldMappings: {
     // audit trails
     creation_date: 'creationDate',
@@ -62,11 +60,37 @@ export const WorkshopExecutionView = {
     remaining_time: 'int'
   },
   selectStatement: `select we.*, wd."name" as workshop_name
-                    from edubit.workshop_execution we
-                    join edubit.workshop_definition wd on wd.id = we.workshop_definition_id
-                    join edubit.institution i on i.id = we.institution_id where i.id = $1`,
+                    from ${DbConfig.SCHEMA}.workshop_execution we
+                    join ${DbConfig.SCHEMA}.workshop_definition wd on wd.id = we.workshop_definition_id
+                    join ${DbConfig.SCHEMA}.institution i on i.id = we.institution_id
+                    where i.id = $1`,
 
   rowToObject: (row) => {
-    return rowToObject(row, WorkshopExecutionView.columnToFieldMappings);
+    return rowToObject(row, WorkshopExecution_InstitutionView.columnToFieldMappings);
+  }
+}
+
+export const WorkshopExecution_ScheduleView = {
+  schemaName: DbConfig.SCHEMA,
+  tableName: 'workshop_execution',
+  qualifiedTableName: `${DbConfig.SCHEMA}.workshop_execution`,
+  columnToFieldMappings: {
+    // business
+    id: 'id',
+    elapsed_time: 'elapsedTime',
+    remaining_time: 'remainingTime',
+    schedule: 'schedule'
+  },
+  columnTypesMappings: {
+    elapsed_time: 'int',
+    remaining_time: 'int'
+  },
+  selectStatement: `select we.*, wd.schedule
+                    from ${DbConfig.SCHEMA}.workshop_execution we
+                    join ${DbConfig.SCHEMA}.workshop_definition wd on wd.id = we.workshop_definition_id
+                    where we.id = $1`,
+
+  rowToObject: (row) => {
+    return rowToObject(row, WorkshopExecution_ScheduleView.columnToFieldMappings);
   }
 }

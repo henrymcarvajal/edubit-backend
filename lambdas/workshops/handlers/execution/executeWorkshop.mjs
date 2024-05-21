@@ -53,14 +53,9 @@ export const handle = async (event) => {
 
     workshopConfig.sort(sorter);
 
-    console.log('workshopConfig', workshopConfig);
-
     let totalTime = workshopConfig.reduce((n, {duration}) => n + parseInt(duration), 0);
-    console.log('totalTime', totalTime);
     let currentTime = totalTime - body.remainingTime;
     let currentStage = range(currentTime, workshopConfig, 'duration');
-
-    console.log('currentStage', currentStage);
 
     if (!workshop) {
       return sendResponse(HttpResponseCodes.NOT_FOUND);
