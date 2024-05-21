@@ -1,8 +1,10 @@
 import { AwsInfo } from './awsInfo.mjs';
 import { CognitoIdentityServiceProvider } from 'aws-sdk';
+import { decode } from 'jsonwebtoken';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { LoginMessages } from './validations/messages.mjs';
 import { UserRepository } from '../../../../persistence/repositories/userRepository.mjs';
+import { UserRoles } from './constants.mjs';
 
 import { sendResponse } from '../../../../util/lambdaHelper.mjs';
 
@@ -13,10 +15,10 @@ const cognito = new CognitoIdentityServiceProvider();
 export const handler = async (event) => {
   try {
 
-    let {email, password} = JSON.parse(event.body);
+    let { email, password } = JSON.parse(event.body);
 
     if (!email || !password) {
-      return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: LoginMessages.EMPTY_CREDENTIALS});
+      return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: LoginMessages.EMPTY_CREDENTIALS });
     }
 
     email = email.toLowerCase();
@@ -34,33 +36,40 @@ export const handler = async (event) => {
 
     const cognitoResponse = await cognito.adminInitiateAuth(params).promise();
 
-    const [user] = await UserRepository.findViewByEmail(email);
+    const decodedIdToken = decode(cognitoResponse.AuthenticationResult.IdToken);
+
+    let user;
+    if (decodedIdToken.profile === UserRoles.ADMIN) {
+      [user] = await UserRepository.findByEmail(email);
+    } else {
+      [user] = await UserRepository.findViewByEmail(email);
+    }
+
     if (!user) {
-      return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: LoginMessages.BAD_CREDENTIALS});
+      return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: LoginMessages.BAD_CREDENTIALS });
     }
 
     const response = {};
     response.memberId = user.memberId;
     response.token = cognitoResponse.AuthenticationResult.IdToken;
 
-
     return sendResponse(HttpResponseCodes.OK, response);
   } catch (error) {
+    console.log('LogIn Cognito error', error);
+
     if (error instanceof CredentialsValidationError) {
-      return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: error.message});
+      return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: error.message });
     } else if (error.code) {
       switch (error.code) {
         case 'NotAuthorizedException':
         case 'UserNotFoundException':
-          return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: LoginMessages.BAD_CREDENTIALS});
+          return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: LoginMessages.BAD_CREDENTIALS });
         case 'UserNotConfirmedException':
-          return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: LoginMessages.USER_NOT_CONFIRMED});
+          return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: LoginMessages.USER_NOT_CONFIRMED });
       }
     }
 
-    console.log('LogIn Cognito error', error);
-
     const message = error.message ? error.message : 'Internal server error';
-    return sendResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, {message: message});
+    return sendResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, { message: message });
   }
 };

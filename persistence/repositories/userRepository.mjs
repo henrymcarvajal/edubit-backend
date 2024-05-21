@@ -1,11 +1,15 @@
 import { DmlOperators } from '../dml/dmlOperators.mjs';
-import { User_UserMemberView, UserTable } from '../tables/userTable.mjs';
+import { User_UserMemberView, UserModel } from '../tables/userModel.mjs';
 
 import { insertClauseBuilder, parseCriteria, selectClauseBuilder, upsertClauseBuilder} from '../dml/dmlBuilders.mjs';
 import { invokeDatabaseLambda } from '../../util/dbHelper.mjs';
 import { objectToRow } from '../ormMapper.mjs';
 
 export const UserRepository = {
+
+  findByEmail: async (email) => {
+    return UserRepository.findByCriteria(['email', DmlOperators.EQUALS, email]);
+  },
 
   findViewByEmail: async (email) => {
     return UserRepository.findViewByCriteria(User_UserMemberView, ['email', DmlOperators.EQUALS, email]);
@@ -20,7 +24,7 @@ export const UserRepository = {
 
     let result = [];
     for (let row of rows) {
-      result.push(UserTable.rowToObject(row));
+      result.push(UserModel.rowToObject(row));
     }
 
     return result;
@@ -40,18 +44,18 @@ export const UserRepository = {
   },
 
   selectStatement: (columns, operators) => {
-    return selectClauseBuilder(UserTable, columns, operators);
+    return selectClauseBuilder(UserModel, columns, operators);
   },
 
   insertStatement: (object) => {
-    const entity = objectToRow(object, UserTable.columnToFieldMappings);
-    const statement = insertClauseBuilder(UserTable.qualifiedTableName, UserTable.columnToFieldMappings, entity);
+    const entity = objectToRow(object, UserModel.columnToFieldMappings);
+    const statement = insertClauseBuilder(UserModel.qualifiedTableName, UserModel.columnToFieldMappings, entity);
     return {entity: entity, statement: statement};
   },
 
   upsertStatement: (object) => {
-    const entity = objectToRow(object, UserTable.columnToFieldMappings);
-    const statement = upsertClauseBuilder(UserTable.qualifiedTableName, UserTable.columnToFieldMappings, entity);
+    const entity = objectToRow(object, UserModel.columnToFieldMappings);
+    const statement = upsertClauseBuilder(UserModel.qualifiedTableName, UserModel.columnToFieldMappings, entity);
     return {entity: entity, statement: statement};
   }
 };
