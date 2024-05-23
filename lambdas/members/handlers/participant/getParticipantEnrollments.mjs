@@ -31,31 +31,51 @@ const findEnrollments = async (participantId) => {
 
   const registeredWorkshops = await WorkshopExecutionRepository.findEnrollmentByParticipantId(participantId);
 
-  const enrollments = [];
+  const enrollments = {};
   for (const workshop of registeredWorkshops) {
 
-    const activities = {};
+    const workshopHasStarted = workshop.startTimestamp && (new Date(workshop.startTimestamp) < new Date());
+    const workshopHasFinished = !!workshop.endTimestamp;
 
-    const participantActivities = workshop.participants[participantId].activities;
-
-    for (const activitiesEntry of Object.entries(participantActivities)) {
-      const activityId = activitiesEntry[1];
-      const activity = { activityId: activityId };
-
-      if (workshop.mentors) {
-
-        const mentor = Object.entries(workshop.mentors)
-            .find(entry => Object.values(entry[1].activities).includes(activityId));
-
-        if (mentor) {
-          activity.mentorId = mentor[0];
-        }
+    const enrollment = fillEnrollment(workshop, participantId);
+    if (!workshopHasStarted) {
+      if (!enrollments.incoming) {
+        enrollments.incoming = [];
       }
-      activities[activitiesEntry[0]] = activity;
+      enrollments.incoming.push(enrollment);
+    } else if (!workshopHasFinished) {
+      enrollments.current = enrollment;
     }
-
-    enrollments.push({ workshopId: workshop.id, scheduledDate: workshop.scheduledDate, activities: activities });
   }
 
   return enrollments;
+};
+
+const fillEnrollment = (workshop, participantId) => {
+
+  const activities = {};
+
+  const participantActivities = workshop.participants[participantId].activities;
+
+  for (const activitiesEntry of Object.entries(participantActivities)) {
+    const activityId = activitiesEntry[1];
+    const activity = { activityId: activityId };
+
+    if (workshop.mentors) {
+      const mentor = Object.entries(workshop.mentors)
+          .find(entry => Object.values(entry[1].activities).includes(activityId));
+
+      if (mentor) {
+        activity.mentorId = mentor[0];
+      }
+    }
+    activities[activitiesEntry[0]] = activity;
+  }
+
+  return {
+    workshopId: workshop.id,
+    scheduledDate: workshop.scheduledDate,
+    startTimestamp: workshop.startTimestamp,
+    activities: activities
+  };
 };

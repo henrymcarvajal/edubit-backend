@@ -30,7 +30,7 @@ export const WorkshopExecutionRepository = {
   findEnrollmentByParticipantId: async (id) => {
     return WorkshopExecutionRepository.findByCriteria(
         ['participants', DmlOperators.HAS_AS_TOP_LEVEL_KEY, id],
-        ['scheduled_date', DmlOperators.GREATER_THAN_OR_EQUAL_TO, new Date()]
+        ['scheduled_date', DmlOperators.GREATER_THAN_OR_EQUAL_TO, new Date(new Date().toISOString().slice(0, 10))]
     );
   },
 
