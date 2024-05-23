@@ -17,6 +17,9 @@ export const  AssetTable = {
     description: 'description',
     price: 'price'
   },
+  columnTypesMappings: {
+    price: 'int'
+  },
 
   rowToObject: (row) => {
     return rowToObject(row, AssetTable.columnToFieldMappings);

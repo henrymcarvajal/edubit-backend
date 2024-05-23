@@ -11,6 +11,17 @@ export const AssetRepository = {
     return AssetRepository.findByCriteria(['id', DmlOperators.EQUALS, id]);
   },
 
+  findByIdIn: async (ids) => {
+    return AssetRepository.findByCriteria(['id', DmlOperators.IN, ids]);
+  },
+
+  findByIdInEnabled: async (ids) => {
+    return AssetRepository.findByCriteria(
+        ['id', DmlOperators.IN, ids],
+        ['enabled', DmlOperators.EQUALS, true]
+    );
+  },
+
   findAll: async () => {
     return AssetRepository.findByCriteria(['id', DmlOperators.NOT_NULL]);
   },

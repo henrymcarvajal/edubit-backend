@@ -220,6 +220,33 @@ functions:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
             arn: ${self:custom.cognitoUserPoolArnImport}
+  purchaseAsset:
+    name: ${self:custom.stack-name}-purchase-asset-by-participant
+    description: lambda to purchase assets by participants
+    handler: handlers/participant/purchaseAsset.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource-participants}/{id}/workshop-execution/{workshopExecutionId}/assets
+          method: post
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
   enrollMentor:
     name: ${self:custom.stack-name}-enroll-mentor
     description: lambda to enroll mentors in workshops
