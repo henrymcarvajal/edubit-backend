@@ -1,0 +1,384 @@
+service: edubit-members
+org: edubit
+
+frameworkVersion: '3'
+configValidationMode: error
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+custom:
+  target-env: ${opt:stage, 'dev'}
+  stack-name: ${self:service}-${self:custom.target-env}
+  api-gateway-resource-participants: participants
+  api-gateway-resource-mentors: mentors
+  api-gateway-allowed-origins: '*'
+  # AWS Infrastructure stack names and imports
+  ## Database
+  commonsDatabaseStackName: ${self:org}-commons-database
+  commonsDatabaseLambdaNameImport:
+    Fn::ImportValue: ${self:custom.commonsDatabaseStackName}-${self:custom.target-env}-commonsDatabaseLambdaName
+  commonsDatabaseQueueNameImport:
+    Fn::ImportValue: ${self:custom.commonsDatabaseStackName}-${self:custom.target-env}-commonsDatabaseQueueName
+  ## Cognito
+  cognitoStackName: ${self:org}-security
+  cognitoUserPoolArnImport:
+    Fn::ImportValue: ${self:custom.cognitoStackName}-${self:custom.target-env}-cognitoUserPoolArn
+  # Packaging
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    #keepOutputDirectory: true
+  # Serverless offline
+  serverless-offline-sqs:
+    autoCreate: true
+    apiVersion: '2012-11-05'
+    endpoint: http://0.0.0.0:9324    # Endpoint where you will publish SQS message
+    region: eu-west-1            # Your preferred AWS region
+    accessKeyId: root
+    secretAccessKey: root
+    skipCacheInvalidation: false
+  serverless-offline:
+    httpPort: 4000
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs18.x
+  environment: ${file(./envs/${self:custom.target-env}.json)}
+  timeout: 15
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "lambda:InvokeFunction"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "sqs:SendMessage"
+          Resource: "*"
+
+resources:
+  Resources:
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    GatewayResponseDefault5XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'*'"
+        ResponseType: DEFAULT_5XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+
+functions:
+  enrollParticipant:
+    name: ${self:custom.stack-name}-enroll-participant
+    description: lambda to enroll participants in workshops
+    handler: handlers/participant/enrollParticipant.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource-participants}/{id}/enrollment
+          method: post
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  getParticipant:
+    name: ${self:custom.stack-name}-get-participant
+    description: lambda to retrieve participants
+    handler: handlers/participant/getParticipant.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource-participants}/{id}
+          method: get
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  getParticipantEnrollments:
+    name: ${self:custom.stack-name}-get-participant-enrollments
+    description: lambda to retrieve participants
+    handler: handlers/participant/getParticipantEnrollments.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource-participants}/{id}/enrollments
+          method: get
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  updateParticipant:
+    name: ${self:custom.stack-name}-update-participant
+    description: lambda to update participants
+    handler: handlers/participant/updateParticipant.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource-participants}/{id}
+          method: patch
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  deleteParticipant:
+    name: ${self:custom.stack-name}-delete-participant
+    description: lambda to disable participants
+    handler: handlers/participant/deleteParticipant.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource-participants}/{id}
+          method: delete
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  purchaseAsset:
+    name: ${self:custom.stack-name}-purchase-asset-by-participant
+    description: lambda to purchase assets by participants
+    handler: handlers/participant/purchaseAsset.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource-participants}/{id}/workshop-execution/{workshopExecutionId}/assets
+          method: post
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  buyImprovement:
+    name: ${self:custom.stack-name}-buy-improvement-by-participant
+    description: lambda to buy improvement by participants
+    handler: handlers/participant/buyImprovement.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource-participants}/{id}/workshop-execution/{workshopExecutionId}/improvements
+          method: post
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  enrollMentor:
+    name: ${self:custom.stack-name}-enroll-mentor
+    description: lambda to enroll mentors in workshops
+    handler: handlers/mentor/enrollMentor.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource-mentors}/{id}/enrollment
+          method: post
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  getMentor:
+    name: ${self:custom.stack-name}-get-mentor
+    description: lambda to retrieve mentors
+    handler: handlers/mentor/getMentor.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource-mentors}/{id}
+          method: get
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  updateMentor:
+    name: ${self:custom.stack-name}-update-mentor
+    description: lambda to update mentors
+    handler: handlers/mentor/updateMentor.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource-mentors}/{id}
+          method: patch
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  deleteMentor:
+    name: ${self:custom.stack-name}-delete-mentor
+    description: lambda to disable mentora
+    handler: handlers/mentor/deleteMentor.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource-mentors}/{id}
+          method: delete
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}

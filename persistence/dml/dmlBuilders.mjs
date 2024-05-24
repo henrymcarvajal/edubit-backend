@@ -8,30 +8,31 @@ export const parseCriteria = (criteria) => {
 };
 
 export const selectClauseBuilder = (tableDefinition, columns, operators) => {
-  const qualifiedTableName = `${tableDefinition.schemaName}.${tableDefinition.tableName}`;
-  const tableAlias = `${tableDefinition.schemaName.substring(0, 1)}${tableDefinition.tableName.substring(0, 1)}`;
+  const qualifiedTableName = `${ tableDefinition.schemaName }.${ tableDefinition.tableName }`;
+  const tableAlias = `${ tableDefinition.schemaName.substring(0, 1) }${ tableDefinition.tableName.substring(0, 1) }`;
   const columnSeparator = ',';
 
   const castedColumns = selectColumnsWithTypes(tableDefinition.columnToFieldMappings, tableDefinition.columnTypes);
 
   const whereClause = whereClauseBuilder(tableAlias, columns, operators);
+  const orderClause = orderClauseBuilder(tableAlias, tableDefinition.orderColumns);
 
-  return `SELECT ${castedColumns.map((column) => `${tableAlias}.${column}`).join(columnSeparator)}
-          FROM ${qualifiedTableName} ${tableAlias}
-          WHERE ` +
-      whereClause +
-      orderClauseBuilder();
+  return `SELECT ${ castedColumns.map((column) => `${ tableAlias }.${ column }`).join(columnSeparator) }
+          FROM ${ qualifiedTableName } ${ tableAlias }
+          WHERE ${ whereClause }
+          ${ orderClause ? orderClause : '' }`;
 };
 
-export const orderClauseBuilder = (alias, columns) => {
-  return '';
+export const orderClauseBuilder = (tableAlias, columns) => {
+  if (!columns || !columns.length) return '';
+  return `ORDER BY ${ columns.map(column => `${ tableAlias }.${ column }`).join(',') }`;
 };
 
 export const whereClauseBuilder = (alias, columns, operators) => {
   let whereClause = conditionClauseBuilder(alias, columns[0], operators[0], 1);
   for (const [i, column] of columns.entries()) {
     if (i > 0) {
-      whereClause = whereClause + ` AND ${conditionClauseBuilder(alias, column, operators[i], i + 1)}`;
+      whereClause = whereClause + ` AND ${ conditionClauseBuilder(alias, column, operators[i], i + 1) }`;
     }
   }
   return whereClause;
@@ -39,29 +40,29 @@ export const whereClauseBuilder = (alias, columns, operators) => {
 
 export const insertClauseBuilder = (qualifiedTableName, tableMappings, entity) => {
   const keys = extractEntityKeys(entity, tableMappings);
-  return `INSERT INTO ${qualifiedTableName} (${keys.join(',')})
-          VALUES (${keys.map(p => '${' + p + '}').join(',')}) RETURNING *`;
+  return `INSERT INTO ${ qualifiedTableName } (${ keys.join(',') })
+          VALUES (${ keys.map(p => '${' + p + '}').join(',') }) RETURNING *`;
 };
 
 export const upsertClauseBuilder = (qualifiedTableName, tableMappings, entity) => {
   const keys = extractEntityKeys(entity, tableMappings);
-  return `UPDATE ${qualifiedTableName}
-          SET ${keys.map(p => `${p} = \$\{${p}\}`).join(',')}
+  return `UPDATE ${ qualifiedTableName }
+          SET ${ keys.map(p => `${ p } = \$\{${ p }\}`).join(',') }
           WHERE id = \$\{id\} RETURNING *`;
 };
 
 const conditionClauseBuilder = (alias, column, operator, index) => {
   switch (operator) {
     case DmlOperators.LIKE:
-      return `${alias}.${column}::text ${operator} $${index}`;
+      return `${ alias }.${ column }::text ${ operator } $${ index }`;
     case DmlOperators.IN:
-      return `${alias}.${column} ${operator} ($${index}:csv)`;
+      return `${ alias }.${ column } ${ operator } ($${ index }:csv)`;
     case DmlOperators.NULL:
     case DmlOperators.NOT_NULL:
-      return `${alias}.${column} ${operator}`;
+      return `${ alias }.${ column } ${ operator }`;
   }
 
-  return `${alias}.${column} ${operator} $${index}`;
+  return `${ alias }.${ column } ${ operator } $${ index }`;
 };
 
 const extractEntityKeys = (entity, tableMappings) => {
@@ -76,7 +77,7 @@ const extractEntityKeys = (entity, tableMappings) => {
 
 const selectColumnsWithTypes = (columnToFieldMappings, columnTypes) => {
   if (columnTypes) {
-    return Object.keys(columnToFieldMappings).map(k => columnTypes[k] ? `${k}::${columnTypes[k]}` : `${k}`);
+    return Object.keys(columnToFieldMappings).map(k => columnTypes[k] ? `${ k }::${ columnTypes[k] }` : `${ k }`);
   }
-  return Object.keys(columnToFieldMappings).map(k => `${k}`);
-}
+  return Object.keys(columnToFieldMappings).map(k => `${ k }`);
+};
