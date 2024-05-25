@@ -15,7 +15,7 @@ let ALL_IMPROVEMENTS;
 export const handle = async (event) => {
 
   if (!ALL_IMPROVEMENTS) {
-    ALL_IMPROVEMENTS = (await ImprovementRepository.findAll()).reduce((accumulator, currentValue) => accumulator + `${ currentValue.code }`, '');
+    ALL_IMPROVEMENTS = await ImprovementRepository.findAll();
   }
 
   const { body } = extractBody(event);
@@ -40,57 +40,30 @@ export const handle = async (event) => {
     if (!foundImprovements.length) return sendResponse(HttpResponseCodes.NOT_FOUND, { message: `Improvements not found: ${ improvementIds }` });
     if (foundImprovements.length !== improvementIds.length) return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: `Invalid improvement ids` });
 
-    let allCodes = '';
+    if (!contains(ALL_IMPROVEMENTS, foundImprovements)) {
+      return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: 'Improper buying order. Should be 1, 2, 3.' });
+    }
+
     let foundCodes = foundImprovements
         .sort((a, b) => {
           return sorter(a, b, 'code');
         })
-        .reduce((accumulator, currentValue) => accumulator + `${ currentValue.code }`, '');
 
     if (progress.details.improvements) {
       const boughtCodes = progress.details.improvements
           .sort((a, b) => {
             return sorter(a, b, 'code');
-          })
-          .reduce((accumulator, currentValue) => accumulator + `${ currentValue.code }`, '');
+          });
 
-      if (boughtCodes.indexOf(foundCodes) >= 0) {
-        return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: 'Improvement already bought' });
+      const itemsBought = intersect(boughtCodes, foundCodes);
+      if (itemsBought.length) {
+        return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: `Improvement already bought: ${itemsBought}` });
       }
-
-      allCodes= foundCodes + boughtCodes;
-    }
-
-    console.log('allCodes', allCodes);
-
-
-    if (ALL_IMPROVEMENTS.indexOf(allCodes) === 0) {
-      return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: 'Requisites not met' });
     }
 
     const totalCost = foundImprovements.reduce((accumulator, improvement) => accumulator + improvement.price, 0);
 
     if (totalCost < progress.details.stats.balance) {
-      /*  if (!progress.details.assets) {
-          progress.details.assets = [];
-        }
-
-        for (const foundAsset of foundImprovements) {
-          let index = progress.details.assets.find(a => a.id === foundAsset.id);
-          if (index) {
-            index.count++;
-          } else {
-            progress.details.assets.push({ id: foundAsset.id, count: 1 });
-          }
-        }
-
-        progress.details.stats.balance -= totalCost;
-
-        const { entity, statement } = ParticipantProgressRepository.upsertStatement(progress);
-
-        const [savedProgress] =savedProgress
-            await execOnDatabase({ statement: statement, parameters: entity });*/
-
       return sendResponse(HttpResponseCodes.OK, { message: 'Items bought!' });
     } else {
       return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: 'Not enough funds!' });
@@ -100,3 +73,11 @@ export const handle = async (event) => {
     return handleMembersError(error);
   }
 };
+
+const contains = (a, b) => {
+  return (a.map(i => i.code).toString()).indexOf(b.map(i => i.code).toString()) > -1;
+}
+
+const intersect = (a, b) => {
+  return a.map(i => i.code).filter(i => b.map(i => i.code).includes(i));
+}
