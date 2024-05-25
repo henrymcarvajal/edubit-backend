@@ -9,6 +9,7 @@ import { handleMembersError } from '../errorHandling.mjs';
 import { sendResponse } from '../../../../util/lambdaHelper.mjs';
 import { sorter } from '../../../../commons/util/sorter.mjs';
 import { validate as uuidValidate } from 'uuid';
+import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 
 let ALL_IMPROVEMENTS;
 
@@ -40,31 +41,39 @@ export const handle = async (event) => {
     if (!foundImprovements.length) return sendResponse(HttpResponseCodes.NOT_FOUND, { message: `Improvements not found: ${ improvementIds }` });
     if (foundImprovements.length !== improvementIds.length) return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: `Invalid improvement ids` });
 
-    if (!contains(ALL_IMPROVEMENTS, foundImprovements)) {
+    if (!containsSubarray(ALL_IMPROVEMENTS.map(a => a.id), foundImprovements.map(f => f.id))) {
       return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: 'Improper buying order. Should be 1, 2, 3.' });
     }
 
-    let foundCodes = foundImprovements
-        .sort((a, b) => {
-          return sorter(a, b, 'code');
-        })
-
     if (progress.details.improvements) {
-      const boughtCodes = progress.details.improvements
-          .sort((a, b) => {
-            return sorter(a, b, 'code');
-          });
-
-      const itemsBought = intersect(boughtCodes, foundCodes);
-      if (itemsBought.length) {
-        return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: `Improvement already bought: ${itemsBought}` });
+      const itemsAlreadyBought = intersect(progress.details.improvements, foundImprovements.map(i => i.id));
+      if (itemsAlreadyBought.length) {
+        return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: `Improvement already bought: ${ itemsAlreadyBought }` });
       }
     }
 
     const totalCost = foundImprovements.reduce((accumulator, improvement) => accumulator + improvement.price, 0);
 
     if (totalCost < progress.details.stats.balance) {
-      return sendResponse(HttpResponseCodes.OK, { message: 'Items bought!' });
+      updateProgress(progress, foundImprovements)
+      /*if (!progress.details.improvements) {
+        progress.details.improvements = [];
+      }
+      foundImprovements.forEach(foundImprovement => {
+        progress.details.improvements.push(foundImprovement.id);
+      });
+
+      progress.details.stats.balance -= totalCost;
+      if (!progress.details.stats.currentImprovementRate) {
+        progress.details.stats.currentImprovementRate = 0.0;
+      }
+      progress.details.stats.currentImprovementRate += foundImprovements.reduce((accumulator, improvement) => accumulator + improvement.rate, 0.0);*/
+
+      const { entity, statement } = ParticipantProgressRepository.upsertStatement(progress);
+      const [savedProgress] =
+          await execOnDatabase({ statement: statement, parameters: entity });
+
+      return sendResponse(HttpResponseCodes.OK, savedProgress);
     } else {
       return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: 'Not enough funds!' });
     }
@@ -74,10 +83,31 @@ export const handle = async (event) => {
   }
 };
 
-const contains = (a, b) => {
-  return (a.map(i => i.code).toString()).indexOf(b.map(i => i.code).toString()) > -1;
-}
+const containsSubarray = (a, b) => {
+  return (a.toString()).indexOf(b.toString()) > -1;
+};
 
 const intersect = (a, b) => {
-  return a.map(i => i.code).filter(i => b.map(i => i.code).includes(i));
+  return a.filter(i => b.includes(i));
+};
+
+const sortBy = (array, prop) => {
+  return array.sort((a, b) => {
+    return sorter(a, b, prop);
+  });
+};
+
+const updateProgress = (progress, foundImprovements) => {
+  if (!progress.details.improvements) {
+    progress.details.improvements = [];
+  }
+  foundImprovements.forEach(foundImprovement => {
+    progress.details.improvements.push(foundImprovement.id);
+  });
+
+  progress.details.stats.balance -= totalCost;
+  if (!progress.details.stats.currentImprovementRate) {
+    progress.details.stats.currentImprovementRate = 0.0;
+  }
+  progress.details.stats.currentImprovementRate += foundImprovements.reduce((accumulator, improvement) => accumulator + improvement.rate, 0.0);
 }
