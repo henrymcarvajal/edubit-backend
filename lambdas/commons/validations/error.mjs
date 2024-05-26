@@ -5,6 +5,13 @@ export class BusinessRuleValidationError extends Error {
   }
 }
 
+export class InvalidUuidError extends BusinessRuleValidationError {
+  constructor(message) {
+    super(message);
+  }
+}
+
+
 export class InvalidActivitiesFormatError extends BusinessRuleValidationError {
   constructor(message) {
     super(message);

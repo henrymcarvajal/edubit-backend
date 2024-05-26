@@ -11,6 +11,10 @@ export const ImprovementRepository = {
     return ImprovementRepository.findByCriteria(['id', DmlOperators.EQUALS, id]);
   },
 
+  findByIdIn: async (ids) => {
+    return ImprovementRepository.findByCriteria(['id', DmlOperators.IN, ids]);
+  },
+
   findAll: async () => {
     return ImprovementRepository.findByCriteria(['id', DmlOperators.NOT_NULL]);
   },
