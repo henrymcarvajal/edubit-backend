@@ -17,7 +17,7 @@ export const  AssetTable = {
     description: 'description',
     price: 'price'
   },
-  columnTypesMappings: {
+  columnTypes: {
     price: 'int'
   },
 

@@ -27,7 +27,7 @@ export const ImprovementTable = {
     rate: 'float',
   },
   orderColumns: [
-    'code'
+    'prerequisite desc'
   ],
 
   rowToObject: (row) => {

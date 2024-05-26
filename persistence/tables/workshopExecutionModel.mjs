@@ -55,7 +55,7 @@ export const WorkshopExecution_InstitutionView = {
     remaining_time: 'remainingTime',
     workshop_name: 'workshopName',
   },
-  columnTypesMappings: {
+  columnTypes: {
     elapsed_time: 'int',
     remaining_time: 'int'
   },
@@ -81,7 +81,7 @@ export const WorkshopExecution_ScheduleView = {
     remaining_time: 'remainingTime',
     schedule: 'schedule'
   },
-  columnTypesMappings: {
+  columnTypes: {
     elapsed_time: 'int',
     remaining_time: 'int'
   },
