@@ -3,13 +3,13 @@ import { InstitutionRepository } from '../../../../persistence/repositories/inst
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
 import { handleAdminError } from '../errorHandling.mjs';
-import { isUUID } from '../../../../commons/validations.mjs';
 import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { validate as uuidValidate } from 'uuid';
 
 export const handle = async (event) => {
 
   const id = event.pathParameters.id;
-  if (!isUUID(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
+  if (!uuidValidate(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
 
   try {
     const [institution] = await InstitutionRepository.findById(id);

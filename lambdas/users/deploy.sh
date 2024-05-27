@@ -23,7 +23,7 @@ echo "${CYAN}Deploying ${STACK} stack...${NC}"
 echo "${YELLOW}> Updating Node dependencies...${NC}"
 npm install
 echo
-echo "${YELLOW}> Running #serverless profile...${NC}"
+echo "${YELLOW}> Running serverless profile...${NC}"
 $serverless
 echo
 echo "${GREEN}+ ${STACK} stack deployed.${NC}"

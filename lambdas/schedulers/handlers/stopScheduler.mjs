@@ -7,10 +7,10 @@ import { UserRoles } from '../../users/handlers/enrollment/constants.mjs';
 import { ValueValidationMessages } from '../../../commons/messages.mjs';
 import { WorkshopExecutionRepository } from '../../../persistence/repositories/workshopExecutionRepository.mjs';
 
-import { isUUID } from '../../../commons/validations.mjs';
-import { sendResponse } from '../../../util/lambdaHelper.mjs';
-import { getDeployedSchedulesNames, getScheduleName } from './getSchedulerList.mjs';
 import { execOnDatabase } from '../../../util/dbHelper.mjs';
+import { getDeployedSchedulesNames, getScheduleName } from './getSchedulerList.mjs';
+import { sendResponse } from '../../../util/lambdaHelper.mjs';
+import { validate as uuidValidate } from 'uuid';
 
 const createDeleteScheduleCommandInput = (id) => {
   return {
@@ -26,7 +26,7 @@ exports.handle = async (event) => {
   if (roles !== UserRoles.ADMIN) return sendResponse(HttpResponseCodes.FORBIDDEN);
 
   const id = event.pathParameters.id;
-  if (!isUUID(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
+  if (!uuidValidate(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
 
   try {
 

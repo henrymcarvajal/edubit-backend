@@ -7,8 +7,8 @@ import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 import { disable } from '../../../commons/fieldOperations.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { handleAdminError } from '../errorHandling.mjs';
-import { isUUID } from '../../../../commons/validations.mjs';
 import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { validate as uuidValidate } from 'uuid';
 
 export const handle = async (event) => {
 
@@ -16,7 +16,7 @@ export const handle = async (event) => {
   if (roles !== UserRoles.ADMIN) return sendResponse(HttpResponseCodes.FORBIDDEN);
 
   const id = event.pathParameters.id;
-  if (!isUUID(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
+  if (!uuidValidate(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
 
   try {
     const [foundInstitution] = await InstitutionRepository.findById(id);

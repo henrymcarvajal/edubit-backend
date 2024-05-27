@@ -35,6 +35,8 @@ export const execute = async (event) => {
       });
     }
   } catch (error) {
+    console.log("Database error", error);
+
     const result = buildFailedResult(error);
     if (wait) {
       return result;

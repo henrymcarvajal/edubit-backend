@@ -8,14 +8,14 @@ import { checkMobileNumberFormat } from '../../../../util/generalValidations.mjs
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { handleMembersError } from '../errorHandling.mjs';
-import { isUUID } from '../../../../commons/validations.mjs';
 import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { validate as uuidValidate } from 'uuid';
 import { validateActivities } from '../../../commons/validations/validations.mjs';
 
 export const handle = async (event) => {
 
   const id = event.pathParameters.id;
-  if (!isUUID(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
+  if (!uuidValidate(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
 
   const {profile: roles, email} = event.requestContext.authorizer.claims;
   const {mentor: foundMentor, response} = await authorizeAndFindMentor(roles, id, email);

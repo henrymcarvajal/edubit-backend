@@ -5,7 +5,7 @@ import { WorkshopDefinitionRepository } from '../../../../persistence/repositori
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
-import { isUUID } from '../../../../commons/validations.mjs';
+import { uuidValidate } from '../../../../commons/validations.mjs';
 import { sendErrorResponse, sendResponse } from '../../../../util/lambdaHelper.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 
@@ -40,7 +40,7 @@ const sorter = (a, b) => {
 export const handle = async (event) => {
 
   const id = event.pathParameters.id;
-  if (!isUUID(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
+  if (!uuidValidate(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
   const {body} = extractBody(event);
 
   if (!body) return sendResponse(204, null);

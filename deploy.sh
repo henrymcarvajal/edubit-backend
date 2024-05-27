@@ -27,7 +27,7 @@ echo "${CYAN}Deploying database stack...${NC}"
 echo "${YELLOW}> Updating Node dependencies...${NC}"
 npm install
 echo
-echo "${YELLOW}> Running #serverless profile...${NC}"
+echo "${YELLOW}> Running serverless profile...${NC}"
 $serverless
 echo
 echo "${GREEN}+ Database stack deployed.${NC}"
@@ -38,7 +38,7 @@ echo "${CYAN}Deploying Admin stack...${NC}"
 echo "${YELLOW}> Updating Node dependencies...${NC}"
 npm install
 echo
-echo "${YELLOW}> Running #serverless profile...${NC}"
+echo "${YELLOW}> Running serverless profile...${NC}"
 $serverless
 echo
 echo "${GREEN}+ Admin stack deployed.${NC}"
@@ -49,7 +49,7 @@ echo "${CYAN}Deploying Users stack...${NC}"
 echo "${YELLOW}> Updating Node dependencies...${NC}"
 npm install
 echo
-echo "${YELLOW}> Running #serverless profile...${NC}"
+echo "${YELLOW}> Running serverless profile...${NC}"
 $serverless
 echo
 echo "${GREEN}+ Users stack deployed.${NC}"
@@ -60,7 +60,7 @@ echo "${CYAN}Deploying workshops stack...${NC}"
 echo "${YELLOW}> Updating Node dependencies...${NC}"
 npm install
 echo
-echo "${YELLOW}> Running #serverless profile...${NC}"
+echo "${YELLOW}> Running serverless profile...${NC}"
 $serverless
 echo
 echo "${GREEN}+ Workshops stack deployed.${NC}"
@@ -71,7 +71,7 @@ echo "${CYAN}Deploying schedulers stack...${NC}"
 echo "${YELLOW}> Updating Node dependencies...${NC}"
 npm install
 echo
-echo "${YELLOW}> Running #serverless profile...${NC}"
+echo "${YELLOW}> Running serverless profile...${NC}"
 $serverless
 echo
 echo "${GREEN}+ Schedulers stack deployed.${NC}"
@@ -82,7 +82,7 @@ echo "${CYAN}Deploying members stack...${NC}"
 echo "${YELLOW}> Updating Node dependencies...${NC}"
 npm install
 echo
-echo "${YELLOW}> Running #serverless profile...${NC}"
+echo "${YELLOW}> Running serverless profile...${NC}"
 $serverless
 echo
 echo "${GREEN}+ Members stack deployed.${NC}"

@@ -7,8 +7,8 @@ import { WorkshopDefinitionTable } from '../../../../persistence/tables/workshop
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { handleWorkshopError } from '../errorHandling.mjs';
-import { isUUID } from '../../../../commons/validations.mjs';
 import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { validate as uuidValidate } from 'uuid';
 
 export const handle = async (event) => {
 
@@ -16,7 +16,7 @@ export const handle = async (event) => {
   if (roles !== UserRoles.ADMIN) return sendResponse(HttpResponseCodes.FORBIDDEN);
 
   const id = event.pathParameters.id;
-  if (!isUUID(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
+  if (!uuidValidate(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
 
   const {body: modifiedWorkshop} = extractBody(event);
   if (!modifiedWorkshop) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: 'Missing data'});
