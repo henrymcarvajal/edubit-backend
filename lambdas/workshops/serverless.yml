@@ -24,6 +24,8 @@ custom:
   cognitoStackName: ${self:org}-security
   cognitoUserPoolArnImport:
     Fn::ImportValue: ${self:custom.cognitoStackName}-${self:custom.target-env}-cognitoUserPoolArn
+  ## Authorizer
+  workshopOperationsAuthorizerLambdaName: ${self:custom.stack-name}-authorize-workshop-operation
   # Packaging
   webpack:
     webpackConfig: ./webpack.config.js
@@ -82,6 +84,11 @@ resources:
         ResponseType: DEFAULT_5XX
         RestApiId:
           Ref: 'ApiGatewayRestApi'
+  Outputs:
+    workshopOperationsAuthorizerLambdaName:
+      Value: ${self:custom.workshopOperationsAuthorizerLambdaName}
+      Export:
+        Name: ${self:custom.stack-name}-workshopOperationsAuthorizerLambdaName
 
 functions:
   createWorkshopDefinition:
@@ -302,3 +309,12 @@ functions:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
             arn: ${self:custom.cognitoUserPoolArnImport}
+  authorizeOperation:
+    name: ${self:custom.workshopOperationsAuthorizerLambdaName}
+    description: lambda to authorize operation during workshops' executions
+    handler: handlers/rules/authorizeWorkshopOperation.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}

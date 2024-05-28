@@ -7,7 +7,7 @@ import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { sendErrorResponse, sendResponse } from '../../../../util/lambdaHelper.mjs';
 
-import { BusinessRuleValidationError } from '../../../commons/validations/error.mjs';
+import { FailedValidationError } from '../../../commons/validations/error.mjs';
 
 export const handle = async (event) => {
 
@@ -51,7 +51,7 @@ export const handle = async (event) => {
     return sendResponse(HttpResponseCodes.CREATED, newEnrollment);
   } catch (error) {
 
-    if (error instanceof BusinessRuleValidationError) {
+    if (error instanceof FailedValidationError) {
       return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: error.message});
     }
 

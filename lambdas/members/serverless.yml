@@ -25,6 +25,10 @@ custom:
   cognitoStackName: ${self:org}-security
   cognitoUserPoolArnImport:
     Fn::ImportValue: ${self:custom.cognitoStackName}-${self:custom.target-env}-cognitoUserPoolArn
+  ## Workshop Operations Authorizer
+  workshopsStackName: ${self:org}-workshops
+  workshopOperationsAuthorizerLambdaNameImport:
+    Fn::ImportValue: ${self:custom.workshopsStackName}-${self:custom.target-env}-workshopOperationsAuthorizerLambdaName
   # Packaging
   webpack:
     webpackConfig: ./webpack.config.js
@@ -256,6 +260,7 @@ functions:
       environment: ${self:custom.target-env}
       commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
       commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      workshop_operations_authorizer: ${self:custom.workshopOperationsAuthorizerLambdaNameImport}
     events:
       - http:
           path: ${self:custom.api-gateway-resource-participants}/{id}/workshop-execution/{workshopExecutionId}/improvements

@@ -1,5 +1,8 @@
 import { DmlOperators } from '../dml/dmlOperators.mjs';
-import { WorkshopDefinitionTable } from '../tables/workshopDefinitionTable.mjs';
+import {
+  WorkshopDefinition_WorkshopExecutionView,
+  WorkshopDefinitionTable
+} from '../tables/workshopDefinitionTable.mjs';
 
 import { insertClauseBuilder, parseCriteria, selectClauseBuilder, upsertClauseBuilder} from '../dml/dmlBuilders.mjs';
 import { invokeDatabaseLambda } from '../../util/dbHelper.mjs';
@@ -11,6 +14,10 @@ export const WorkshopDefinitionRepository = {
     return WorkshopDefinitionRepository.findByCriteria(['id', DmlOperators.EQUALS, id]);
   },
 
+  findByWorkshopExecutionId: async (id) => {
+    return WorkshopDefinitionRepository.findViewByCriteria(WorkshopDefinition_WorkshopExecutionView, ['id', DmlOperators.EQUALS, id]);
+  },
+
   findByCriteria: async (...criteria) => {
     const [keys, operators, values] = parseCriteria(criteria);
 
@@ -20,6 +27,19 @@ export const WorkshopDefinitionRepository = {
     let result = [];
     for (let row of rows) {
       result.push(WorkshopDefinitionTable.rowToObject(row));
+    }
+
+    return result;
+  },
+
+  findViewByCriteria: async (view, ...criteria) => {
+    const [_, __, values] = parseCriteria(criteria);
+
+    const rows = await invokeDatabaseLambda({statement: view.selectStatement, parameters: values});
+
+    let result = [];
+    for (let row of rows) {
+      result.push(view.rowToObject(row));
     }
 
     return result;

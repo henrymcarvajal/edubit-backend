@@ -3,7 +3,7 @@ import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { ParticipantProgressRepository } from '../../../../persistence/repositories/participantProgressRepository.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
-import { authorizeAndFindParticipant } from './participantAuthorizer.mjs';
+import { authorizeAndFindParticipant } from '../participant/participantAuthorizer.mjs';
 import { handleMembersError } from '../errorHandling.mjs';
 import { sendResponse } from '../../../../util/lambdaHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';

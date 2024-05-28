@@ -12,9 +12,7 @@ export const execOnDatabase = async (statementsWithParameters, wait = true) => {
 
 export const invokeDatabaseLambda = async (statementsWithParams) => {
 
-  const lambdaResult = await invokeLambda(AwsInfo.COMMONS_DATABASE_LAMBDA, statementsWithParams);
-
-  const databaseResult = JSON.parse(Buffer.from(lambdaResult.Payload).toString());
+  const databaseResult = await invokeLambda(AwsInfo.COMMONS_DATABASE_LAMBDA, statementsWithParams);
 
   if (databaseResult.failed) {
     throw databaseResult;

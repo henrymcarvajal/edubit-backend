@@ -1,18 +1,30 @@
-import { BusinessRuleValidationError } from '../../commons/validations/error.mjs';
+import { FailedValidationError } from '../../commons/validations/error.mjs';
 
-export class InvalidRequestError extends BusinessRuleValidationError {
+export class InvalidRequestError extends FailedValidationError {
   constructor(message) {
     super(message);
   }
 }
 
-export class ImprovementRequestError extends BusinessRuleValidationError {
+export class ImprovementRequestError extends FailedValidationError {
   constructor(message) {
     super(message);
   }
 }
 
-export class InsufficientFundsError extends BusinessRuleValidationError {
+export class InsufficientFundsError extends FailedValidationError {
+  constructor(message) {
+    super(message);
+  }
+}
+
+export class UnauthorizedOperationError extends Error {
+  constructor(message) {
+    super(message);
+  }
+}
+
+export class NoPurchaseAllowedError extends UnauthorizedOperationError {
   constructor(message) {
     super(message);
   }

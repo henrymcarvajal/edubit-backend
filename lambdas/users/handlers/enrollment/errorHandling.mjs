@@ -1,11 +1,11 @@
-import { BusinessRuleValidationError } from '../../../commons/validations/error.mjs';
+import { FailedValidationError } from '../../../commons/validations/error.mjs';
 import { sendResponse } from '../../../../util/lambdaHelper.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { SignUpMessages } from './validations/messages.mjs';
 import { GenericMessages } from '../../../../util/messages.mjs';
 
 export const handleEnrollmentError = (error) => {
-  if (error instanceof BusinessRuleValidationError) {
+  if (error instanceof FailedValidationError) {
     return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: error.message});
   } else if (error.code) {
     switch (error.code) {

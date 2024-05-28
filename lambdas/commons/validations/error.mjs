@@ -1,24 +1,23 @@
-export class BusinessRuleValidationError extends Error {
+export class FailedValidationError extends Error {
   constructor(message) {
     super(message);
     this.message = message;
   }
 }
 
-export class InvalidUuidError extends BusinessRuleValidationError {
+export class InvalidUuidError extends FailedValidationError {
   constructor(message) {
     super(message);
   }
 }
 
-
-export class InvalidActivitiesFormatError extends BusinessRuleValidationError {
+export class InvalidActivitiesFormatError extends FailedValidationError {vch
   constructor(message) {
     super(message);
   }
 }
 
-export class ActivitiesNotFoundError extends BusinessRuleValidationError {
+export class ActivitiesNotFoundError extends FailedValidationError {
   constructor(message) {
     super(message);
   }

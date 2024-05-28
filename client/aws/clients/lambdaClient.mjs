@@ -17,6 +17,7 @@ export const invokeLambda = async (lambdaName, payload, isAsync = false) => {
 
   const command = new InvokeCommand(params);
 
-  return lambdaClient.send(command);
-};
+  const lambdaResult = await lambdaClient.send(command);
 
+  return JSON.parse(Buffer.from(lambdaResult.Payload).toString());
+};

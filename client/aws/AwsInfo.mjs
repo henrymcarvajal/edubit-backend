@@ -6,5 +6,6 @@ export const AwsInfo = {
   SCHEDULERS_EXECUTION_ROLE_ARN: process.env.schedulers_execution_role_arn,
   TIMER_NOTIFICATION_TOPIC_ARN: process.env.timer_notification_topic_arn,
   CLEAN_SCHEDULER_TOPIC_NAME: process.env.clean_scheduler_topic_name,
-  WORKSHOPS_TOPIC_NAME: process.env.workshops_topic_name
+  WORKSHOPS_TOPIC_NAME: process.env.workshops_topic_name,
+  WORKSHOPS_OPERATIONS_AUTHORIZER: process.env.workshop_operations_authorizer
 }
