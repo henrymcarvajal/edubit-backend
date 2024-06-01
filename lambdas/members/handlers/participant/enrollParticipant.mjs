@@ -5,7 +5,7 @@ import { authorizeAndFindParticipant } from './participantAuthorizer.mjs';
 import { crossCheckActivities } from '../activityChecks.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
-import { sendErrorResponse, sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 
 import { FailedValidationError } from '../../../commons/validations/error.mjs';
 
@@ -55,6 +55,6 @@ export const handle = async (event) => {
       return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: error.message});
     }
 
-    return sendErrorResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error);
+    return sendResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error, true);
   }
 };

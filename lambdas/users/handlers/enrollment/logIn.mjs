@@ -6,7 +6,7 @@ import { LoginMessages } from './validations/messages.mjs';
 import { UserRepository } from '../../../../persistence/repositories/userRepository.mjs';
 import { UserRoles } from './constants.mjs';
 
-import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 
 import { CredentialsValidationError } from './validations/error.mjs';
 

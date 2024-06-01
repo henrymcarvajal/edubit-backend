@@ -6,7 +6,7 @@ import { UserRoles } from '../../users/handlers/enrollment/constants.mjs';
 import { WorkshopExecutionRepository } from '../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { createListSchedulesCommandInput, getScheduleId, getScheduleName } from './getSchedulerList.mjs';
-import { sendResponse } from '../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../util/responseHelper.mjs';
 
 exports.handle = async (event) => {
 

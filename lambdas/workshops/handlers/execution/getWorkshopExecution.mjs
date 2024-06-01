@@ -2,7 +2,7 @@ import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
-import { sendErrorResponse, sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
 export const handle = async (event) => {
@@ -21,6 +21,6 @@ export const handle = async (event) => {
     return sendResponse(HttpResponseCodes.OK, workshopExecution);
 
   } catch (error) {
-    return sendErrorResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error);
+    return sendResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error, true);
   }
 };

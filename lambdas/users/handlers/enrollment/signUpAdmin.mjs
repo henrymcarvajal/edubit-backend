@@ -7,7 +7,7 @@ import { UserRoles } from './constants.mjs';
 import { checkProps } from '../../../../util/propsGetter.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { registerUserInCognito } from './cognito.mjs';
-import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validateCredentials } from './policies/credentialsPolicy.mjs';
 
 import { CredentialsValidationError } from './validations/error.mjs';

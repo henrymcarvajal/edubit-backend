@@ -2,7 +2,7 @@ import { AwsInfo } from '../enrollment/awsInfo.mjs';
 import { cognitoClient } from '../../../../client/aws/clients/cognitoClient.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 
-import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 
 import { ForgotPasswordCommand } from '@aws-sdk/client-cognito-identity-provider';
 

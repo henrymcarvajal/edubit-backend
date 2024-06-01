@@ -4,7 +4,7 @@ import { WorkshopExecutionRepository } from '../../../../persistence/repositorie
 
 import { authorizeAndFindParticipant } from './participantAuthorizer.mjs';
 import { handleMembersError } from '../errorHandling.mjs';
-import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
 export const handle = async (event) => {

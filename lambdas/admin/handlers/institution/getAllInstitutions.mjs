@@ -3,13 +3,14 @@ import { InstitutionRepository } from '../../../../persistence/repositories/inst
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 
 import { handleAdminError } from '../errorHandling.mjs';
-import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 
 export const handle = async (event) => {
 
-  const roles = event.requestContext.authorizer.claims.profile;
-
   try {
+
+    const roles = event.requestContext.authorizer.claims.profile;
+
     let institutions;
     if (roles === UserRoles.ADMIN) {
       institutions = await InstitutionRepository.findAll();

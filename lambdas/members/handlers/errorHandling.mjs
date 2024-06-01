@@ -1,7 +1,7 @@
 import { DatabaseErrorType } from '../../commons/database/handler/errorMapper.mjs';
 import { HttpResponseCodes } from '../../../commons/web/webResponses.mjs';
 
-import { sendErrorResponse, sendResponse } from '../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../util/responseHelper.mjs';
 
 import { FailedValidationError } from '../../commons/validations/error.mjs';
 import { UnauthorizedOperationError } from '../validations/error.mjs';
@@ -19,5 +19,5 @@ export const handleMembersError = (error) => {
     return sendResponse(HttpResponseCodes.FORBIDDEN, {message: error.message});
   }
 
-  return sendErrorResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error);
+  return sendResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error, true);
 };

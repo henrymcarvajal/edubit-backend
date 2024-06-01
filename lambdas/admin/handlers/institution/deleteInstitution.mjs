@@ -7,7 +7,7 @@ import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 import { disable } from '../../../commons/fieldOperations.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { handleAdminError } from '../errorHandling.mjs';
-import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
 export const handle = async (event) => {

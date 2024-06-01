@@ -10,7 +10,7 @@ import { WorkshopExecutionRepository } from '../../../persistence/repositories/w
 
 import { execOnDatabase } from '../../../util/dbHelper.mjs';
 import { getDeployedSchedulesNames, getScheduleName } from './getSchedulerList.mjs';
-import { sendErrorResponse, sendResponse } from '../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
 const createCreateScheduleCommandInput = (id) => {
@@ -72,6 +72,6 @@ exports.handle = async (event) => {
     }
 
   } catch (error) {
-    return sendErrorResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error);
+    return sendResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error, true);
   }
 };

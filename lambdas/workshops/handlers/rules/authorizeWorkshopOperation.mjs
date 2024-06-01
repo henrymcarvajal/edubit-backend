@@ -5,7 +5,7 @@ import { WorkshopExecutionRepository } from '../../../../persistence/repositorie
 
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { getWorkshopExecutionTiming } from '../execution/getWorkshopExecutionTiming.mjs';
-import { sendErrorResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
 import { Engine } from 'json-rules-engine';
@@ -28,7 +28,7 @@ export const handle = async (event) => {
 
   } catch (error) {
     console.log('AuthorizeWorkshopOperation error', error);
-    return sendErrorResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error);
+    return sendResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error, true);
   }
 };
 

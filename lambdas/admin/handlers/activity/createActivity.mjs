@@ -7,7 +7,7 @@ import { checkProps } from '../../../../util/propsGetter.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { handleAdminError } from '../errorHandling.mjs';
-import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 
 export const handle = async (event) => {
 

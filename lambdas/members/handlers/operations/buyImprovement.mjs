@@ -10,7 +10,7 @@ import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { handleMembersError } from '../errorHandling.mjs';
 import { invokeLambda } from '../../../../client/aws/clients/lambdaClient.mjs';
-import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
 import {

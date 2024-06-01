@@ -10,7 +10,7 @@ import { checkProps } from '../../../../util/propsGetter.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { handleEnrollmentError } from './errorHandling.mjs';
 import { registerUserInCognito } from './cognito.mjs';
-import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validateActivities } from '../../../commons/validations/validations.mjs';
 import { validateCredentials } from './policies/credentialsPolicy.mjs';
 

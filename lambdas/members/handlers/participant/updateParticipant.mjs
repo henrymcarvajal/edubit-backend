@@ -9,7 +9,7 @@ import { checkGrade } from '../../../users/handlers/enrollment/validations/valid
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { handleMembersError } from '../errorHandling.mjs';
-import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 import { validateActivities } from '../../../commons/validations/validations.mjs';
 

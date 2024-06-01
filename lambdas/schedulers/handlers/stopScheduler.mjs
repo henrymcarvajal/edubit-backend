@@ -9,7 +9,7 @@ import { WorkshopExecutionRepository } from '../../../persistence/repositories/w
 
 import { execOnDatabase } from '../../../util/dbHelper.mjs';
 import { getDeployedSchedulesNames, getScheduleName } from './getSchedulerList.mjs';
-import { sendResponse } from '../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
 const createDeleteScheduleCommandInput = (id) => {

@@ -6,7 +6,7 @@ import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { handleAdminError } from '../errorHandling.mjs';
-import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { checkProps } from '../../../../util/propsGetter.mjs';
 
 export const handle = async (event) => {

@@ -2,7 +2,7 @@ import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { MentorRepository } from '../../../../persistence/repositories/mentorRepository.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 
-import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 
 export const authorizeAndFindMentor = async (roles, id, email) => {
   let foundMentor;

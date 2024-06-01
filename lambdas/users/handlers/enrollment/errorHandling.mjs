@@ -1,5 +1,5 @@
 import { FailedValidationError } from '../../../commons/validations/error.mjs';
-import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { SignUpMessages } from './validations/messages.mjs';
 import { GenericMessages } from '../../../../util/messages.mjs';

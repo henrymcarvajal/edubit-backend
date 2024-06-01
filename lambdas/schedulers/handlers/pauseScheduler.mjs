@@ -9,7 +9,7 @@ import { ValueValidationMessages } from '../../../commons/messages.mjs';
 import { WorkshopExecutionRepository } from '../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { getDeployedSchedulesNames, getScheduleName } from './getSchedulerList.mjs';
-import { sendResponse } from '../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
 const createUpdateScheduleCommandInput = (id) => {

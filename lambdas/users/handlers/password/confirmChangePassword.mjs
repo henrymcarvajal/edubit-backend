@@ -3,7 +3,7 @@ import { cognitoClient } from '../../../../client/aws/clients/cognitoClient.mjs'
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { ChangePasswordMessages } from '../enrollment/validations/messages.mjs';
 
-import { sendErrorResponse, sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validatePassword } from '../enrollment/policies/credentialsPolicy.mjs';
 
 import { CredentialsValidationError } from '../enrollment/validations/error.mjs';
@@ -38,6 +38,6 @@ export const handler = async (event) => {
     }
 
     const message = error.message ? error.message : 'Internal server error';
-    return sendErrorResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, {message: message});
+    return sendResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, {message: message});
   }
 };

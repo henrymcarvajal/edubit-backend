@@ -2,7 +2,7 @@ import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { ParticipantRepository } from '../../../../persistence/repositories/participantRepository.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 
-import { sendResponse } from '../../../../util/lambdaHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 
 export const authorizeAndFindParticipant = async (roles, id, email) => {
   let foundParticipant;

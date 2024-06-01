@@ -1,6 +1,6 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { ImprovementRepository } from '../../../../persistence/repositories/improvementRepository.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
+import { WagesRepository } from '../../../../persistence/repositories/wageRepository.mjs';
 
 import { handleAdminError } from '../errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
@@ -12,10 +12,10 @@ export const handle = async (event) => {
   if (!uuidValidate(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
 
   try {
-    const [improvement] = await ImprovementRepository.findById(id);
-    if (!improvement) return sendResponse(HttpResponseCodes.NOT_FOUND);
+    const [wage] = await WagesRepository.findById(id);
+    if (!wage) return sendResponse(HttpResponseCodes.NOT_FOUND);
 
-    return sendResponse(HttpResponseCodes.OK, improvement);
+    return sendResponse(HttpResponseCodes.OK, wage);
 
   } catch (error) {
     return handleAdminError(error);
