@@ -25,8 +25,6 @@ export const ParticipantProgressRepository = {
 
     const rows = await invokeDatabaseLambda({ statement: statement, parameters: values });
 
-    console.log('rows', rows);
-
     let result = [];
     for (let row of rows) {
       result.push(ParticipantProgressTable.rowToObject(row));

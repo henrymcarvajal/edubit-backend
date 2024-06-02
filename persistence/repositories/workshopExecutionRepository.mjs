@@ -2,7 +2,8 @@ import { DmlOperators } from '../dml/dmlOperators.mjs';
 import {
   WorkshopExecutionTable,
   WorkshopExecution_InstitutionView,
-  WorkshopExecution_ScheduleView
+  WorkshopExecution_ScheduleView,
+  WorkshopExecution_DefinitionView
 } from '../tables/workshopExecutionModel.mjs';
 
 import { insertClauseBuilder, parseCriteria, selectClauseBuilder, upsertClauseBuilder } from '../dml/dmlBuilders.mjs';
@@ -28,7 +29,7 @@ export const WorkshopExecutionRepository = {
   },
 
   findEnrollmentByParticipantId: async (id) => {
-    return WorkshopExecutionRepository.findByCriteria(
+    return WorkshopExecutionRepository.findViewByCriteria(WorkshopExecution_DefinitionView,
         ['participants', DmlOperators.HAS_AS_TOP_LEVEL_KEY, id],
         ['scheduled_date', DmlOperators.GREATER_THAN_OR_EQUAL_TO, new Date(new Date().toISOString().slice(0, 10))]
     );

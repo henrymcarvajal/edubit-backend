@@ -8,13 +8,14 @@ import { WORKSHOP_OPERATION_NAMES } from '../../../../commons/workshops/operatio
 import { authorizeAndFindParticipant } from '../participant/participantAuthorizer.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
+import { getParticipantProgress } from './participanProgress.mjs';
 import { handleMembersError } from '../errorHandling.mjs';
 import { invokeLambda } from '../../../../client/aws/clients/lambdaClient.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
 import {
-  ImprovementRequestError, InsufficientFundsError, InvalidRequestError, NoPurchaseAllowedError
+  ImprovementRequestError, InsufficientFundsError, NoPurchaseAllowedError
 } from '../../validations/error.mjs';
 import { InvalidUuidError } from '../../../commons/validations/error.mjs';
 
@@ -88,14 +89,6 @@ const validateAndExtractParams = (event) => {
   }
 
   return { participantId, workshopExecutionId, improvementIds };
-};
-
-const getParticipantProgress = async (participantId, workshopExecutionId) => {
-  const [progress] = await ParticipantProgressRepository.findByParticipantIdAndWorkshopExecutionId(participantId, workshopExecutionId);
-  if (!progress) {
-    throw new InvalidRequestError(`Participant progress not found: ${ participantId }, ${ workshopExecutionId }`);
-  }
-  return progress;
 };
 
 const validateImprovementIds = async (improvementIds) => {

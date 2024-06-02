@@ -5,7 +5,7 @@ import { WorkshopDefinitionRepository } from '../../../../persistence/repositori
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
-import { uuidValidate } from '../../../../commons/validations.mjs';
+import { validate as uuidValidate } from 'uuid';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 

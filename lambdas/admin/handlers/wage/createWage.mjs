@@ -1,15 +1,13 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { InstitutionRepository } from '../../../../persistence/repositories/institutionRepository.mjs';
-import { InstitutionTable } from '../../../../persistence/tables/institutionTable.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
+import { WagesRepository } from '../../../../persistence/repositories/wageRepository.mjs';
+import { WagesTable } from '../../../../persistence/tables/wagesTable.mjs';
 
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { handleAdminError } from '../errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { checkProps } from '../../../../util/propsGetter.mjs';
-import { WagesRepository } from '../../../../persistence/repositories/wageRepository.mjs';
-import { WagesTable } from '../../../../persistence/tables/wagesTable.mjs';
 
 export const handle = async (event) => {
 

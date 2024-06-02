@@ -1,4 +1,6 @@
+import { ActivityRepository } from '../../../../persistence/repositories/activityRepository.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
+import { MentorRepository } from '../../../../persistence/repositories/mentorRepository.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
@@ -29,15 +31,15 @@ export const handle = async (event) => {
 
 const findEnrollments = async (participantId) => {
 
-  const registeredWorkshops = await WorkshopExecutionRepository.findEnrollmentByParticipantId(participantId);
-
   const enrollments = {};
+
+  const registeredWorkshops = await WorkshopExecutionRepository.findEnrollmentByParticipantId(participantId);
   for (const workshop of registeredWorkshops) {
 
     const workshopHasStarted = workshop.startTimestamp && (new Date(workshop.startTimestamp) < new Date());
     const workshopHasFinished = !!workshop.endTimestamp;
 
-    const enrollment = fillEnrollment(workshop, participantId);
+    const enrollment = await fillEnrollment(workshop, participantId);
     if (!workshopHasStarted) {
       if (!enrollments.incoming) {
         enrollments.incoming = [];
@@ -51,22 +53,30 @@ const findEnrollments = async (participantId) => {
   return enrollments;
 };
 
-const fillEnrollment = (workshop, participantId) => {
+const fillEnrollment = async (workshop, participantId) => {
 
   const activities = {};
 
   const participantActivities = workshop.participants[participantId].activities;
 
+  const foundActivities = await ActivityRepository.findByIdIn(Object.values(participantActivities));
+
   for (const activitiesEntry of Object.entries(participantActivities)) {
     const activityId = activitiesEntry[1];
-    const activity = { activityId: activityId };
+    const activity = { id: activityId };
+    activity.name = foundActivities.find(activity => activity.id === activityId).name;
 
     if (workshop.mentors) {
       const mentor = Object.entries(workshop.mentors)
           .find(entry => Object.values(entry[1].activities).includes(activityId));
 
       if (mentor) {
-        activity.mentorId = mentor[0];
+        const [foundMentor] = await MentorRepository.findById(mentor[0]);
+        if (foundMentor) {
+          activity.mentor = {};
+          activity.mentor.id = foundMentor.id;
+          activity.mentor.name = foundMentor.name;
+        }
       }
     }
     activities[activitiesEntry[0]] = activity;
@@ -74,8 +84,9 @@ const fillEnrollment = (workshop, participantId) => {
 
   return {
     workshopId: workshop.id,
+    workshopName: workshop.workshopName,
     scheduledDate: workshop.scheduledDate,
     startTimestamp: workshop.startTimestamp,
-    activities: activities
+    activities
   };
 };
