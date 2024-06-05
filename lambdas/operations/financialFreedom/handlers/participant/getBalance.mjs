@@ -1,27 +1,22 @@
-import { AssetRepository } from '../../../../persistence/repositories/assetRepository.mjs';
-import { ImprovementRepository } from '../../../../persistence/repositories/improvementRepository.mjs';
-import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { ValueValidationMessages } from '../../../../commons/messages.mjs';
+import { AssetRepository } from '../../../../../persistence/repositories/assetRepository.mjs';
+import { ImprovementRepository } from '../../../../../persistence/repositories/improvementRepository.mjs';
+import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
+import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 
 import { authorizeAndFindParticipant } from './participantAuthorizer.mjs';
 import { handleMembersError } from '../errorHandling.mjs';
-import { sendResponse } from '../../../../util/responseHelper.mjs';
+import { sendResponse } from '../../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
-import { getParticipantProgress } from '../operations/participanProgress.mjs';
+import { getParticipantProgress } from './participanProgress.mjs';
 
-import { InvalidUuidError } from '../../../commons/validations/error.mjs';
+import { InvalidUuidError } from '../../../../commons/validations/error.mjs';
 
 export const handle = async (event) => {
-
-  const id = event.pathParameters.id;
-  if (!uuidValidate(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: `${ ValueValidationMessages.VALUE_IS_NOT_UUID }: ${ id }` });
-
-  const { profile: roles, email } = event.requestContext.authorizer.claims;
 
   try {
 
     const { participantId, workshopExecutionId } = validateAndExtractParams(event);
-    const { response } = await authorizeAndFindParticipant(roles, participantId, email);
+    const { response } = await authorizeAndFindParticipant(event, participantId);
     if (response) return response;
 
     const progress = await getParticipantProgress(participantId, workshopExecutionId);
@@ -61,15 +56,15 @@ export const handle = async (event) => {
 
 const validateAndExtractParams = (event) => {
 
-  const participantId = event.pathParameters.id;
+  const participantId = event.pathParameters.participantId;
   const workshopExecutionId = event.pathParameters.workshopExecutionId;
 
   if (!uuidValidate(participantId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID }: ${ participantId }`);
+    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (participantId): ${ participantId }`);
   }
 
   if (!uuidValidate(workshopExecutionId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID }: ${ workshopExecutionId }`);
+    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId): ${ workshopExecutionId }`);
   }
 
   return { participantId, workshopExecutionId };

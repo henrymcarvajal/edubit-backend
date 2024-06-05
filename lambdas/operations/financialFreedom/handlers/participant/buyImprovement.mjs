@@ -1,23 +1,26 @@
-import { AwsInfo } from '../../../../client/aws/AwsInfo.mjs';
-import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { ImprovementRepository } from '../../../../persistence/repositories/improvementRepository.mjs';
-import { ParticipantProgressRepository } from '../../../../persistence/repositories/participantProgressRepository.mjs';
-import { ValueValidationMessages } from '../../../../commons/messages.mjs';
-import { WORKSHOP_OPERATION_NAMES } from '../../../../commons/workshops/operations.mjs';
+import { AwsInfo } from '../../../../../client/aws/AwsInfo.mjs';
+import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
+import { ImprovementRepository } from '../../../../../persistence/repositories/improvementRepository.mjs';
+import {
+  ParticipantProgressRepository
+} from '../../../../../persistence/repositories/participantProgressRepository.mjs';
+import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
+import { WORKSHOP_OPERATION_NAMES } from '../../definitions/operations.mjs';
 
-import { authorizeAndFindParticipant } from '../participant/participantAuthorizer.mjs';
-import { execOnDatabase } from '../../../../util/dbHelper.mjs';
-import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
+import { authorizeAndFindParticipant } from './participantAuthorizer.mjs';
+import { execOnDatabase } from '../../../../../util/dbHelper.mjs';
+import { extractBody } from '../../../../../client/aws/utils/bodyExtractor.mjs';
 import { getParticipantProgress } from './participanProgress.mjs';
 import { handleMembersError } from '../errorHandling.mjs';
-import { invokeLambda } from '../../../../client/aws/clients/lambdaClient.mjs';
-import { sendResponse } from '../../../../util/responseHelper.mjs';
+import { invokeLambda } from '../../../../../client/aws/clients/lambdaClient.mjs';
+import { messageQueue } from '../../../../../client/aws/clients/sqsClient.mjs';
+import { sendResponse } from '../../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
 import {
   ImprovementRequestError, InsufficientFundsError, NoPurchaseAllowedError
 } from '../../validations/error.mjs';
-import { InvalidUuidError } from '../../../commons/validations/error.mjs';
+import { InvalidUuidError } from '../../../../commons/validations/error.mjs';
 
 let ALL_IMPROVEMENTS;
 
@@ -27,9 +30,8 @@ export const handle = async (event) => {
     await initializeImprovements();
 
     const { participantId, workshopExecutionId, improvementIds } = validateAndExtractParams(event);
-    const { profile: roles, email } = event.requestContext.authorizer.claims;
 
-    const { response } = await authorizeAndFindParticipant(roles, participantId, email);
+    const { participant, response } = await authorizeAndFindParticipant(event, participantId);
     if (response) return response;
 
     await authorizeOperation(participantId, workshopExecutionId);
@@ -45,8 +47,11 @@ export const handle = async (event) => {
     validateImprovementsNotAlreadyBought(progress, requestedImprovements);
     validatePrerequisites(requestedImprovements, progress);
 
-    return await processImprovements(progress, requestedImprovements);
+    const savedProgress = await processImprovements(progress, requestedImprovements);
 
+    await notifyEvent(workshopExecutionId, participant, requestedImprovements);
+
+    return sendResponse(HttpResponseCodes.OK, savedProgress);
   } catch (error) {
     return handleMembersError(error);
   }
@@ -54,16 +59,17 @@ export const handle = async (event) => {
 
 const authorizeOperation = async (participantId, workshopExecutionId) => {
 
+  const operation = WORKSHOP_OPERATION_NAMES.PARTICIPANT_BUY_IMPROVEMENT;
   const { authorize } = await invokeLambda(
       AwsInfo.WORKSHOPS_OPERATIONS_AUTHORIZER,
       {
-        operationName: WORKSHOP_OPERATION_NAMES.BUY_IMPROVEMENT,
+        operationName: operation,
         participantId: participantId,
         workshopExecutionId: workshopExecutionId
       });
 
   if (!authorize) {
-    throw new NoPurchaseAllowedError(`Operation ${ WORKSHOP_OPERATION_NAMES.BUY_IMPROVEMENT } cannot be performed at this moment`);
+    throw new NoPurchaseAllowedError(`Operation ${ operation } cannot be performed at this moment`);
   }
 };
 
@@ -76,16 +82,16 @@ const initializeImprovements = async () => {
 const validateAndExtractParams = (event) => {
 
   const { body } = extractBody(event);
-  const participantId = event.pathParameters.id;
+  const participantId = event.pathParameters.participantId;
   const workshopExecutionId = event.pathParameters.workshopExecutionId;
   const improvementIds = body.improvementIds;
 
   if (!uuidValidate(participantId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID }: ${ participantId }`);
+    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (participantId)}: ${ participantId }`);
   }
 
   if (!uuidValidate(workshopExecutionId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID }: ${ workshopExecutionId }`);
+    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId): ${ workshopExecutionId }`);
   }
 
   return { participantId, workshopExecutionId, improvementIds };
@@ -134,9 +140,7 @@ const processImprovements = async (progress, requestedImprovements) => {
   updateProgress(progress, requestedImprovements, totalCost);
 
   const { entity, statement } = ParticipantProgressRepository.upsertStatement(progress);
-  const [savedProgress] = await execOnDatabase({ statement, parameters: entity });
-
-  return sendResponse(HttpResponseCodes.OK, savedProgress);
+  return await execOnDatabase({ statement, parameters: entity });
 };
 
 const containsSubarray = (a, b) => a.toString().indexOf(b.toString()) > -1;
@@ -191,3 +195,14 @@ const toView = (foundImprovement) => ({
   rate: foundImprovement.rate,
   prerequisite: foundImprovement.prerequisite
 });
+
+const notifyEvent = async (workshopExecutionId, participant, requestedImprovements) => {
+  const participantName = participant.name;
+  const improvementNames = requestedImprovements.map(i => i.name);
+  await messageQueue(AwsInfo.EVENT_REGISTRY_QUEUE, {
+    workshopExecutionId,
+    participantName,
+    operationName: WORKSHOP_OPERATION_NAMES.PARTICIPANT_BUY_IMPROVEMENT,
+    improvementNames
+  });
+};

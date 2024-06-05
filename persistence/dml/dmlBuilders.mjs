@@ -16,11 +16,13 @@ export const selectClauseBuilder = (tableDefinition, columns, operators) => {
 
   const whereClause = whereClauseBuilder(tableAlias, columns, operators);
   const orderClause = orderClauseBuilder(tableAlias, tableDefinition.orderColumns);
+  const limitClause = limitClauseBuilder(tableDefinition.limitRows);
 
   return `SELECT ${ castedColumns.map((column) => `${ tableAlias }.${ column }`).join(columnSeparator) }
           FROM ${ qualifiedTableName } ${ tableAlias }
           WHERE ${ whereClause }
-          ${ orderClause ? orderClause : '' }`;
+          ${ orderClause ? orderClause : '' }
+          ${ limitClause ? limitClause : '' }`;
 };
 
 export const orderClauseBuilder = (tableAlias, columns) => {
@@ -37,6 +39,10 @@ export const whereClauseBuilder = (alias, columns, operators) => {
   }
   return whereClause;
 };
+
+export const limitClauseBuilder = (limitRows) => {
+  if (limitRows) return `limit ${limitRows}`
+}
 
 export const insertClauseBuilder = (qualifiedTableName, tableMappings, entity) => {
   const keys = extractEntityKeys(entity, tableMappings);

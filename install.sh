@@ -1,3 +1,5 @@
+#!/bin/bash
+
 YELLOW=$(tput setaf 3)
 CYAN=$(tput setaf 6)
 GREEN=$(tput setaf 2)
@@ -57,6 +59,14 @@ echo "${YELLOW}> Updating Node dependencies...${NC}"
 npm install
 echo
 echo "${GREEN}+ Members stack installed.${NC}"
+echo
+
+cd "${BASE_PATH}"/lambdas/operations/financialFreedom/ || exit
+echo "${CYAN}Updating operations stack...${NC}"
+echo "${YELLOW}> Updating Node dependencies...${NC}"
+npm install
+echo
+echo "${GREEN}+ operations stack installed.${NC}"
 echo
 
 date '+%Y-%m-%d %H:%M:%S'

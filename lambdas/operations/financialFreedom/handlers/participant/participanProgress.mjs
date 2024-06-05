@@ -1,4 +1,4 @@
-import { ParticipantProgressRepository } from '../../../../persistence/repositories/participantProgressRepository.mjs';
+import { ParticipantProgressRepository } from '../../../../../persistence/repositories/participantProgressRepository.mjs';
 import { InvalidRequestError } from '../../validations/error.mjs';
 
 export const getParticipantProgress = async (participantId, workshopExecutionId) => {

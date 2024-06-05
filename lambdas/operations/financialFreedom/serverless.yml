@@ -1,0 +1,225 @@
+service: edubit-financial-freedom
+org: edubit
+
+frameworkVersion: '3'
+configValidationMode: error
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+custom:
+  target-env: ${opt:stage, 'dev'}
+  stack-name: ${self:service}-${self:custom.target-env}
+  api-gateway-resource: financial-freedom
+  api-gateway-allowed-origins: '*'
+  # AWS Infrastructure stack names and imports
+  ## Database
+  commonsDatabaseStackName: ${self:org}-commons-database
+  commonsDatabaseLambdaNameImport:
+    Fn::ImportValue: ${self:custom.commonsDatabaseStackName}-${self:custom.target-env}-commonsDatabaseLambdaName
+  commonsDatabaseQueueNameImport:
+    Fn::ImportValue: ${self:custom.commonsDatabaseStackName}-${self:custom.target-env}-commonsDatabaseQueueName
+  ## Cognito
+  cognitoStackName: ${self:org}-security
+  cognitoUserPoolArnImport:
+    Fn::ImportValue: ${self:custom.cognitoStackName}-${self:custom.target-env}-cognitoUserPoolArn
+  ## SQS
+  eventRegistryQueueName: ${self:custom.stack-name}-event-registry-queue
+  ## Workshop Operations Authorizer
+  workshopsStackName: ${self:org}-workshops
+  workshopOperationsAuthorizerLambdaNameImport:
+    Fn::ImportValue: ${self:custom.workshopsStackName}-${self:custom.target-env}-workshopOperationsAuthorizerLambdaName
+  # Packaging
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    #keepOutputDirectory: true
+  # Serverless offline
+  serverless-offline-sqs:
+    autoCreate: true
+    apiVersion: '2012-11-05'
+    endpoint: http://0.0.0.0:9324    # Endpoint where you will publish SQS message
+    region: eu-west-1            # Your preferred AWS region
+    accessKeyId: root
+    secretAccessKey: root
+    skipCacheInvalidation: false
+  serverless-offline:
+    httpPort: 4000
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs18.x
+  environment: ${file(./envs/${self:custom.target-env}.json)}
+  timeout: 15
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "lambda:InvokeFunction"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "sqs:SendMessage"
+          Resource: "*"
+
+resources:
+  Resources:
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    GatewayResponseDefault5XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'*'"
+        ResponseType: DEFAULT_5XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    EventRegistryQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.eventRegistryQueueName}
+
+functions:
+  purchaseAsset:
+    name: ${self:custom.stack-name}-purchase-asset-by-participant
+    description: lambda to purchase assets by participants
+    handler: handlers/participant/purchaseAsset.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      workshop_operations_authorizer: ${self:custom.workshopOperationsAuthorizerLambdaNameImport}
+      event_registry_queue: ${self:custom.eventRegistryQueueName}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/participant/{participantId}/workshop-execution/{workshopExecutionId}/assets
+          method: post
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  buyImprovement:
+    name: ${self:custom.stack-name}-buy-improvement-by-participant
+    description: lambda to buy improvement by participants
+    handler: handlers/participant/buyImprovement.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      workshop_operations_authorizer: ${self:custom.workshopOperationsAuthorizerLambdaNameImport}
+      event_registry_queue: ${self:custom.eventRegistryQueueName}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/participant/{participantId}/workshop-execution/{workshopExecutionId}/improvements
+          method: post
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  getBalance:
+    name: ${self:custom.stack-name}-get-balance-per-participant
+    description: lambda to get balance per participant
+    handler: handlers/participant/getBalance.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      workshop_operations_authorizer: ${self:custom.workshopOperationsAuthorizerLambdaNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/participant/{participantId}/workshop-execution/{workshopExecutionId}/balance
+          method: get
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  registerEvent:
+    name: ${self:custom.stack-name}-register-event
+    description: lambda to register events from the workshop
+    handler: handlers/notifications/registerEvent.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - EventRegistryQueue
+              - Arn
+          batchSize: 1
+  getEvents:
+    name: ${self:custom.stack-name}-get-events
+    description: lambda to fetch events for workshops
+    handler: handlers/notifications/getEvents.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/workshop-execution/{workshopExecutionId}/events
+          method: get
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+
+
+

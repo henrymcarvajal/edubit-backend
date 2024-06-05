@@ -1,0 +1,18 @@
+{
+  "name": "edubit-financial-freedom",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "serverless offline -s dev",
+    "debug": "export SLS_DEBUG=* && node --inspect /usr/local/bin/serverless offline",
+    "start-elastic-mq": "docker run --name Offline-SQS --rm -it -p 9324:9324 -p 9325:9325 softwaremill/elasticmq-native"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "webpack": "^5.73.0"
+  }
+}
