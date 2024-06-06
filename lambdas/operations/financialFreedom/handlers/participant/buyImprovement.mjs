@@ -11,7 +11,7 @@ import { authorizeAndFindParticipant } from './participantAuthorizer.mjs';
 import { execOnDatabase } from '../../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../../client/aws/utils/bodyExtractor.mjs';
 import { getParticipantProgress } from './participanProgress.mjs';
-import { handleMembersError } from '../errorHandling.mjs';
+import { handleError } from '../errorHandling.mjs';
 import { invokeLambda } from '../../../../../client/aws/clients/lambdaClient.mjs';
 import { messageQueue } from '../../../../../client/aws/clients/sqsClient.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
@@ -34,7 +34,7 @@ export const handle = async (event) => {
     const { participant, response } = await authorizeAndFindParticipant(event, participantId);
     if (response) return response;
 
-    await authorizeOperation(participantId, workshopExecutionId);
+    await authorizeOperation(workshopExecutionId, participantId);
 
     const progress = await getParticipantProgress(participantId, workshopExecutionId);
 
@@ -53,11 +53,11 @@ export const handle = async (event) => {
 
     return sendResponse(HttpResponseCodes.OK, savedProgress);
   } catch (error) {
-    return handleMembersError(error);
+    return handleError(error);
   }
 };
 
-const authorizeOperation = async (participantId, workshopExecutionId) => {
+const authorizeOperation = async (workshopExecutionId, participantId) => {
 
   const operation = WORKSHOP_OPERATION_NAMES.PARTICIPANT_BUY_IMPROVEMENT;
   const { authorize } = await invokeLambda(

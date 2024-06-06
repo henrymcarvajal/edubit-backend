@@ -4,7 +4,7 @@ import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 
 import { authorizeAndFindParticipant } from './participantAuthorizer.mjs';
-import { handleMembersError } from '../errorHandling.mjs';
+import { handleError } from '../errorHandling.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 import { getParticipantProgress } from './participanProgress.mjs';
@@ -49,7 +49,7 @@ export const handle = async (event) => {
     return sendResponse(HttpResponseCodes.OK, progressView);
 
   } catch (error) {
-    return handleMembersError(error);
+    return handleError(error);
   }
 };
 

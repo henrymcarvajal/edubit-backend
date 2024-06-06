@@ -46,20 +46,28 @@ const validateAndExtractParams = (event) => {
   return { workshopExecutionId, participantName, operationName, list };
 };
 
-const verbalize = (participantName, operationName, list) => {
+const verbalize = (participantName, operationName, complement) => {
 
+  let playerName = participantName.split(' ')[0];
   let verb = '';
   let elements = ['', ''];
+  let message = '';
 
   switch (operationName) {
     case WORKSHOP_OPERATION_NAMES.PARTICIPANT_BUY_IMPROVEMENT: {
       verb = 'comprar';
       elements = ['las', 'mejoras'];
+      message = `${ playerName } acaba de ${ verb } ${ elements[0] } siguientes ${ elements[1] }: ${ complement.join(', ') }`;
       break;
     }
     case WORKSHOP_OPERATION_NAMES.PARTICIPANT_PURCHASE_ASSET: {
       verb = 'adquirir';
       elements = ['los', 'activos'];
+      message = `${ playerName } acaba de ${ verb } ${ elements[0] } siguientes ${ elements[1] }: ${ complement.join(', ') }`;
+      break;
+    }
+    case WORKSHOP_OPERATION_NAMES.MENTOR_APPROVE_LEVEL: {
+      message = `${ playerName } acaba de subir al nivel ${ complement.level } de ${ complement.name }`;
       break;
     }
     default: {
@@ -67,5 +75,5 @@ const verbalize = (participantName, operationName, list) => {
     }
   }
 
-  return `${ participantName.split(' ')[0] } acaba de ${ verb } ${ elements[0] } siguientes ${ elements[1] }: ${ list.join(', ') }`;
+  return message;
 };

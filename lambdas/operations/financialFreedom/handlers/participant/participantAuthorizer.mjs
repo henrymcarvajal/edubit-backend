@@ -10,6 +10,7 @@ export const authorizeAndFindParticipant = async (event, id) => {
 
   let foundParticipant;
   let response;
+
   switch (profile) {
     case UserRoles.ADMIN:
       [foundParticipant] = await ParticipantRepository.findById(id);

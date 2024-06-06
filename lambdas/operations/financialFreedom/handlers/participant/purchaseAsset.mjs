@@ -8,7 +8,7 @@ import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 import { WORKSHOP_OPERATION_NAMES } from '../../definitions/operations.mjs';
 
 import { authorizeAndFindParticipant } from './participantAuthorizer.mjs';
-import { handleMembersError } from '../errorHandling.mjs';
+import { handleError } from '../errorHandling.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
 import { extractBody } from '../../../../../client/aws/utils/bodyExtractor.mjs';
 import { execOnDatabase } from '../../../../../util/dbHelper.mjs';
@@ -31,7 +31,7 @@ export const handle = async (event) => {
     const { participant, response } = await authorizeAndFindParticipant(event, participantId);
     if (response) return response;
 
-    await authorizeOperation(participantId, workshopExecutionId);
+    await authorizeOperation(workshopExecutionId, participantId);
 
     const progress = await getParticipantProgress(participantId, workshopExecutionId);
 
@@ -43,7 +43,7 @@ export const handle = async (event) => {
 
     return sendResponse(HttpResponseCodes.OK, savedProgress);
   } catch (error) {
-    return handleMembersError(error);
+    return handleError(error);
   }
 };
 
@@ -72,7 +72,7 @@ const validateAssetsIds = async (assetIds) => {
   return foundAssets;
 };
 
-const authorizeOperation = async (participantId, workshopExecutionId) => {
+const authorizeOperation = async (workshopExecutionId, participantId) => {
 
   const operation = WORKSHOP_OPERATION_NAMES.PARTICIPANT_PURCHASE_ASSET;
   const { authorize } = await invokeLambda(

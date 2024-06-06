@@ -34,12 +34,12 @@ const findEnrollments = async (participantId) => {
   const enrollments = {};
 
   const registeredWorkshops = await WorkshopExecutionRepository.findEnrollmentByParticipantId(participantId);
-  for (const workshop of registeredWorkshops) {
+  for (const workshopExecution of registeredWorkshops) {
 
-    const workshopHasStarted = workshop.startTimestamp && (new Date(workshop.startTimestamp) < new Date());
-    const workshopHasFinished = !!workshop.endTimestamp;
+    const workshopHasStarted = workshopExecution.startTimestamp && (new Date(workshopExecution.startTimestamp) < new Date());
+    const workshopHasFinished = !!workshopExecution.endTimestamp;
 
-    const enrollment = await fillEnrollment(workshop, participantId);
+    const enrollment = await fillEnrollment(workshopExecution, participantId);
     if (!workshopHasStarted) {
       if (!enrollments.incoming) {
         enrollments.incoming = [];
@@ -53,11 +53,11 @@ const findEnrollments = async (participantId) => {
   return enrollments;
 };
 
-const fillEnrollment = async (workshop, participantId) => {
+const fillEnrollment = async (workshopExecution, participantId) => {
 
   const activities = {};
 
-  const participantActivities = workshop.participants[participantId].activities;
+  const participantActivities = workshopExecution.participants[participantId].activities;
 
   const foundActivities = await ActivityRepository.findByIdIn(Object.values(participantActivities));
 
@@ -66,8 +66,8 @@ const fillEnrollment = async (workshop, participantId) => {
     const activity = { id: activityId };
     activity.name = foundActivities.find(activity => activity.id === activityId).name;
 
-    if (workshop.mentors) {
-      const mentor = Object.entries(workshop.mentors)
+    if (workshopExecution.mentors) {
+      const mentor = Object.entries(workshopExecution.mentors)
           .find(entry => Object.values(entry[1].activities).includes(activityId));
 
       if (mentor) {
@@ -83,10 +83,10 @@ const fillEnrollment = async (workshop, participantId) => {
   }
 
   return {
-    workshopId: workshop.id,
-    workshopName: workshop.workshopName,
-    scheduledDate: workshop.scheduledDate,
-    startTimestamp: workshop.startTimestamp,
+    workshopExecutionId: workshopExecution.id,
+    workshopName: workshopExecution.workshopName,
+    scheduledDate: workshopExecution.scheduledDate,
+    startTimestamp: workshopExecution.startTimestamp,
     activities
   };
 };

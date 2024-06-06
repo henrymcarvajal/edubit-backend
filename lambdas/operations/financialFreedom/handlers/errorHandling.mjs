@@ -6,7 +6,7 @@ import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { FailedValidationError } from '../../../commons/validations/error.mjs';
 import { UnauthorizedOperationError } from '../validations/error.mjs';
 
-export const handleMembersError = (error) => {
+export const handleError = (error) => {
   if (error.type === DatabaseErrorType[DatabaseErrorType.INTEGRITY_CONSTRAINT_VIOLATION]) {
     return sendResponse(HttpResponseCodes.BAD_REQUEST, error);
   }
@@ -16,7 +16,7 @@ export const handleMembersError = (error) => {
   }
 
   if (error instanceof UnauthorizedOperationError) {
-    return sendResponse(HttpResponseCodes.FORBIDDEN, {message: error.message});
+    return sendResponse(HttpResponseCodes.UNAUTHORIZED, {message: error.message});
   }
 
   return sendResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error, true);
