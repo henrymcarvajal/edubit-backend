@@ -241,9 +241,34 @@ functions:
           method: get
           cors:
             origins:
-              - http://localhost:8080
-              - http://localhost:63342
-              - http://localhost:99999
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  getWorkshopExecutionMentors:
+    name: ${self:custom.stack-name}-get-mentors-per-workshop-execution
+    description: lambda to query mentors for a workshop execution
+    handler: handlers/execution/getWorkshopExecutionMentors.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/executions/{id}/mentors
+          method: get
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
             headers:
               - Content-Type
               - Authorization
@@ -309,12 +334,4 @@ functions:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
             arn: ${self:custom.cognitoUserPoolArnImport}
-  authorizeOperation:
-    name: ${self:custom.workshopOperationsAuthorizerLambdaName}
-    description: lambda to authorize operation during workshops' executions
-    handler: handlers/rules/authorizeWorkshopOperation.handle
-    environment:
-      region: ${self:provider.region}
-      environment: ${self:custom.target-env}
-      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
-      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+

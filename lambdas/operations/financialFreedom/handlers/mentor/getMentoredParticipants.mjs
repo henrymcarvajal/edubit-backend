@@ -17,7 +17,7 @@ let ALL_ACTIVITIES;
 export const handle = async (event) => {
   try {
 
-    await initializeImprovements();
+    await initializeActivities();
 
     const { workshopExecutionId, mentorId } = validateAndExtractParams(event);
 
@@ -37,16 +37,16 @@ export const handle = async (event) => {
   }
 };
 
-const initializeImprovements = async () => {
+const initializeActivities = async () => {
+  const toView = (activity) => ({
+    id: activity.id,
+    name: activity.name
+  });
+
   if (!ALL_ACTIVITIES) {
     ALL_ACTIVITIES = (await ActivityRepository.findAll()).map(toView);
   }
 };
-
-const toView = (activity) => ({
-  id: activity.id,
-  name: activity.name
-});
 
 const processParticipantsProgress = async (workshopExecution, mentorId) => {
   const mentor = workshopExecution.mentors[mentorId];

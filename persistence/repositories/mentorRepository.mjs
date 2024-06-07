@@ -11,6 +11,10 @@ export const MentorRepository = {
     return MentorRepository.findByCriteria(['id', DmlOperators.EQUALS, id]);
   },
 
+  findByIdIn: async (ids) => {
+    return MentorRepository.findByCriteria(['id', DmlOperators.IN, ids]);
+  },
+
   findByEmail: async (email) => {
     return MentorRepository.findByCriteria(['email', DmlOperators.EQUALS, email]);
   },
