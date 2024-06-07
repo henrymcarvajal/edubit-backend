@@ -69,7 +69,9 @@ const processParticipantsProgress = async (workshopExecution, mentorId) => {
         };
       }
 
-      participantsPerActivity[activityId].participants.push({ name: progress.name, id: progress.id });
+      participantsPerActivity[activityId].participants.push(
+          { name: progress.name, id: progress.id, level: progress.details.stats.currentActivity.level}
+      );
     }
   }
 
