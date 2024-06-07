@@ -181,6 +181,33 @@ functions:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
             arn: ${self:custom.cognitoUserPoolArnImport}
+  getMentoredParticipants:
+    name: ${self:custom.stack-name}-get-mentored-participants
+    description: lambda to fetch participants mentored by mentor
+    handler: handlers/mentor/getMentoredParticipants.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/workshop-execution/{workshopExecutionId}/mentor/{mentorId}/participants
+          method: get
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
   getBalance:
     name: ${self:custom.stack-name}-get-balance-per-participant
     description: lambda to get balance per participant

@@ -1,7 +1,7 @@
 import { DmlOperators } from '../dml/dmlOperators.mjs';
 import {
   ParticipantProgressTable,
-  ParticipantProgressTable_CurrentActivityView
+  ParticipantProgressTable_CurrentActivityView, ParticipantProgressTable_ParticipantView
 } from '../tables/ParticipantProgressTable.mjs';
 
 import { insertClauseBuilder, parseCriteria, selectClauseBuilder, upsertClauseBuilder } from '../dml/dmlBuilders.mjs';
@@ -21,7 +21,20 @@ export const ParticipantProgressRepository = {
     )
   ),
 
-  findCurrentActivityByParticipantIdAndWorkshopExecutionId: async (workshopExecutionId, participantId) => (
+  findByWorkshopExecutionId: async (workshopExecutionId) => (
+      ParticipantProgressRepository.findByCriteria(
+          ['workshop_execution_id', DmlOperators.EQUALS, workshopExecutionId]
+      )
+  ),
+
+  findByWorkshopExecutionIdWithParticipantView: async (workshopExecutionId) => (
+     ParticipantProgressRepository.findViewByCriteria(
+          ParticipantProgressTable_ParticipantView,
+          ['workshop_execution_id', DmlOperators.EQUALS, workshopExecutionId]
+      )
+  ),
+
+  findCurrentActivityByParticipantIdAndWorkshopExecutionId: async (workshopExecutionId) => (
      ParticipantProgressRepository.findViewByCriteria(
          ParticipantProgressTable_CurrentActivityView,
         ['participant_id', DmlOperators.EQUALS, participantId],

@@ -19,5 +19,5 @@ export const handleError = (error) => {
     return sendResponse(HttpResponseCodes.UNAUTHORIZED, {message: error.message});
   }
 
-  return sendResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error, true);
+  return sendResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error);
 };

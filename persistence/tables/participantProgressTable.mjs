@@ -16,8 +16,8 @@ export const ParticipantProgressTable = {
     details: 'details'
   },
 
-  rowToObject: (row) => {
-    return rowToObject(row, ParticipantProgressTable.columnToFieldMappings);
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
   }
 };
 
@@ -34,8 +34,23 @@ export const ParticipantProgressTable_CurrentActivityView = {
                             where pp.participant_id = $1
                             and pp.workshop_execution_id = $2)`,
 
-  rowToObject: (row) => {
-    return rowToObject(row, ParticipantProgressTable_CurrentActivityView.columnToFieldMappings);
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
   }
 };
 
+export const ParticipantProgressTable_ParticipantView = {
+  columnToFieldMappings: {
+    id: 'id',
+    name: 'name',
+    details: 'details'
+  },
+  selectStatement: `select p.id, p.name, pp.details
+                      from edubit.participant_progress pp
+                      join edubit.participant p on pp.participant_id = p.id
+                     where pp.workshop_execution_id = $1`,
+
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
+  }
+};
