@@ -5,13 +5,20 @@ export class FailedValidationError extends Error {
   }
 }
 
+export class ReferenceNotFoundError extends Error {
+  constructor(message) {
+    super(message);
+    this.message = message;
+  }
+}
+
 export class InvalidUuidError extends FailedValidationError {
   constructor(message) {
     super(message);
   }
 }
 
-export class InvalidActivitiesFormatError extends FailedValidationError {vch
+export class InvalidActivitiesFormatError extends FailedValidationError {
   constructor(message) {
     super(message);
   }
