@@ -2,7 +2,7 @@ import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 
 import { AwsInfo } from '../AwsInfo.mjs';
 
-export const lambdaClient = new LambdaClient({region: AwsInfo.REGION});
+ const lambdaClient = new LambdaClient({region: AwsInfo.REGION});
 
 export const invokeLambda = async (lambdaName, payload, isAsync = false) => {
 

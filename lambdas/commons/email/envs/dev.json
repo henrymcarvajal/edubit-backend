@@ -1,0 +1,8 @@
+{
+  "email_host": "smtp.zoho.com",
+  "email_username": "info@edubit360.com",
+  "email_password": "Edubit.info+2024",
+  "smtp_port": 465,
+  "db_schema": "edubit",
+  "env_log_level": "DEBUG"
+}

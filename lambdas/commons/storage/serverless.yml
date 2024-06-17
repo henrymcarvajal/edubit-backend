@@ -1,0 +1,56 @@
+service: edubit-commons-storage
+org: edubit
+
+frameworkVersion: "3"
+configValidationMode: error
+
+custom:
+  target-env: ${opt:stage, 'dev'}
+  stack-name: ${self:service}-${self:custom.target-env}
+  # AWS Infrastructure
+  commonsS3BucketName: ${self:custom.stack-name}-bucket
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs18.x
+  timeout: 15
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "s3:PutObject"
+            - "s3:PutBucketPolicy"
+            - "s3:GetBucketPolicy"
+          Resource: "arn:aws:s3:::${self:custom.commonsS3BucketName}/*"
+
+resources:
+  Resources:
+    CommonsS3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.commonsS3BucketName}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+        OwnershipControls:
+          Rules:
+            - ObjectOwnership: ObjectWriter
+        CorsConfiguration:
+          CorsRules:
+            - AllowedMethods:
+                - GET
+              AllowedOrigins:
+                - "*"
+    CommonsS3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref CommonsS3Bucket
+        PolicyDocument:
+          Statement:
+            - Action:
+                - s3:GetObject
+              Resource:
+                - arn:aws:s3:::${self:custom.commonsS3BucketName}/*
+              Effect: Allow
+              Principal: "*"

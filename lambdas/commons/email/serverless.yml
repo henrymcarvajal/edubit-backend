@@ -1,0 +1,91 @@
+service: edubit-commons-email
+org: edubit
+
+frameworkVersion: "3"
+configValidationMode: error
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+custom:
+  target-env: ${opt:stage, 'dev'}
+  stack-name: ${self:service}-${self:custom.target-env}
+  # AWS Infrastructure
+  commonsEmailLambdaName: ${self:custom.stack-name}-lambda
+  commonsEmailQueueName: ${self:custom.stack-name}-queue
+  # Packaging
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    #keepOutputDirectory: true
+  # Serverless offline
+  serverless-offline-sqs:
+    autoCreate: true
+    apiVersion: '2012-11-05'
+    endpoint: http://0.0.0.0:9324    # Endpoint where you will publish SQS message
+    region: eu-west-1            # Your preferred AWS region
+    accessKeyId: root
+    secretAccessKey: root
+    skipCacheInvalidation: false
+  serverless-offline:
+    httpPort: 4000
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs18.x
+  environment: ${file(./envs/${self:custom.target-env}.json)}
+  timeout: 15
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "ses:SendEmail"
+          Resource: "*"
+
+resources:
+  Resources:
+    CommonsEmailQueueDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.commonsEmailQueueName}-dlq
+    CommonsEmailQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.commonsEmailQueueName}
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+              - CommonsEmailQueueDLQ
+              - Arn
+          maxReceiveCount: 3
+  Outputs:
+    commonsEmailStackName:
+      Value: ${self:service}
+      Export:
+        Name: commonsEmailStackName-${self:custom.target-env}
+    commonsEmailLambdaName:
+      Value: ${self:custom.commonsEmailLambdaName}
+      Export:
+        Name: ${self:custom.stack-name}-commonsEmailLambdaName
+    commonsEmailQueueName:
+      Value: ${self:custom.commonsEmailQueueName}
+      Export:
+        Name: ${self:custom.stack-name}-commonsEmailQueueName
+
+functions:
+  commonsEmail:
+    name: ${self:custom.commonsEmailLambdaName}
+    description: reusable lambda to send electronic mail
+    handler: handler/emailHandler.execute
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - CommonsEmailQueue
+              - Arn
+          batchSize: 1
