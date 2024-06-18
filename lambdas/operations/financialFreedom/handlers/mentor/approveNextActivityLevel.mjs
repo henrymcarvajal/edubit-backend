@@ -51,6 +51,10 @@ const validateAndExtractParams = (event) => {
     throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId)}: ${ workshopExecutionId }`);
   }
 
+  if (!uuidValidate(mentorId)) {
+    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (mentorId)}: ${ mentorId }`);
+  }
+
   if (!uuidValidate(participantId)) {
     throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (participantId)}: ${ participantId }`);
   }

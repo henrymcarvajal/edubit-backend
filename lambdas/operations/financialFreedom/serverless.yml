@@ -322,8 +322,8 @@ functions:
           path: ${self:custom.api-gateway-resource}/workshop-execution/{workshopExecutionId}/send-email
           method: post
   getCurrentActivity:
-    name: ${self:custom.stack-name}-get-events
-    description: lambda to fetch events for workshops
+    name: ${self:custom.stack-name}-get-current-activity
+    description: lambda to fetch the current activity for a participant
     handler: handlers/participant/getCurrentActivity.handle
     environment:
       region: ${self:provider.region}
@@ -331,7 +331,7 @@ functions:
       commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
     events:
       - http:
-          path: ${self:custom.api-gateway-resource}/workshop-execution/{workshopExecutionId}/participant/{participantId}/mentors
+          path: ${self:custom.api-gateway-resource}/workshop-execution/{workshopExecutionId}/participant/{participantId}/activities/current
           method: get
           cors:
             origins:
