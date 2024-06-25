@@ -3,7 +3,7 @@ import {
   WorkshopExecutionTable,
   WorkshopExecution_InstitutionView,
   WorkshopExecution_ScheduleView,
-  WorkshopExecution_DefinitionView
+  WorkshopExecution_DefinitionView, WorkshopExecution_FullDefinitionView
 } from '../tables/workshopExecutionModel.mjs';
 
 import { insertClauseBuilder, parseCriteria, selectClauseBuilder, upsertClauseBuilder } from '../dml/dmlBuilders.mjs';
@@ -22,6 +22,17 @@ export const WorkshopExecutionRepository = {
 
   findByInstitutionId: async (id) => {
     return WorkshopExecutionRepository.findViewByCriteria(WorkshopExecution_InstitutionView, ['id', DmlOperators.EQUALS, id]);
+  },
+
+  findCurrent: async () => {
+    const today = new Date();
+    const todayAtMidnight = new Date(new Date(today.getTime()).setHours(0,0,0,0));
+
+    return WorkshopExecutionRepository.findViewByCriteria(
+        WorkshopExecution_FullDefinitionView,
+        ['scheduled_date', DmlOperators.EQUALS, todayAtMidnight],
+        ['end_timestamp', DmlOperators.GREATER_THAN_OR_EQUAL_TO, today],
+    );
   },
 
   findScheduleById: async (id) => {
@@ -43,7 +54,7 @@ export const WorkshopExecutionRepository = {
     const [keys, operators, values] = parseCriteria(criteria);
 
     const statement = WorkshopExecutionRepository.selectStatement(keys, operators);
-    const rows = await invokeDatabaseLambda({statement: statement, parameters: values});
+    const rows = await invokeDatabaseLambda({ statement: statement, parameters: values });
 
     let result = [];
     for (let row of rows) {
@@ -56,7 +67,7 @@ export const WorkshopExecutionRepository = {
   findViewByCriteria: async (view, ...criteria) => {
     const [_, __, values] = parseCriteria(criteria);
 
-    const rows = await invokeDatabaseLambda({statement: view.selectStatement, parameters: values});
+    const rows = await invokeDatabaseLambda({ statement: view.selectStatement, parameters: values });
 
     let result = [];
     for (let row of rows) {
@@ -73,12 +84,12 @@ export const WorkshopExecutionRepository = {
   insertStatement: (object) => {
     const entity = objectToRow(object, WorkshopExecutionTable.columnToFieldMappings);
     const statement = insertClauseBuilder(WorkshopExecutionTable.qualifiedTableName, WorkshopExecutionTable.columnToFieldMappings, entity);
-    return {entity: entity, statement: statement};
+    return { entity: entity, statement: statement };
   },
 
   upsertStatement: (object) => {
     const entity = objectToRow(object, WorkshopExecutionTable.columnToFieldMappings);
     const statement = upsertClauseBuilder(WorkshopExecutionTable.qualifiedTableName, WorkshopExecutionTable.columnToFieldMappings, entity);
-    return {entity: entity, statement: statement};
+    return { entity: entity, statement: statement };
   }
-}
+};

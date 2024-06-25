@@ -9,10 +9,15 @@ import { getParticipantProgress } from './participanProgress.mjs';
 
 import { InvalidUuidError } from '../../../../commons/validations/error.mjs';
 import { ActivityRepository } from '../../../../../persistence/repositories/activityRepository.mjs';
+import { WagesRepository } from '../../../../../persistence/repositories/wageRepository.mjs';
+
+let ALL_WAGES;
 
 export const handle = async (event) => {
 
   try {
+
+    await initializeWages();
 
     const { mentorId, participantId, workshopExecutionId } = validateAndExtractParams(event);
     const { response } = await authorizeAndFindMentor(event, mentorId);
@@ -24,10 +29,13 @@ export const handle = async (event) => {
 
     const [currentActivity] = await ActivityRepository.findById(stats.currentActivity.id);
 
+    const wage = ALL_WAGES.find(wage => wage.description === currentActivity.levels);
+
     const currentActivityView = {
       id: stats.currentActivity.id,
-      level:stats.currentActivity.level,
-      supportMaterial: currentActivity.supportMaterial
+      level: stats.currentActivity.level,
+      supportMaterial: currentActivity.supportMaterial,
+      wage: wage[`level${stats.currentActivity.level}`]
     };
 
     return sendResponse(HttpResponseCodes.OK, currentActivityView);
@@ -57,3 +65,9 @@ const validateAndExtractParams = (event) => {
 
   return { mentorId, participantId, workshopExecutionId };
 };
+
+const initializeWages = async () => {
+    if (!ALL_WAGES) {
+      ALL_WAGES = (await WagesRepository.findAll());
+    }
+}

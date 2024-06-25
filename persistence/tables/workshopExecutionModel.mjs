@@ -30,8 +30,8 @@ export const WorkshopExecutionTable = {
     activities: 'json'
   },
 
-  rowToObject: (row) => {
-    return rowToObject(row, WorkshopExecutionTable.columnToFieldMappings);
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
   }
 }
 
@@ -65,8 +65,8 @@ export const WorkshopExecution_InstitutionView = {
                     join ${DbConfig.SCHEMA}.institution i on i.id = we.institution_id
                     where i.id = $1`,
 
-  rowToObject: (row) => {
-    return rowToObject(row, WorkshopExecution_InstitutionView.columnToFieldMappings);
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
   }
 }
 
@@ -90,8 +90,8 @@ export const WorkshopExecution_ScheduleView = {
                     join ${DbConfig.SCHEMA}.workshop_definition wd on wd.id = we.workshop_definition_id
                     where we.id = $1`,
 
-  rowToObject: (row) => {
-    return rowToObject(row, WorkshopExecution_ScheduleView.columnToFieldMappings);
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
   }
 }
 
@@ -127,7 +127,45 @@ export const WorkshopExecution_DefinitionView = {
                     where we.participants ? $1
                       and we.scheduled_date >= $2`,
 
-  rowToObject: (row) => {
-    return rowToObject(row, WorkshopExecution_DefinitionView.columnToFieldMappings);
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
+  }
+}
+
+export const WorkshopExecution_FullDefinitionView = {
+  schemaName: DbConfig.SCHEMA,
+  tableName: 'workshop_execution',
+  qualifiedTableName: `${DbConfig.SCHEMA}.workshop_execution`,
+  columnToFieldMappings: {
+    // audit trails
+    creation_date: 'creationDate',
+    modification_date: 'modificationDate',
+    // business
+    id: 'id',
+    workshop_definition_id: 'workshopDefinitionId',
+    institution_id: 'institutionId',
+    participants: 'participants',
+    mentors: 'mentors',
+    activities: 'activities',
+    scheduled_date: 'scheduledDate',
+    start_timestamp: 'startTimestamp',
+    end_timestamp: 'endTimestamp',
+    elapsed_time: 'elapsedTime',
+    remaining_time: 'remainingTime',
+    workshop_name: 'workshopName',
+    schedule: 'schedule'
+  },
+  columnTypes: {
+    elapsed_time: 'int',
+    remaining_time: 'int'
+  },
+  selectStatement: `select we.*, wd.name as workshop_name, wd.schedule as schedule
+                     from ${DbConfig.SCHEMA}.workshop_execution we
+                     join ${DbConfig.SCHEMA}.workshop_definition wd on wd.id = we.workshop_definition_id
+                    where we.scheduled_date = $1
+                      and we.end_timestamp is null`,
+
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
   }
 }
