@@ -3,7 +3,7 @@ import { HttpResponseCodes } from '../../../commons/web/webResponses.mjs';
 
 import { sendResponse } from '../../../util/responseHelper.mjs';
 
-import { FailedValidationError } from '../../commons/validations/error.mjs';
+import { FailedValidationError } from '../../commons/errors/error.mjs';
 
 export const handleAdminError = (error) => {
   if (error.type === DatabaseErrorType[DatabaseErrorType.INTEGRITY_CONSTRAINT_VIOLATION]) {

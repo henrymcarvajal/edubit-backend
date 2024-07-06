@@ -1,36 +1,63 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 import { WorkshopDefinitionRepository } from '../../../../persistence/repositories/workshopDefinitionRepository.mjs';
 import { WorkshopDefinitionTable } from '../../../../persistence/tables/workshopDefinitionTable.mjs';
 
+import { authorizeAdmin } from '../../../members/authorizers/adminAuthorizer.mjs';
 import { checkProps } from '../../../../util/propsGetter.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
-import { handleWorkshopError } from '../errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
+import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
+
+import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 
 export const handle = async (event) => {
-
-  const roles = event.requestContext.authorizer.claims.profile;
-  if (roles !== UserRoles.ADMIN) return sendResponse(HttpResponseCodes.FORBIDDEN);
-
-  const {body: workshop} = extractBody(event);
-
-  if (!workshop) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: 'Missing data'});
-
   try {
+    authorizeAdmin(event);
 
-    let props = ['name', 'schedule'];
-    checkProps(workshop, props);
+    const workshopDefinition = validateAndExtractParams(event);
 
-    const {statement, entity} = WorkshopDefinitionRepository.insertStatement(workshop);
+    validateWorkshopDefinitionData(workshopDefinition);
 
-    const [savedWorkshopRow] =
-        await execOnDatabase({statement: statement, parameters: entity});
+    const savedWorkshopDefinition = await saveWorkshopDefinition(workshopDefinition);
 
-    return sendResponse(HttpResponseCodes.OK, WorkshopDefinitionTable.rowToObject(savedWorkshopRow));
+    return sendResponse(HttpResponseCodes.OK, savedWorkshopDefinition);
 
   } catch (error) {
-    return handleWorkshopError(error);
+    return handleErrorResponse(error);
   }
+};
+
+const validateAndExtractParams = (event) => {
+  const { body: workshop } = extractBody(event);
+  if (!workshop) {
+    throw new InvalidInputError(`Missing workshop definition data`);
+  }
+  return workshop;
+};
+
+const validateWorkshopDefinitionData = (workshop) => {
+  let props = ['name', 'schedule'];
+  checkProps(workshop, props);
+
+  let keys = Object.keys(workshop.schedule);
+  if (keys.length === 0) {
+    throw new InvalidInputError('Missing activities data');
+  }
+
+  let activityProps = ['duration', 'description'];
+  keys.forEach((key) => {
+    const activity = workshop.schedule[key];
+    checkProps(activity, activityProps);
+    if (typeof activity.duration !== 'number') {
+      throw new InvalidInputError(`duration should be a number: ${ activity.duration }`);
+    }
+  });
+};
+
+const saveWorkshopDefinition = async (workshopDefinition) => {
+  const { statement, entity } = WorkshopDefinitionRepository.insertStatement(workshopDefinition);
+  const [savedWorkshopDefinition] =
+      await execOnDatabase({ statement: statement, parameters: entity });
+  return WorkshopDefinitionTable.rowToObject(savedWorkshopDefinition);
 };

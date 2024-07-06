@@ -1,17 +1,13 @@
-import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
-import { ParticipantRepository } from '../../../../../persistence/repositories/participantRepository.mjs';
-import { UserRoles } from '../../../../users/handlers/enrollment/constants.mjs';
+import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
+import { ParticipantRepository } from '../../../../persistence/repositories/participantRepository.mjs';
+import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 
-import { sendResponse } from '../../../../../util/responseHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 
-export const authorizeAndFindParticipant = async (event, id) => {
-
-  const { profile, email } = event.requestContext.authorizer.claims;
-
+export const authorizeAndFindParticipant = async (roles, id, email) => {
   let foundParticipant;
   let response;
-
-  switch (profile) {
+  switch (roles) {
     case UserRoles.ADMIN:
       [foundParticipant] = await ParticipantRepository.findById(id);
       if (!foundParticipant) {

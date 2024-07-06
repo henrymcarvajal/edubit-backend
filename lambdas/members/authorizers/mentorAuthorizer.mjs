@@ -1,17 +1,13 @@
-import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
-import { MentorRepository } from '../../../../../persistence/repositories/mentorRepository.mjs';
-import { UserRoles } from '../../../../users/handlers/enrollment/constants.mjs';
+import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
+import { MentorRepository } from '../../../../persistence/repositories/mentorRepository.mjs';
+import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 
-import { sendResponse } from '../../../../../util/responseHelper.mjs';
+import { sendResponse } from '../../../../util/responseHelper.mjs';
 
-export const authorizeAndFindMentor = async (event, id) => {
-
-  const { profile, email } = event.requestContext.authorizer.claims;
-
+export const authorizeAndFindMentor = async (roles, id, email) => {
   let foundMentor;
   let response;
-
-  switch (profile) {
+  switch (roles) {
     case UserRoles.ADMIN:
       [foundMentor] = await MentorRepository.findById(id);
       if (!foundMentor) {
