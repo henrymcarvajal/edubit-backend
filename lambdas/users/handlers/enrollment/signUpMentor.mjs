@@ -11,10 +11,41 @@ import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { handleEnrollmentError } from './errorHandling.mjs';
 import { registerUserInCognito } from './cognito.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
-import { validateActivities } from '../../../commons/validations/validations.mjs';
 import { validateCredentials } from './policies/credentialsPolicy.mjs';
 
 const MENTOR_PROPS = ['email', 'password', 'name', 'phone'];
+
+export const handler = async (event) => {
+  try {
+    const data = await validateAndExtractParams(event);
+
+    const user = createUser(data);
+    await registerUserInCognito(user.email, data.password, UserRoles.MENTOR);
+    const savedUser = await saveUser(user);
+
+    const mentor = createMentor(data, savedUser);
+    await saveMentor(mentor);
+
+    return sendResponse(HttpResponseCodes.OK, { message: SignUpMessages.USER_REGISTRATION_SUCCESSFUL });
+  } catch (error) {
+    return handleEnrollmentError(error);
+  }
+};
+
+const validateAndExtractParams = async (event) => {
+  const data = JSON.parse(event.body);
+  checkProps(data, MENTOR_PROPS);
+
+  checkMobileNumberFormat(data.phone);
+  await validateCredentials(data.email, data.password);
+
+  const [phoneInDB] = await MentorRepository.findByCriteria(['phone', DmlOperators.EQUALS, data.phone]);
+  if (phoneInDB) {
+    return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: SignUpMessages.PHONE_ALREADY_EXISTS });
+  }
+
+  return data;
+};
 
 const createUser = (data) => {
   const user = {};
@@ -25,50 +56,22 @@ const createUser = (data) => {
   return user;
 };
 
+const saveUser = async (user) => {
+  const { statement, entity } = UserRepository.insertStatement(user);
+  const [savedUser] = await execOnDatabase({ statement, parameters: entity });
+  return savedUser;
+};
+
 const createMentor = (data, user) => {
   const mentor = {};
   mentor.userId = user.id;
   mentor.email = data.email.toLowerCase();
   mentor.name = data.name;
   mentor.phone = data.phone;
-  mentor.activities = data.activities;
   return mentor;
 };
 
-export const handler = async (event) => {
-
-  try {
-    const data = JSON.parse(event.body);
-    checkProps(data, MENTOR_PROPS);
-
-    checkMobileNumberFormat(data.phone);
-    await validateCredentials(data.email, data.password);
-
-    const [phoneInDB] = await MentorRepository.findByCriteria(
-        ['phone', DmlOperators.EQUALS, data.phone]
-    );
-    if (phoneInDB) {
-      return sendResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, {message: SignUpMessages.PHONE_ALREADY_EXISTS});
-    }
-
-    if (data.activities) await validateActivities(data.activities);
-
-    const user = createUser(data);
-
-    await registerUserInCognito(user.email, data.password, UserRoles.MENTOR);
-
-    const {statement: userStatement, entity: userEntity} = UserRepository.insertStatement(user);
-    const [savedUser] = await execOnDatabase([{statement: userStatement, parameters: userEntity}]);
-
-    const mentor = createMentor(data, savedUser);
-
-    const {statement: mentorStatement, entity: mentorEntity} = MentorRepository.insertStatement(mentor);
-
-    await execOnDatabase([{statement: mentorStatement, parameters: mentorEntity}]);
-
-    return sendResponse(HttpResponseCodes.OK, {message: SignUpMessages.USER_REGISTRATION_SUCCESSFUL});
-
-  } catch (error) {
-    return handleEnrollmentError(error);
-  }
+const saveMentor = async (mentor) => {
+  const { statement, entity } = MentorRepository.insertStatement(mentor);
+  await execOnDatabase({ statement, parameters: entity });
 };

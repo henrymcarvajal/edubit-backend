@@ -12,10 +12,39 @@ import { handleEnrollmentError } from './errorHandling.mjs';
 import { registerUserInCognito } from './cognito.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validateCredentials } from './policies/credentialsPolicy.mjs';
-import { validateActivities } from '../../../commons/validations/validations.mjs';
-
 
 const PARTICIPANT_PROPS = ['email', 'password', 'name', 'grade', 'parentEmail', 'parentPhone'];
+
+export const handler = async (event) => {
+  try {
+    const data = await validateAndExtractParams(event);
+
+    const user = createUser(data);
+    await registerUserInCognito(user.email, data.password, UserRoles.PARTICIPANT);
+    const savedUser = await saveUser(user);
+
+    const participant = createParticipant(data, savedUser);
+    await saveParticipant(participant);
+
+    return sendResponse(HttpResponseCodes.OK, { message: SignUpMessages.USER_REGISTRATION_SUCCESSFUL });
+  } catch (error) {
+    return handleEnrollmentError(error);
+  }
+};
+
+const validateAndExtractParams = async (event) => {
+  const data = JSON.parse(event.body);
+  checkProps(data, PARTICIPANT_PROPS);
+
+  checkDuplicateEmails(data.email, data.parentEmail);
+  checkMobileNumberFormat(data.parentPhone);
+
+  await validateCredentials(data.email, data.password);
+  await validateEmail(data.parentEmail);
+  checkGrade(data.grade);
+
+  return data;
+};
 
 const createUser = (data) => {
   const user = {};
@@ -26,51 +55,24 @@ const createUser = (data) => {
   return user;
 };
 
+const saveUser = async (user) => {
+  const { statement, entity } = UserRepository.insertStatement(user);
+  const [savedUser] = await execOnDatabase({ statement, parameters: entity });
+  return savedUser;
+};
+
 const createParticipant = (data, user) => {
   const participant = {};
   participant.userId = user.id;
   participant.email = data.email.toLowerCase();
   participant.name = data.name;
   participant.grade = data.grade;
-  participant.activities = data.activities;
   participant.parentEmail = data.parentEmail.toLowerCase();
   participant.parentPhone = data.parentPhone;
   return participant;
 };
 
-export const handler = async (event) => {
-
-  try {
-    const data = JSON.parse(event.body);
-
-    checkProps(data, PARTICIPANT_PROPS);
-    checkDuplicateEmails(data.email, data.parentEmail);
-    checkMobileNumberFormat(data.parentPhone);
-
-    await validateCredentials(data.email, data.password);
-    await validateEmail(data.parentEmail);
-    checkGrade(data.grade);
-    if (data.activities) await validateActivities(data.activities);
-
-    const user = createUser(data);
-
-    await registerUserInCognito(user.email, data.password, UserRoles.PARTICIPANT);
-
-    const {statement: userStatement, entity: userEntity} = UserRepository.insertStatement(user);
-    const [savedUser] = await execOnDatabase([{statement: userStatement, parameters: userEntity}]);
-
-    const participant = createParticipant(data, savedUser);
-
-    const {
-      statement: participantStatement,
-      entity: participantEntity
-    } = ParticipantRepository.insertStatement(participant);
-
-    await execOnDatabase([{statement: participantStatement, parameters: participantEntity}]);
-
-    return sendResponse(HttpResponseCodes.OK, {message: SignUpMessages.USER_REGISTRATION_SUCCESSFUL});
-
-  } catch (error) {
-    return handleEnrollmentError(error);
-  }
+const saveParticipant = async (participant) => {
+  const { statement, entity } = ParticipantRepository.insertStatement(participant);
+  await execOnDatabase({ statement, parameters: entity });
 };

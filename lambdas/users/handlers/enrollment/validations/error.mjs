@@ -1,18 +1,18 @@
-import { FailedValidationError } from '../../../../commons/validations/error.mjs';
+import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
 
-export class CredentialsValidationError extends FailedValidationError {
+export class CredentialsValidationError extends InvalidInputError {
   constructor(message) {
     super(message);
   }
 }
 
-export class DuplicateEmailsError extends FailedValidationError {
+export class DuplicateEmailsError extends InvalidInputError {
   constructor(message) {
     super(message);
   }
 }
 
-export class InvalidGradeError extends FailedValidationError {
+export class InvalidGradeError extends InvalidInputError {
   constructor(message) {
     super(message);
   }

@@ -4,7 +4,7 @@ export const GeneralUserMessages = {
 };
 
 export const SignUpMessages = {
-  PHONE_ALREADY_EXISTS: `Número telefónico registrado con otro usuario`,
+  PHONE_ALREADY_EXISTS: `Número telefónico ya registrado`,
   USER_ALREADY_EXISTS: `Usuario ya está registrado`,
   USER_NOT_AUTHORIZED_FOR_OPERATION: `Usuario no autorizado para esta operación`,
   USER_REGISTRATION_SUCCESSFUL: `Usuario registrado exitosamente`,
