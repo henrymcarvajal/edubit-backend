@@ -334,4 +334,12 @@ functions:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
             arn: ${self:custom.cognitoUserPoolArnImport}
-
+  authorizeOperation:
+    name: ${self:custom.workshopOperationsAuthorizerLambdaName}
+    description: lambda to authorize operation during workshops' executions
+    handler: handlers/rules/authorizeWorkshopOperation.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}

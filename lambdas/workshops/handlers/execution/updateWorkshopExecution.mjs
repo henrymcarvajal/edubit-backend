@@ -1,47 +1,77 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { WorkshopExecutionTable } from '../../../../persistence/tables/workshopExecutionModel.mjs';
 
+import { authorizeAdmin } from '../../../members/authorizers/adminAuthorizer.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
-import { handleWorkshopError } from '../errorHandling.mjs';
+import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { setFields } from '../../../commons/fieldOperations.mjs';
 import { validate as uuidValidate } from 'uuid';
+import { validateWorkshopExecutionData } from '../../validations/validateWorkshopExecutionData.mjs';
+
+import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
+import { ResourceNotFoundError, ResourceStateError } from '../../../commons/errors/integrity/resources.mjs';
 
 export const handle = async (event) => {
 
-  const roles = event.requestContext.authorizer.claims.profile;
-  if (roles !== UserRoles.ADMIN) return sendResponse(HttpResponseCodes.FORBIDDEN);
-
-  const id = event.pathParameters.id;
-  if (!uuidValidate(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
-
-  const {body: modifiedWorkshopExecution} = extractBody(event);
-  if (!modifiedWorkshopExecution) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: 'Missing data'});
-  if (modifiedWorkshopExecution.id !== id) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: 'Ids do not match'});
-
   try {
+    authorizeAdmin(event);
 
-    const [foundWorkshopExecution] = await WorkshopExecutionRepository.findById(id);
-    if (!foundWorkshopExecution) return sendResponse(HttpResponseCodes.NOT_FOUND, null);
+    const { workshopExecutionId, modifiedWorkshopExecution } = validateAndExtractParams(event);
+    await validateWorkshopExecutionData(
+        modifiedWorkshopExecution,
+        ['scheduledDate', 'activities']
+    );
 
-    if (!foundWorkshopExecution.startTimestamp) {
-      setFields(modifiedWorkshopExecution, foundWorkshopExecution, 'scheduledDate', 'institutionId', 'workshopDefinitionId', 'activities');
-    } else {
-      return sendResponse(HttpResponseCodes.CONFLICT);
-    }
+    const foundWorkshopExecution = await fetchWorkshopExecution(workshopExecutionId);
+    updateWorkshopExecution(foundWorkshopExecution, modifiedWorkshopExecution);
+    const savedWorkshopExecution = await saveWorkshopExecution(foundWorkshopExecution);
 
-    const {entity, statement} = WorkshopExecutionRepository.upsertStatement(foundWorkshopExecution);
-
-    const [savedWorkshop] =
-        await execOnDatabase({statement: statement, parameters: entity});
-
-    return sendResponse(HttpResponseCodes.OK, WorkshopExecutionTable.rowToObject(savedWorkshop));
-
+    return sendResponse(HttpResponseCodes.OK, savedWorkshopExecution);
   } catch (error) {
-    return handleWorkshopError(error);
+    return handleErrorResponse(error);
   }
+};
+
+const validateAndExtractParams = (event) => {
+  const { id: workshopExecutionId } = event.pathParameters;
+  if (!uuidValidate(workshopExecutionId)) {
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID }: ${ workshopExecutionId }`);
+  }
+
+  const { body: modifiedWorkshopExecution } = extractBody(event);
+  if (!modifiedWorkshopExecution) {
+    throw new InvalidInputError('Missing workshop execution data');
+  }
+  if (modifiedWorkshopExecution.id !== workshopExecutionId) {
+    throw new InvalidInputError('Ids do not match');
+  }
+
+  return { workshopExecutionId, modifiedWorkshopExecution };
+};
+
+const fetchWorkshopExecution = async (workshopExecutionId) => {
+  const [foundWorkshopExecution] = await WorkshopExecutionRepository.findById(workshopExecutionId);
+  if (!foundWorkshopExecution) {
+    throw new ResourceNotFoundError(`Workshop execution not found: ${ workshopExecutionId }`);
+  }
+  return foundWorkshopExecution;
+};
+
+const updateWorkshopExecution = (foundWorkshopExecution, modifiedWorkshopExecution) => {
+  if (!foundWorkshopExecution.startTimestamp) {
+    setFields(modifiedWorkshopExecution, foundWorkshopExecution, 'scheduledDate', 'institutionId', 'workshopDefinitionId', 'activities');
+  } else {
+    throw new ResourceStateError('Workshop execution cannot be modified at this moment');
+  }
+};
+
+const saveWorkshopExecution = async (workshopExecution) => {
+  const { entity, statement } = WorkshopExecutionRepository.upsertStatement(workshopExecution);
+  const [savedWorkshop] =
+      await execOnDatabase({ statement: statement, parameters: entity });
+  return WorkshopExecutionTable.rowToObject(savedWorkshop);
 };

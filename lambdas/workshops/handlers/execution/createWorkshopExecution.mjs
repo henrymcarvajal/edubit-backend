@@ -1,50 +1,72 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 import { WorkshopDefinitionRepository } from '../../../../persistence/repositories/workshopDefinitionRepository.mjs';
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { WorkshopExecutionTable } from '../../../../persistence/tables/workshopExecutionModel.mjs';
 
-import { checkProps } from '../../../../util/propsGetter.mjs';
+import { authorizeAdmin } from '../../../members/authorizers/adminAuthorizer.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
-import { handleWorkshopError } from '../errorHandling.mjs';
+import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
+import { validateWorkshopExecutionData } from '../../validations/validateWorkshopExecutionData.mjs';
+
+import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
+import { ResourceNotFoundError } from '../../../commons/errors/integrity/resources.mjs';
+
+export const handle = async (event) => {
+  try {
+    authorizeAdmin(event);
+
+    const workshopExecution = validateAndExtractParams(event);
+    await validateWorkshopExecutionData(
+        workshopExecution,
+        ['scheduledDate', 'institutionId', 'workshopDefinitionId', 'activities']
+    );
+
+    const workshopDefinition = await fetchWorkshopDefinition(workshopExecution.workshopDefinitionId);
+
+    updateWorkshopExecution(workshopExecution, workshopDefinition);
+
+    const savedWorkshopExecution = await saveWorkshopExecution(workshopExecution);
+
+    return sendResponse(HttpResponseCodes.CREATED, savedWorkshopExecution);
+  } catch (error) {
+    return handleErrorResponse(error);
+  }
+};
+
+const validateAndExtractParams = (event) => {
+  const { body: workshopExecution } = extractBody(event);
+  if (!workshopExecution) {
+    throw new InvalidInputError(`Missing workshop execution data`);
+  }
+  return workshopExecution;
+};
+
+const fetchWorkshopDefinition = async (workshopDefinitionId) => {
+  const [workshopDefinition] = await WorkshopDefinitionRepository.findById(workshopDefinitionId);
+  if (!workshopDefinition) {
+    throw new ResourceNotFoundError(`Workshop Definition not found: ${ workshopDefinitionId }`);
+  }
+  return workshopDefinition;
+};
 
 const getTotalRunningTime = (workshopDefinition) => {
   return Object
       .values(workshopDefinition.schedule)
       .map(r => r.duration)
       .reduce((accumulator, currentValue) => accumulator + currentValue, 0);
-}
-
-export const handle = async (event) => {
-
-  const roles = event.requestContext.authorizer.claims.profile;
-  if (roles !== UserRoles.ADMIN) return sendResponse(HttpResponseCodes.FORBIDDEN);
-
-  const {body: workshopExecution} = extractBody(event);
-
-  if (!workshopExecution) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: 'Missing data'});
-
-  try {
-
-    let props = ['scheduledDate', 'institutionId', 'workshopDefinitionId', 'activities'];
-    checkProps(workshopExecution, props);
-
-    const [workshopDefinition] = await WorkshopDefinitionRepository.findById(workshopExecution.workshopDefinitionId);
-    if (!workshopDefinition) return sendResponse(HttpResponseCodes.NOT_FOUND);
-
-    workshopExecution.elapsedTime = 0;
-    workshopExecution.remainingTime = getTotalRunningTime(workshopDefinition);
-
-    const {statement, entity} = WorkshopExecutionRepository.insertStatement(workshopExecution);
-
-    const [savedWorkshopExecution] =
-        await execOnDatabase({statement: statement, parameters: entity});
-
-    return sendResponse(HttpResponseCodes.OK, WorkshopExecutionTable.rowToObject(savedWorkshopExecution));
-
-  } catch (error) {
-    return handleWorkshopError(error);
-  }
 };
+
+const updateWorkshopExecution = (workshopExecution, workshopDefinition) => {
+  workshopExecution.elapsedTime = 0;
+  workshopExecution.remainingTime = getTotalRunningTime(workshopDefinition);
+};
+
+const saveWorkshopExecution = async (workshopExecution) => {
+  const { statement, entity } = WorkshopExecutionRepository.insertStatement(workshopExecution);
+  const [savedWorkshopExecution] =
+      await execOnDatabase({ statement: statement, parameters: entity });
+  return WorkshopExecutionTable.rowToObject(savedWorkshopExecution);
+};
+

@@ -11,7 +11,7 @@ import { ResourceNotFoundError } from '../../../commons/errors/integrity/resourc
 
 export const handle = async (event) => {
   try {
-    const { workshopDefinitionId } = validateAndExtractParams(event);
+    const workshopDefinitionId = validateAndExtractParams(event);
     const foundWorkshopDefinition = await fetchWorkshopDefinition(workshopDefinitionId);
     return sendResponse(HttpResponseCodes.OK, foundWorkshopDefinition);
   } catch (error) {
@@ -24,13 +24,13 @@ const validateAndExtractParams = (event) => {
   if (!uuidValidate(workshopDefinitionId)) {
     throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID }: ${ workshopDefinitionId }`);
   }
-  return { workshopDefinitionId };
+  return workshopDefinitionId;
 };
 
 const fetchWorkshopDefinition = async (workshopDefinitionId) => {
-  const [foundWorkshopDefinition] = await WorkshopDefinitionRepository.findById(workshopDefinitionId);
-  if (!foundWorkshopDefinition) {
+  const [workshopDefinition] = await WorkshopDefinitionRepository.findById(workshopDefinitionId);
+  if (!workshopDefinition) {
     throw new ResourceNotFoundError(`Workshop definition not found: ${ workshopDefinitionId }`);
   }
-  return foundWorkshopDefinition;
+  return workshopDefinition;
 };

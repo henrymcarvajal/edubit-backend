@@ -4,21 +4,19 @@ import { WorkshopExecutionRepository } from '../../../../persistence/repositorie
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
+import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
-import { handleWorkshopError } from '../errorHandling.mjs';
 
-import { InvalidUuidError } from '../../../commons/validations/error.mjs';
+import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 
 let ALL_ACTIVITIES;
 
 export const handle = async (event) => {
 
-  await initializeActivities();
-
-  const { workshopExecutionId } = validateAndExtractParams(event);
-
   try {
+    const workshopExecutionId = validateAndExtractParams(event);
+
     const [workshopExecution] = await WorkshopExecutionRepository.findById(workshopExecutionId);
     if (!workshopExecution) return sendResponse(HttpResponseCodes.NOT_FOUND);
 
@@ -27,18 +25,8 @@ export const handle = async (event) => {
     return sendResponse(HttpResponseCodes.OK, mentorsView);
 
   } catch (error) {
-    return handleWorkshopError(error);
+    return handleErrorResponse(error);
   }
-};
-
-const validateAndExtractParams = (event) => {
-  const workshopExecutionId = event.pathParameters.id;
-
-  if (!uuidValidate(workshopExecutionId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId)}: ${ workshopExecutionId }`);
-  }
-
-  return { workshopExecutionId };
 };
 
 const initializeActivities = async () => {
@@ -53,7 +41,20 @@ const initializeActivities = async () => {
   }
 };
 
+const validateAndExtractParams = (event) => {
+  const workshopExecutionId = event.pathParameters.id;
+
+  if (!uuidValidate(workshopExecutionId)) {
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId)}: ${ workshopExecutionId }`);
+  }
+
+  return workshopExecutionId;
+};
+
 const processActivities = async (mentors) => {
+
+  await initializeActivities();
+
   const mappedMentors = {};
 
   const foundMentors = await MentorRepository.findByIdIn(Object.keys(mentors));

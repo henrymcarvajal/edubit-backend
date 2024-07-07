@@ -1,7 +1,5 @@
 export const calculateTiming = (workshopExecution) => {
 
-  console.log('workshopExecution', JSON.stringify(workshopExecution));
-
   let currentPhase;
   let nextPhase;
   let sumUp = 0;

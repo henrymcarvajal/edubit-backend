@@ -4,17 +4,17 @@ import { WorkshopDefinitionRepository } from '../../../../persistence/repositori
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
-import { getWorkshopExecutionTiming } from '../execution/getWorkshopExecutionTiming.mjs';
+import { calculateTiming } from '../execution/calculateWorkshopTiming.mjs';
+import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
 import { Engine } from 'json-rules-engine';
-import { InvalidUuidError } from '../../../commons/validations/error.mjs';
+import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 
 let engineTable;
 
 export const handle = async (event) => {
-
   try {
     const { workshopExecutionId, operationName } = validateAndExtractParams(event);
 
@@ -24,11 +24,14 @@ export const handle = async (event) => {
 
     const currentWorkshopPhaseType = await getCurrentWorkshopPhaseType(workshopExecutionId);
 
-    return runEngine(engine, { workshopPhaseType: currentWorkshopPhaseType, operationName: operationName });
+    const authorize = await runEngine(engine, {
+      workshopPhaseType: currentWorkshopPhaseType,
+      operationName: operationName
+    });
 
+    return sendResponse(HttpResponseCodes.OK, authorize);
   } catch (error) {
-    console.log('AuthorizeWorkshopOperation error', error);
-    return sendResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error, true);
+    return handleErrorResponse(error);
   }
 };
 
@@ -38,7 +41,7 @@ const validateAndExtractParams = (event) => {
 
   const workshopExecutionId = body.workshopExecutionId;
   if (!uuidValidate(workshopExecutionId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID }: ${ workshopExecutionId }`);
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID }: ${ workshopExecutionId }`);
   }
 
   const operationName = body.operationName;
@@ -58,7 +61,7 @@ const initializeEngine = async (workshopExecutionId) => {
 
 const getCurrentWorkshopPhaseType = async (workshopExecutionId) => {
   const [workshopExecution] = await WorkshopExecutionRepository.findScheduleById(workshopExecutionId);
-  const timing = getWorkshopExecutionTiming(workshopExecution);
+  const timing = calculateTiming(workshopExecution);
   return timing.currentPhase.type;
 };
 
