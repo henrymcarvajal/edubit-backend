@@ -1,60 +1,82 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
+import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
-import { authorizeAndFindParticipant } from './participantAuthorizer.mjs';
-import { crossCheckActivities } from '../activityChecks.mjs';
+import { authorizeAndFindParticipant } from '../../authorizers/participantAuthorizer.mjs';
+import { crossCheckActivities } from '../../validations/activityChecks.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
+import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
+import { validate as uuidValidate } from 'uuid';
 
-import { FailedValidationError } from '../../../commons/validations/error.mjs';
+import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
+import { ResourceNotFoundError, ResourceUnmodifiedError } from '../../../commons/errors/integrity/resources.mjs';
 
 export const handle = async (event) => {
-
-  const participantId = event.pathParameters.id;
-  const {profile: roles, email} = event.requestContext.authorizer.claims;
-
-  const {response} = await authorizeAndFindParticipant(roles, participantId, email);
-  if (response) return response;
-
   try {
-    const {body: enrollment} = extractBody(event);
+    const { participantId, enrollment } = validateAndExtractParams(event);
+    await authorizeAndFindParticipant(event, participantId);
 
-    const [workshopExecution] = await WorkshopExecutionRepository.findById(enrollment.workshopExecutionId);
-    if (!workshopExecution) return sendResponse(
-        HttpResponseCodes.NOT_FOUND,
-        {message: `WorkshopExecution not found: ${enrollment.workshopExecutionId}`}
-    );
+    const workshopExecution = await getWorkshopExecution(enrollment.workshopExecutionId);
 
-    const newEnrollment = {
-      inscriptionDate: new Date(),
-      activities: enrollment.activities
-    };
+    const newEnrollment = enrollParticipant(workshopExecution, participantId, enrollment.activities);
 
-    if (!workshopExecution.participants) {
-      crossCheckActivities(Object.values(enrollment.activities), Object.values(workshopExecution.activities));
-      workshopExecution.participants = {};
-      workshopExecution.participants[participantId] = newEnrollment;
-    } else {
-      const enrolledParticipantsIds = Object.keys(workshopExecution.participants);
-      if (!enrolledParticipantsIds.includes(participantId)) {
-        crossCheckActivities(Object.values(enrollment.activities), Object.values(workshopExecution.activities));
-        workshopExecution.participants[participantId] = newEnrollment;
-      } else {
-        return sendResponse(HttpResponseCodes.NO_CONTENT);
-      }
-    }
-
-    const {statement, entity} = WorkshopExecutionRepository.upsertStatement(workshopExecution);
-    await execOnDatabase([{statement: statement, parameters: entity}]);
+    await saveWorkshopExecution(workshopExecution);
 
     return sendResponse(HttpResponseCodes.CREATED, newEnrollment);
+
   } catch (error) {
-
-    if (error instanceof FailedValidationError) {
-      return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: error.message});
-    }
-
-    return sendResponse(HttpResponseCodes.INTERNAL_SERVER_ERROR, error, true);
+    return handleErrorResponse(error);
   }
+};
+
+const validateAndExtractParams = (event) => {
+  const { id: participantId } = event.pathParameters;
+  if (!uuidValidate(participantId)) {
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (participantId)}: ${ participantId }`);
+  }
+
+  const { body: enrollment } = extractBody(event);
+  if (!enrollment) {
+    throw new InvalidInputError(`Missing enrollment data`);
+  }
+
+  return { participantId, enrollment };
+};
+
+const getWorkshopExecution = async (workshopExecutionId) => {
+  const [workshopExecution] = await WorkshopExecutionRepository.findById(workshopExecutionId);
+  if (!workshopExecution) {
+    throw new ResourceNotFoundError(`WorkshopExecution not found: ${ workshopExecutionId }`);
+  }
+  return workshopExecution;
+};
+
+const enrollParticipant = (workshopExecution, participantId, activities) => {
+  const newEnrollment = {
+    inscriptionDate: new Date(),
+    activities
+  };
+
+  if (!workshopExecution.participants) {
+    crossCheckActivities(Object.values(activities), Object.values(workshopExecution.activities));
+    workshopExecution.participants = {};
+    workshopExecution.participants[participantId] = newEnrollment;
+  } else {
+    const enrolledParticipantsIds = Object.keys(workshopExecution.participants);
+    if (!enrolledParticipantsIds.includes(participantId)) {
+      crossCheckActivities(Object.values(activities), Object.values(workshopExecution.activities));
+      workshopExecution.participants[participantId] = newEnrollment;
+    } else {
+      throw new ResourceUnmodifiedError();
+    }
+  }
+
+  return newEnrollment;
+};
+
+const saveWorkshopExecution = async (workshopExecution) => {
+  const { statement, entity } = WorkshopExecutionRepository.upsertStatement(workshopExecution);
+  await execOnDatabase([{ statement: statement, parameters: entity }]);
 };

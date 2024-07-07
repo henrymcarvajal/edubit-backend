@@ -1,29 +1,30 @@
-import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { MentorRepository } from '../../../../persistence/repositories/mentorRepository.mjs';
-import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
+import { MentorRepository } from '../../../persistence/repositories/mentorRepository.mjs';
+import { UserRoles } from '../../users/handlers/enrollment/constants.mjs';
 
-import { sendResponse } from '../../../../util/responseHelper.mjs';
+import { ForbiddenOperationError } from '../../commons/errors/security/restrictedAccess.mjs';
+import { ResourceNotFoundError } from '../../commons/errors/integrity/resources.mjs';
 
-export const authorizeAndFindMentor = async (roles, id, email) => {
+export const authorizeAndFindMentor = async (event, mentorId) => {
+
   let foundMentor;
-  let response;
-  switch (roles) {
+
+  const { profile, email } = event.requestContext.authorizer.claims;
+  switch (profile) {
     case UserRoles.ADMIN:
-      [foundMentor] = await MentorRepository.findById(id);
+      [foundMentor] = await MentorRepository.findById(mentorId);
       if (!foundMentor) {
-        response = sendResponse(HttpResponseCodes.NOT_FOUND, {message: `Mentor not found: ${id}`});
+        throw new ResourceNotFoundError(`Mentor not found: ${ mentorId }`);
       }
       break;
     case UserRoles.MENTOR:
       [foundMentor] = await MentorRepository.findByEmail(email);
-      if (!foundMentor || foundMentor.id !== id) {
-        response = sendResponse(HttpResponseCodes.FORBIDDEN);
+      if (!foundMentor || foundMentor.id !== mentorId) {
+        throw new ForbiddenOperationError();
       }
       break;
     default:
-      response = sendResponse(HttpResponseCodes.FORBIDDEN);
-      break;
+      throw new ForbiddenOperationError();
   }
 
-  return {mentor: foundMentor, response: response};
+  return foundMentor;
 };

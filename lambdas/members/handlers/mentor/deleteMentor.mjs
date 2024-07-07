@@ -1,36 +1,43 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { MentorRepository } from '../../../../persistence/repositories/mentorRepository.mjs';
-import { MentorTable } from '../../../../persistence/tables/mentorTable.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
-import { authorizeAndFindMentor } from './mentorAuthorizer.mjs';
+import { authorizeAndFindMentor } from '../../authorizers/mentorAuthorizer.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
-import { handleMembersError } from '../errorHandling.mjs';
+import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
+import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
+
 export const handle = async (event) => {
-
-  const id = event.pathParameters.id;
-  if (!uuidValidate(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
-
-  const {profile: roles, email} = event.requestContext.authorizer.claims;
-
   try {
-    const {mentor: foundMentor, response} = await authorizeAndFindMentor(roles, id, email);
-    if (response) return response;
+    const mentorId = validateAndExtractParams(event);
+    const foundMentor = await authorizeAndFindMentor(event, mentorId);
 
-    foundMentor.enabled = false;
-    foundMentor.disabledDate = new Date();
+    updateMentor(foundMentor);
+    await saveMentor(foundMentor);
 
-    const {statement, entity} = MentorRepository.upsertStatement(foundMentor);
-
-    const [savedMentor] =
-        await execOnDatabase({statement: statement, parameters: entity});
-
-    return sendResponse(HttpResponseCodes.OK, MentorTable.rowToObject(savedMentor));
-
+    return sendResponse(HttpResponseCodes.NO_CONTENT);
   } catch (error) {
-    return handleMembersError(error);
+    return handleErrorResponse(error);
   }
 };
+
+const validateAndExtractParams = (event) => {
+  const { id: mentorId } = event.pathParameters;
+  if (!uuidValidate(mentorId)) {
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (mentorId)}: ${ mentorId }`);
+  }
+  return mentorId;
+};
+
+const updateMentor = (mentor) => {
+  mentor.enabled = false;
+  mentor.disabledDate = new Date();
+};
+
+const saveMentor = async (mentor) => {
+  const { statement, entity } = MentorRepository.upsertStatement(mentor);
+  await execOnDatabase({ statement: statement, parameters: entity });
+}

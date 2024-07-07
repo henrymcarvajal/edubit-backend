@@ -1,25 +1,27 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
-import { authorizeAndFindMentor } from './mentorAuthorizer.mjs';
-import { handleMembersError } from '../errorHandling.mjs';
+import { authorizeAndFindMentor } from '../../authorizers/mentorAuthorizer.mjs';
+import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
+import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
+
 export const handle = async (event) => {
-
-  const id = event.pathParameters.id;
-  if (!uuidValidate(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: `${ValueValidationMessages.VALUE_IS_NOT_UUID}: ${id}`});
-
-  const {profile: roles, email} = event.requestContext.authorizer.claims;
-
   try {
-    const {mentor: foundMentor, response} = await authorizeAndFindMentor(roles, id, email);
-    if (response) return response;
-
+    const mentorId = validateAndExtractParams(event);
+    const foundMentor = await authorizeAndFindMentor(event, mentorId);
     return sendResponse(HttpResponseCodes.OK, foundMentor);
-
   } catch (error) {
-    return handleMembersError(error);
+    return handleErrorResponse(error);
   }
+};
+
+const validateAndExtractParams = (event) => {
+  const { id: mentorId } = event.pathParameters;
+  if (!uuidValidate(mentorId)) {
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (mentorId)}: ${ mentorId }`);
+  }
+  return mentorId;
 };

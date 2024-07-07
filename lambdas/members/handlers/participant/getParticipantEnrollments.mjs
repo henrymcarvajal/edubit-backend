@@ -4,33 +4,35 @@ import { MentorRepository } from '../../../../persistence/repositories/mentorRep
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
-import { authorizeAndFindParticipant } from './participantAuthorizer.mjs';
-import { handleMembersError } from '../errorHandling.mjs';
+import { authorizeAndFindParticipant } from '../../authorizers/participantAuthorizer.mjs';
+import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
+import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
+
 export const handle = async (event) => {
-
-  const id = event.pathParameters.id;
-  if (!uuidValidate(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: `${ ValueValidationMessages.VALUE_IS_NOT_UUID }: ${ id }` });
-
-  const { profile: roles, email } = event.requestContext.authorizer.claims;
-
   try {
-    const { participant: foundParticipant, response } = await authorizeAndFindParticipant(roles, id, email);
-    if (response) return response;
+    const participantId = validateAndExtractParams(event);
+    const foundParticipant = await authorizeAndFindParticipant(event, participantId);
 
-    const enrollments = await findEnrollments(foundParticipant.id);
+    const enrollments = await fetchEnrollments(foundParticipant.id);
 
     return sendResponse(HttpResponseCodes.OK, enrollments);
-
   } catch (error) {
-    return handleMembersError(error);
+    return handleErrorResponse(error);
   }
 };
 
-const findEnrollments = async (participantId) => {
+const validateAndExtractParams = (event) => {
+  const { id: participantId } = event.pathParameters;
+  if (!uuidValidate(participantId)) {
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (participantId)}: ${ participantId }`);
+  }
+  return participantId;
+};
 
+const fetchEnrollments = async (participantId) => {
   const enrollments = {};
 
   const registeredWorkshops = await WorkshopExecutionRepository.findEnrollmentByParticipantId(participantId);
