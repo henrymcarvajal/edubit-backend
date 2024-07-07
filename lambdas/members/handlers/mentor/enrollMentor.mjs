@@ -3,13 +3,12 @@ import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { authorizeAndFindMentor } from '../../authorizers/mentorAuthorizer.mjs';
-import { crossCheckActivities } from '../../validations/activityChecks.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
-import { validateActivities } from '../../../commons/validations/validations.mjs';
+import { validateEnrollmentActivities } from '../../../commons/validations/enrollment.mjs';
 
 import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 import { ResourceNotFoundError, ResourceUnmodifiedError } from '../../../commons/errors/integrity/resources.mjs';
@@ -20,7 +19,7 @@ export const handle = async (event) => {
     await authorizeAndFindMentor(event, mentorId);
 
     const workshopExecution = await getWorkshopExecution(enrollment.workshopExecutionId);
-    await validateEnrollmentData(enrollment, workshopExecution);
+    await validateEnrollmentActivities(enrollment.activities, workshopExecution.activities);
 
     const newEnrollment = enrollMentor(workshopExecution, mentorId, enrollment.activities);
     await saveWorkshopExecution(workshopExecution);
@@ -44,11 +43,6 @@ const validateAndExtractParams = (event) => {
 
   return { mentorId, enrollment };
 };
-
-const validateEnrollmentData = async (enrollment, workshopExecution) => {
-  await validateActivities(enrollment.activities);
-  crossCheckActivities(Object.values(enrollment.activities), Object.values(workshopExecution.activities));
-}
 
 const getWorkshopExecution = async (workshopExecutionId) => {
   const [workshopExecution] = await WorkshopExecutionRepository.findById(workshopExecutionId);

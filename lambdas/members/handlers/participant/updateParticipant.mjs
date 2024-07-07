@@ -11,7 +11,6 @@ import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
-import { validateActivities } from '../../../commons/validations/validations.mjs';
 
 import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 
@@ -49,11 +48,6 @@ const updateParticipant = async (foundParticipant, modifiedParticipant) => {
     foundParticipant.grade = modifiedParticipant.grade;
     foundParticipant.modificationDate = new Date();
   }
-  /*if (Object.keys(modifiedParticipant.activities).length && JSON.stringify(foundParticipant.activities) !== JSON.stringify(modifiedParticipant.activities)) {
-    await validateActivities(modifiedParticipant.activities);
-    foundParticipant.activities = modifiedParticipant.activities;
-    foundParticipant.modificationDate = new Date();
-  }*/
   if (modifiedParticipant.parentEmail && foundParticipant.parentEmail !== modifiedParticipant.parentEmail) {
     await validateEmail(modifiedParticipant.parentEmail);
     foundParticipant.parentEmail = modifiedParticipant.parentEmail;

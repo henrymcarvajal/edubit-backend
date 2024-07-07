@@ -3,12 +3,12 @@ import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { authorizeAndFindParticipant } from '../../authorizers/participantAuthorizer.mjs';
-import { crossCheckActivities } from '../../validations/activityChecks.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
+import { validateEnrollmentActivities } from '../../../commons/validations/enrollment.mjs';
 
 import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 import { ResourceNotFoundError, ResourceUnmodifiedError } from '../../../commons/errors/integrity/resources.mjs';
@@ -19,9 +19,9 @@ export const handle = async (event) => {
     await authorizeAndFindParticipant(event, participantId);
 
     const workshopExecution = await getWorkshopExecution(enrollment.workshopExecutionId);
+    await validateEnrollmentActivities(enrollment.activities, workshopExecution.activities);
 
     const newEnrollment = enrollParticipant(workshopExecution, participantId, enrollment.activities);
-
     await saveWorkshopExecution(workshopExecution);
 
     return sendResponse(HttpResponseCodes.CREATED, newEnrollment);
@@ -60,13 +60,11 @@ const enrollParticipant = (workshopExecution, participantId, activities) => {
   };
 
   if (!workshopExecution.participants) {
-    crossCheckActivities(Object.values(activities), Object.values(workshopExecution.activities));
     workshopExecution.participants = {};
     workshopExecution.participants[participantId] = newEnrollment;
   } else {
     const enrolledParticipantsIds = Object.keys(workshopExecution.participants);
     if (!enrolledParticipantsIds.includes(participantId)) {
-      crossCheckActivities(Object.values(activities), Object.values(workshopExecution.activities));
       workshopExecution.participants[participantId] = newEnrollment;
     } else {
       throw new ResourceUnmodifiedError();

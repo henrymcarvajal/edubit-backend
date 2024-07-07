@@ -13,7 +13,7 @@ export const  ParticipantTable = {
     disabled_date: 'disabledDate',
     // business
     id: 'id',
-    //user_id: 'userId', commented out for security reasons
+    user_id: 'userId',
     name: 'name',
     email: 'email',
     grade: 'grade',

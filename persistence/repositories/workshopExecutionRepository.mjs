@@ -24,14 +24,14 @@ export const WorkshopExecutionRepository = {
     return WorkshopExecutionRepository.findViewByCriteria(WorkshopExecution_InstitutionView, ['id', DmlOperators.EQUALS, id]);
   },
 
-  findCurrent: async () => {
+  findForToday: async () => {
     const today = new Date();
     const todayAtMidnight = new Date(new Date(today.getTime()).setHours(0,0,0,0));
 
     return WorkshopExecutionRepository.findViewByCriteria(
         WorkshopExecution_FullDefinitionView,
-        ['scheduled_date', DmlOperators.EQUALS, todayAtMidnight],
-        ['end_timestamp', DmlOperators.GREATER_THAN_OR_EQUAL_TO, today],
+        ['scheduled_date', DmlOperators.GREATER_THAN, todayAtMidnight],
+        ['end_timestamp', DmlOperators.NULL],
     );
   },
 

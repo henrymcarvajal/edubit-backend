@@ -10,7 +10,6 @@ import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
-import { validateActivities } from '../../../commons/validations/validations.mjs';
 
 import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 
@@ -43,11 +42,6 @@ const validateAndExtractParams = (event) => {
 };
 
 const updateMentor = async (foundMentor, modifiedMentor) => {
-  if (Object.keys(modifiedMentor.activities).length && JSON.stringify(foundMentor.activities) !== JSON.stringify(modifiedMentor.activities)) {
-    await validateActivities(modifiedMentor.activities);
-    foundMentor.activities = modifiedMentor.activities;
-    foundMentor.modificationDate = new Date();
-  }
   if (modifiedMentor.phone && foundMentor.phone !== modifiedMentor.phone) {
     checkMobileNumberFormat(modifiedMentor.phone);
     foundMentor.phone = modifiedMentor.phone;

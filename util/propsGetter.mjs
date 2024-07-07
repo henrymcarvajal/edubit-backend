@@ -1,5 +1,5 @@
 // FROM https://it.knightnet.org.uk/kb/node-js/get-properties/
-import { MissingPropertyError } from './error.mjs';
+import { InvalidInputError } from '../lambdas/commons/errors/data/input.mjs';
 
 /** Get a nested property from an object without returning any errors.
  * If the property or property chain doesn't exist, undefined is returned.
@@ -25,7 +25,7 @@ export const getProp = (obj, prop) => {
 export const checkProps = (body, props) => {
   for (const prop of props) {
     if (!getProp(body, prop)) {
-      throw new MissingPropertyError(`Falta propiedad: ${prop}`);
+      throw new InvalidInputError(`Falta propiedad: ${prop}`);
     }
   }
 };
