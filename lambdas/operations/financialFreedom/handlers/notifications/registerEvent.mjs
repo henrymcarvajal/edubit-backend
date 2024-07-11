@@ -5,25 +5,15 @@ import { execOnDatabase } from '../../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../../client/aws/utils/bodyExtractor.mjs';
 import { validate as uuidValidate } from 'uuid';
 
-import { InvalidUuidError } from '../../../../commons/validations/error.mjs';
+import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
 import { WORKSHOP_OPERATION_NAMES } from '../../definitions/operations.mjs';
 
 export const handle = async (lambdaEvent) => {
   try {
-
     const { workshopExecutionId, participantName, operationName, list } = validateAndExtractParams(lambdaEvent);
 
     const event = verbalize(participantName, operationName, list);
-
-    const { entity, statement } = WorkshopRegistryRepository
-        .insertStatement({
-          workshopExecutionId,
-          event
-        });
-
-    const savedEvent = await execOnDatabase({ statement: statement, parameters: entity });
-
-    console.error('Success saving event', savedEvent);
+    await saveEvent(workshopExecutionId, event);
   } catch (error) {
     console.error('Error on registering event', error);
   }
@@ -40,7 +30,7 @@ const validateAndExtractParams = (event) => {
   const list = listEntry[0][1];
 
   if (!uuidValidate(workshopExecutionId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId): ${ workshopExecutionId }`);
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId): ${ workshopExecutionId }`);
   }
 
   return { workshopExecutionId, participantName, operationName, list };
@@ -76,4 +66,14 @@ const verbalize = (participantName, operationName, complement) => {
   }
 
   return message;
+};
+
+const saveEvent = async (workshopExecutionId, event) => {
+  const { entity, statement } = WorkshopRegistryRepository
+      .insertStatement({
+        workshopExecutionId,
+        event
+      });
+
+  await execOnDatabase({ statement: statement, parameters: entity });
 };

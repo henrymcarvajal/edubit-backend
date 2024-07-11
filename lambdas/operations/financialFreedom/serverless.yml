@@ -347,17 +347,17 @@ functions:
             name: PrivateAuthorizer
             type: COGNITO_USER_POOLS
             arn: ${self:custom.cognitoUserPoolArnImport}
-  getCurrentWorkshopExecution:
+  getWorkshopExecutionsForToday:
     name: ${self:custom.stack-name}-get-current-workshop-execution
     description: lambda to fetch the current workshop
-    handler: handlers/workshop/getCurrentWorkshopExecution.handle
+    handler: handlers/admin/getWorkshopExecutionsForToday.handle
     environment:
       region: ${self:provider.region}
       environment: ${self:custom.target-env}
       commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
     events:
       - http:
-          path: ${self:custom.api-gateway-resource}/workshop-execution/current
+          path: ${self:custom.api-gateway-resource}/workshop-execution/today
           method: get
           cors:
             origins:
