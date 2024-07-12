@@ -1,38 +1,32 @@
 import { ActivityRepository } from '../../../../../persistence/repositories/activityRepository.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
+import { MentorRepository } from '../../../../../persistence/repositories/mentorRepository.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 import { WorkshopExecutionRepository } from '../../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
-import { handleError } from '../errorHandling.mjs';
+import { handleErrorResponse } from '../../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
-import { InvalidUuidError, ReferenceNotFoundError } from '../../../../commons/validations/error.mjs';
-import { MentorRepository } from '../../../../../persistence/repositories/mentorRepository.mjs';
+import { ResourceNotFoundError } from '../../../../commons/errors/integrity/resources.mjs';
+import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
 
 let ALL_ACTIVITIES;
 let ALL_MENTORS;
 
 export const handle = async (event) => {
-
   try {
-
     await initializeActivities();
     await initializeMentors();
 
     const { workshopExecutionId, participantId } = validateAndExtractParams(event);
 
     const workshopExecution = await getWorkshopExecution(workshopExecutionId);
-
-    const mentorEntries = Object.entries(workshopExecution.mentors);
-    const activities = Object.entries(workshopExecution.participants[participantId].activities);
-
-    const mentorsView = getMentorsView(activities, mentorEntries);
+    const mentorsView = createMentorsView(workshopExecution, participantId);
 
     return sendResponse(HttpResponseCodes.OK, mentorsView);
-
   } catch (error) {
-    return handleError(error);
+    return handleErrorResponse(error);
   }
 };
 
@@ -59,16 +53,14 @@ const initializeMentors = async () => {
 };
 
 const validateAndExtractParams = (event) => {
-
   const workshopExecutionId = event.pathParameters.workshopExecutionId;
-  const participantId = event.pathParameters.participantId;
-
   if (!uuidValidate(workshopExecutionId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId): ${ workshopExecutionId }`);
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId): ${ workshopExecutionId }`);
   }
 
+  const participantId = event.pathParameters.participantId;
   if (!uuidValidate(participantId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (participantId) : ${ participantId }`);
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (participantId) : ${ participantId }`);
   }
 
   return { workshopExecutionId, participantId };
@@ -77,11 +69,17 @@ const validateAndExtractParams = (event) => {
 const getWorkshopExecution = async (workshopExecutionId) => {
   const [workshopExecution] = await WorkshopExecutionRepository.findById(workshopExecutionId);
   if (!workshopExecution) {
-    throw new ReferenceNotFoundError(`WorkshopExecution ${ workshopExecutionId } not found`);
+    throw new ResourceNotFoundError(`WorkshopExecution ${ workshopExecutionId } not found`);
   }
-
   return workshopExecution;
 };
+
+const createMentorsView = (workshopExecution, participantId) => {
+  const mentorEntries = Object.entries(workshopExecution.mentors);
+  const activities = Object.entries(workshopExecution.participants[participantId].activities);
+
+  return getMentorsView(activities, mentorEntries);
+}
 
 const getMentorsView = (activities, mentorEntries) => {
   const mentorsView = {};

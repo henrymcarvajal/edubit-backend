@@ -6,49 +6,65 @@ import {
 } from '../../../../../persistence/repositories/participantProgressRepository.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 
-import { authorizeAndFindMentor } from './mentorAuthorizer.mjs';
-import { handleError } from '../errorHandling.mjs';
+import { authorizeAndFindMentor } from '../../../../members/authorizers/mentorAuthorizer.mjs';
+import { handleErrorResponse } from '../../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
-import { InvalidUuidError } from '../../../../commons/validations/error.mjs';
+import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
+import { ResourceNotFoundError } from '../../../../commons/errors/integrity/resources.mjs';
 
 let ALL_ACTIVITIES;
 export const handle = async (event) => {
   try {
 
-    await initializeActivities();
-
     const { workshopExecutionId, mentorId } = validateAndExtractParams(event);
 
-    const { response } = await authorizeAndFindMentor(event, mentorId);
-    if (response) return response;
+    await authorizeAndFindMentor(event, mentorId);
 
-    const [workshopExecution] = await WorkshopExecutionRepository.findById(workshopExecutionId);
-
-    const mentorKey = Object.keys(workshopExecution.mentors).find(k => k === mentorId);
-    if (!mentorKey) return sendResponse(HttpResponseCodes.NOT_FOUND, mentorId);
-
+    const workshopExecution = await fetchWorkshopExecution(workshopExecutionId);
+    checkMentorEnrollment(workshopExecution.mentors, mentorId);
     const participantsPerActivity = await processParticipantsProgress(workshopExecution, mentorId);
 
     return sendResponse(HttpResponseCodes.OK, participantsPerActivity);
   } catch (error) {
-    return handleError(error);
+    return handleErrorResponse(error);
   }
 };
 
-const initializeActivities = async () => {
-  const toView = (activity) => ({
-    id: activity.id,
-    name: activity.name
-  });
+const validateAndExtractParams = (event) => {
+  const workshopExecutionId = event.pathParameters.workshopExecutionId;
+  if (!uuidValidate(workshopExecutionId)) {
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId)}: ${ workshopExecutionId }`);
+  }
 
-  if (!ALL_ACTIVITIES) {
-    ALL_ACTIVITIES = (await ActivityRepository.findAll()).map(toView);
+  const mentorId = event.pathParameters.mentorId;
+  if (!uuidValidate(mentorId)) {
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (mentorId)}: ${ mentorId }`);
+  }
+
+  return { workshopExecutionId, mentorId };
+};
+
+const fetchWorkshopExecution = async (workshopExecutionId) => {
+  const [workshopExecution] = await WorkshopExecutionRepository.findById(workshopExecutionId);
+  if (!workshopExecution) {
+    throw new ResourceNotFoundError(`Workshop execution not found: ${ workshopExecutionId } `);
+  }
+  return workshopExecution;
+};
+
+const checkMentorEnrollment = (mentors, mentorId) => {
+  const mentorKey = Object.keys(mentors).find(k => k === mentorId);
+  if (!mentorKey) {
+    throw new ResourceNotFoundError(`Mentor not enrolled: ${ mentorId } `);
   }
 };
 
 const processParticipantsProgress = async (workshopExecution, mentorId) => {
+
+  await initializeActivities();
+
   const mentor = workshopExecution.mentors[mentorId];
 
   const participantProgresses = await ParticipantProgressRepository.findByWorkshopExecutionIdWithParticipantView(workshopExecution.id);
@@ -70,7 +86,7 @@ const processParticipantsProgress = async (workshopExecution, mentorId) => {
       }
 
       participantsPerActivity[activityId].participants.push(
-          { name: progress.name, id: progress.id, level: progress.details.stats.currentActivity.level}
+          { name: progress.name, id: progress.id, level: progress.details.stats.currentActivity.level }
       );
     }
   }
@@ -78,17 +94,14 @@ const processParticipantsProgress = async (workshopExecution, mentorId) => {
   return Object.values(participantsPerActivity);
 };
 
-const validateAndExtractParams = (event) => {
-  const workshopExecutionId = event.pathParameters.workshopExecutionId;
-  const mentorId = event.pathParameters.mentorId;
+const initializeActivities = async () => {
+  const toView = (activity) => ({
+    id: activity.id,
+    name: activity.name
+  });
 
-  if (!uuidValidate(workshopExecutionId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId)}: ${ workshopExecutionId }`);
+  if (!ALL_ACTIVITIES) {
+    ALL_ACTIVITIES = (await ActivityRepository.findAll()).map(toView);
   }
-
-  if (!uuidValidate(mentorId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (mentorId)}: ${ mentorId }`);
-  }
-
-  return { workshopExecutionId, mentorId };
 };
+
