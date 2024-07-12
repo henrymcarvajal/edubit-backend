@@ -17,7 +17,6 @@ export const  MentorTable = {
     name: 'name',
     email: 'email',
     phone: 'phone',
-    activities: 'activities',
   },
 
   rowToObject: (row) => {

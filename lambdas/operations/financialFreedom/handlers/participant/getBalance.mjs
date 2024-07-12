@@ -40,11 +40,10 @@ const validateAndExtractParams = (event) => {
 };
 
 const createProgressView = async (details) => {
-  const { improvements, assets, startingBalance, stats } = details;
+  const { improvements, assets, stats } = details;
 
   const balanceView = {
-    currentBalance: stats.balance,
-    startingBalance
+    stats
   };
 
   if (improvements) {

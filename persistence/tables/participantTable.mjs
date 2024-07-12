@@ -18,8 +18,7 @@ export const  ParticipantTable = {
     email: 'email',
     grade: 'grade',
     parent_phone: 'parentPhone',
-    parent_email: 'parentEmail',
-    activities: 'activities',
+    parent_email: 'parentEmail'
   },
 
   rowToObject: (row) => {

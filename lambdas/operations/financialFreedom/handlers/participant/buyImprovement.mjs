@@ -7,20 +7,19 @@ import {
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 import { WORKSHOP_OPERATION_NAMES } from '../../definitions/operations.mjs';
 
-import { authorizeAndFindParticipant } from './participantAuthorizer.mjs';
+import { authorizeAndFindParticipant } from '../../../../members/authorizers/participantAuthorizer.mjs';
 import { execOnDatabase } from '../../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../../client/aws/utils/bodyExtractor.mjs';
-import { getParticipantProgress } from './participanProgress.mjs';
-import { handleError } from '../errorHandling.mjs';
+import { getParticipantProgress } from '../../commons/getParticipantProgress.mjs';
+import { handleErrorResponse } from '../../../../commons/errorHandling.mjs';
 import { invokeLambda } from '../../../../../client/aws/clients/lambdaClient.mjs';
 import { messageQueue } from '../../../../../client/aws/clients/sqsClient.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
-import {
-  ImprovementRequestError, InsufficientFundsError, NoPurchaseAllowedError
-} from '../../validations/error.mjs';
-import { InvalidUuidError } from '../../../../commons/validations/error.mjs';
+import { ForbiddenOperationError } from '../../../../commons/errors/security/restrictedAccess.mjs';
+import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
+import { ResourceNotFoundError, ResourceStateError } from '../../../../commons/errors/integrity/resources.mjs';
 
 let ALL_IMPROVEMENTS;
 
@@ -31,8 +30,7 @@ export const handle = async (event) => {
 
     const { participantId, workshopExecutionId, improvementIds } = validateAndExtractParams(event);
 
-    const { participant, response } = await authorizeAndFindParticipant(event, participantId);
-    if (response) return response;
+    const participant = await authorizeAndFindParticipant(event, participantId);
 
     await authorizeOperation(workshopExecutionId, participantId);
 
@@ -52,8 +50,9 @@ export const handle = async (event) => {
     await notifyEvent(workshopExecutionId, participant, requestedImprovements);
 
     return sendResponse(HttpResponseCodes.OK, savedProgress);
+
   } catch (error) {
-    return handleError(error);
+    return handleErrorResponse(error);
   }
 };
 
@@ -69,7 +68,7 @@ const authorizeOperation = async (workshopExecutionId, participantId) => {
       });
 
   if (!authorize) {
-    throw new NoPurchaseAllowedError(`Operation ${ operation } cannot be performed at this moment`);
+    throw new ForbiddenOperationError(`Operation ${ operation } cannot be performed at this moment`);
   }
 };
 
@@ -87,11 +86,11 @@ const validateAndExtractParams = (event) => {
   const improvementIds = body.improvementIds;
 
   if (!uuidValidate(participantId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (participantId)}: ${ participantId }`);
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (participantId)}: ${ participantId }`);
   }
 
   if (!uuidValidate(workshopExecutionId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId): ${ workshopExecutionId }`);
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId): ${ workshopExecutionId }`);
   }
 
   return { participantId, workshopExecutionId, improvementIds };
@@ -100,20 +99,20 @@ const validateAndExtractParams = (event) => {
 const validateImprovementIds = async (improvementIds) => {
   const improvements = await ImprovementRepository.findByIdIn(improvementIds);
   if (!improvements.length || improvements.length !== improvementIds.length) {
-    throw new ImprovementRequestError(`Invalid improvement ids`);
+    throw new InvalidInputError(`Invalid improvement ids`);
   }
 };
 
 const validateRequestedImprovements = (improvementIds, requestedImprovements) => {
   if (requestedImprovements.length !== improvementIds.length) {
-    throw new ImprovementRequestError(`Improvements not found: ${ improvementIds }`);
+    throw new ResourceNotFoundError(`Improvements not found: ${ improvementIds }`);
   }
 };
 
 const validateImprovementOrder = (requestedImprovements) => {
   const subarrayIsContained = containsSubarray(ALL_IMPROVEMENTS.map(a => a.id), requestedImprovements.map(f => f.id));
   if (!subarrayIsContained) {
-    throw new ImprovementRequestError(`Improper buying order. Must be 1, 2, 3.`);
+    throw new InvalidInputError(`Improper buying order. Must be 1, 2, 3.`);
   }
 };
 
@@ -121,20 +120,20 @@ const validateImprovementsNotAlreadyBought = (progress, requestedImprovements) =
   const ownedImprovements = progress.details.improvements || [];
   const itemsAlreadyBought = intersect(ownedImprovements.map(i => i.id), requestedImprovements.map(i => i.id));
   if (itemsAlreadyBought.length) {
-    throw new ImprovementRequestError(`Improvement already bought: ${ itemsAlreadyBought }`);
+    throw new ResourceStateError(`Improvement already bought: ${ itemsAlreadyBought }`);
   }
 };
 
 const validatePrerequisites = (requestedImprovements, progress) => {
   if (!prerequisitesMet(requestedImprovements[0], [requestedImprovements, progress.details.improvements || []])) {
-    throw new ImprovementRequestError(`Requisites not met`);
+    throw new ResourceStateError(`Requisites not met`);
   }
 };
 
 const processImprovements = async (progress, requestedImprovements) => {
   const totalCost = requestedImprovements.reduce((acc, improvement) => acc + improvement.price, 0);
   if (totalCost > progress.details.stats.balance) {
-    throw new InsufficientFundsError('Not enough funds!');
+    throw new ResourceStateError('Not enough funds!');
   }
 
   updateProgress(progress, requestedImprovements, totalCost);
