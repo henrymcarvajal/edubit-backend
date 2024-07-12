@@ -25,7 +25,6 @@ export const handle = async (event) => {
     await saveWorkshopExecution(workshopExecution);
 
     return sendResponse(HttpResponseCodes.CREATED, newEnrollment);
-
   } catch (error) {
     return handleErrorResponse(error);
   }
@@ -66,6 +65,9 @@ const enrollParticipant = (workshopExecution, participantId, activities) => {
     const enrolledParticipantsIds = Object.keys(workshopExecution.participants);
     if (!enrolledParticipantsIds.includes(participantId)) {
       workshopExecution.participants[participantId] = newEnrollment;
+    } else if (shouldUpdateActivities(workshopExecution.participants[participantId].activities, activities)) {
+      console.log('Updating activities...');
+      workshopExecution.participants[participantId].activities = activities;
     } else {
       throw new ResourceUnmodifiedError();
     }
@@ -77,4 +79,21 @@ const enrollParticipant = (workshopExecution, participantId, activities) => {
 const saveWorkshopExecution = async (workshopExecution) => {
   const { statement, entity } = WorkshopExecutionRepository.upsertStatement(workshopExecution);
   await execOnDatabase([{ statement: statement, parameters: entity }]);
+};
+
+const shouldUpdateActivities = (oldActivities, newActivities) => {
+  const oldActivitiesValues = Object.values(oldActivities);
+  const newActivitiesValues = Object.values(newActivities);
+
+  if (oldActivitiesValues.length !== newActivitiesValues.length) return true;
+
+  for (let i = 0; i < oldActivitiesValues.length; i++) {
+    console.log(oldActivitiesValues[i]);
+    console.log(newActivitiesValues[i]);
+    console.log(oldActivitiesValues[i] !== newActivitiesValues[i]);
+    if (oldActivitiesValues[i] !== newActivitiesValues[i]) {
+      return true;
+    }
+  }
+  return false;
 };
