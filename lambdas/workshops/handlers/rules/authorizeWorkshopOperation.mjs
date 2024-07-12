@@ -66,7 +66,6 @@ const getCurrentWorkshopPhaseType = async (workshopExecutionId) => {
 };
 
 const runEngine = async (engine, facts) => {
-  console.log('facts', facts);
   let result = false;
   const { events } = await engine.run(facts);
   events.map(event => result = event.params.authorize);

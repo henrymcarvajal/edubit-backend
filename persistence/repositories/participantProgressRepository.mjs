@@ -34,7 +34,7 @@ export const ParticipantProgressRepository = {
       )
   ),
 
-  findCurrentActivityByParticipantIdAndWorkshopExecutionId: async (workshopExecutionId) => (
+  findCurrentActivityByParticipantIdAndWorkshopExecutionId: async (workshopExecutionId, participantId) => (
      ParticipantProgressRepository.findViewByCriteria(
          ParticipantProgressTable_CurrentActivityView,
         ['participant_id', DmlOperators.EQUALS, participantId],

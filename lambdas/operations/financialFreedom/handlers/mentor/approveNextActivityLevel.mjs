@@ -7,17 +7,19 @@ import { ParticipantRepository } from '../../../../../persistence/repositories/p
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 import { WORKSHOP_OPERATION_NAMES } from '../../definitions/operations.mjs';
 
-import { authorizeAndFindMentor } from './mentorAuthorizer.mjs';
+import { authorizeAndFindMentor } from '../../../../members/authorizers/mentorAuthorizer.mjs';
 import { execOnDatabase } from '../../../../../util/dbHelper.mjs';
-import { getParticipantProgress } from '../participant/participanProgress.mjs';
-import { handleError } from '../errorHandling.mjs';
+import { getAuthorizationResult } from '../../commons/getAuthorizationResult.mjs';
+import { getParticipantProgress } from '../../commons/getParticipantProgress.mjs';
+import { handleErrorResponse } from '../../../../commons/errorHandling.mjs';
 import { invokeLambda } from '../../../../../client/aws/clients/lambdaClient.mjs';
 import { messageQueue } from '../../../../../client/aws/clients/sqsClient.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
-import { InvalidRequestError, NoPurchaseAllowedError } from '../../validations/error.mjs';
-import { InvalidUuidError } from '../../../../commons/validations/error.mjs';
+import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
+import { ForbiddenOperationError } from '../../../../commons/errors/security/restrictedAccess.mjs';
+import { ResourceNotFoundError, ResourceStateError } from '../../../../commons/errors/integrity/resources.mjs';
 
 export const handle = async (event) => {
 
@@ -25,8 +27,7 @@ export const handle = async (event) => {
 
     const { workshopExecutionId, mentorId, participantId } = validateAndExtractParams(event);
 
-    const { response } = await authorizeAndFindMentor(event, mentorId);
-    if (response) return response;
+    await authorizeAndFindMentor(event, mentorId);
 
     await authorizeOperation(workshopExecutionId, participantId);
 
@@ -38,7 +39,7 @@ export const handle = async (event) => {
 
     return sendResponse(HttpResponseCodes.OK, newLevel);
   } catch (error) {
-    return handleError(error);
+    return handleErrorResponse(error);
   }
 };
 
@@ -48,15 +49,15 @@ const validateAndExtractParams = (event) => {
   const participantId = event.pathParameters.participantId;
 
   if (!uuidValidate(workshopExecutionId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId)}: ${ workshopExecutionId }`);
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId)}: ${ workshopExecutionId }`);
   }
 
   if (!uuidValidate(mentorId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (mentorId)}: ${ mentorId }`);
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (mentorId)}: ${ mentorId }`);
   }
 
   if (!uuidValidate(participantId)) {
-    throw new InvalidUuidError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (participantId)}: ${ participantId }`);
+    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (participantId)}: ${ participantId }`);
   }
 
   return { workshopExecutionId, mentorId, participantId };
@@ -65,7 +66,7 @@ const validateAndExtractParams = (event) => {
 const authorizeOperation = async (workshopExecutionId, participantId) => {
   const operation = WORKSHOP_OPERATION_NAMES.MENTOR_APPROVE_LEVEL;
 
-  const { authorize } = await invokeLambda(
+  const result = await invokeLambda(
       AwsInfo.WORKSHOPS_OPERATIONS_AUTHORIZER,
       {
         operationName: operation,
@@ -73,8 +74,9 @@ const authorizeOperation = async (workshopExecutionId, participantId) => {
         workshopExecutionId: workshopExecutionId
       });
 
+  const authorize = getAuthorizationResult(result);
   if (!authorize) {
-    throw new NoPurchaseAllowedError(`Operation ${ operation } cannot be performed at this moment`);
+    throw new ForbiddenOperationError(`Operation ${ operation } cannot be performed at this moment`);
   }
 };
 
@@ -84,19 +86,19 @@ const processLevel = async (workshopExecutionId, participantId) => {
 
   const newActivityLevel = progress.details.stats.currentActivity.level++;
   if (newActivityLevel > currentActivity.levels) {
-    throw new InvalidRequestError(`Actividad en máximo nivel`);
+    throw new ResourceStateError(`Actividad en máximo nivel`);
   }
 
   const { entity, statement } = ParticipantProgressRepository.upsertStatement(progress);
   await execOnDatabase({ statement, parameters: entity });
 
-  return {name: currentActivity.name, level: newActivityLevel};
+  return { name: currentActivity.name, level: newActivityLevel };
 };
 
 const getParticipant = async (participantId) => {
   const [participant] = await ParticipantRepository.findById(participantId);
   if (!participant) {
-    throw new InvalidRequestError(`Participant not found: ${ participantId }`);
+    throw new ResourceNotFoundError(`Participant not found: ${ participantId }`);
   }
   return participant;
 };
@@ -104,7 +106,7 @@ const getParticipant = async (participantId) => {
 const getCurrentActivity = async (workshopExecutionId, participantId) => {
   const [progress] = await ParticipantProgressRepository.findCurrentActivityByParticipantIdAndWorkshopExecutionId(workshopExecutionId, participantId);
   if (!progress) {
-    throw new InvalidRequestError(`Participant progress not found: ${ participantId }, ${ workshopExecutionId }`);
+    throw new ResourceNotFoundError(`Participant progress not found: ${ participantId }, ${ workshopExecutionId }`);
   }
   return progress;
 };
@@ -118,5 +120,3 @@ const notifyEvent = async (workshopExecutionId, participant, newLevel) => {
     newLevel: newLevel
   });
 };
-
-

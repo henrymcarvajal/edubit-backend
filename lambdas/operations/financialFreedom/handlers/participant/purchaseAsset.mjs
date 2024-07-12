@@ -7,11 +7,13 @@ import {
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 import { WORKSHOP_OPERATION_NAMES } from '../../definitions/operations.mjs';
 
+import { arrayNotEmpty } from '../../../../../util/arrays.mjs';
 import { authorizeAndFindParticipant } from '../../../../members/authorizers/participantAuthorizer.mjs';
+import { extractBody } from '../../../../../client/aws/utils/bodyExtractor.mjs';
 import { handleErrorResponse } from '../../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
-import { extractBody } from '../../../../../client/aws/utils/bodyExtractor.mjs';
 import { execOnDatabase } from '../../../../../util/dbHelper.mjs';
+import { getAuthorizationResult } from '../../commons/getAuthorizationResult.mjs';
 import { getParticipantProgress } from '../../commons/getParticipantProgress.mjs';
 import { invokeLambda } from '../../../../../client/aws/clients/lambdaClient.mjs';
 import { messageQueue } from '../../../../../client/aws/clients/sqsClient.mjs';
@@ -23,17 +25,17 @@ import { ResourceStateError } from '../../../../commons/errors/integrity/resourc
 
 export const handle = async (event) => {
   try {
-    const { participantId, workshopExecutionId } = validateAndExtractParams(event);
+    const { participantId, workshopExecutionId, assetIds } = validateAndExtractParams(event);
 
     const participant = await authorizeAndFindParticipant(event, participantId);
 
     await authorizeOperation(workshopExecutionId, participantId);
 
     const progress = await getParticipantProgress(participantId, workshopExecutionId);
-    const requestedAssets = await validateAssetsIds(body.assetIds);
+    const requestedAssets = await validateAssetsIds(assetIds);
     const savedProgress = await processAssets(progress, requestedAssets);
 
-    await notifyEvent(workshopExecutionId, participant, requestedAssets)
+    await notifyEvent(workshopExecutionId, participant, requestedAssets);
 
     return sendResponse(HttpResponseCodes.OK, savedProgress);
   } catch (error) {
@@ -42,19 +44,28 @@ export const handle = async (event) => {
 };
 
 const validateAndExtractParams = (event) => {
-
   const participantId = event.pathParameters.participantId;
-  const workshopExecutionId = event.pathParameters.workshopExecutionId;
-
   if (!uuidValidate(participantId)) {
     throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (participantId)}: ${ participantId }`);
   }
 
+  const workshopExecutionId = event.pathParameters.workshopExecutionId;
   if (!uuidValidate(workshopExecutionId)) {
     throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId)}: ${ workshopExecutionId }`);
   }
 
-  return {participantId, workshopExecutionId};
+  const { body: { assetIds } } = extractBody(event);
+  if (arrayNotEmpty(assetIds)) {
+    assetIds.forEach((assetId) => {
+      if (!uuidValidate(assetId)) {
+        throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (assetId)}: ${ assetId }`);
+      }
+    });
+  } else {
+    throw new InvalidInputError(`Faltan activos por comprar`);
+  }
+
+  return { participantId, workshopExecutionId, assetIds };
 };
 
 const validateAssetsIds = async (assetIds) => {
@@ -67,9 +78,8 @@ const validateAssetsIds = async (assetIds) => {
 };
 
 const authorizeOperation = async (workshopExecutionId, participantId) => {
-
   const operation = WORKSHOP_OPERATION_NAMES.PARTICIPANT_PURCHASE_ASSET;
-  const { authorize } = await invokeLambda(
+  const result = await invokeLambda(
       AwsInfo.WORKSHOPS_OPERATIONS_AUTHORIZER,
       {
         operationName: operation,
@@ -77,6 +87,7 @@ const authorizeOperation = async (workshopExecutionId, participantId) => {
         workshopExecutionId: workshopExecutionId
       });
 
+  const authorize = getAuthorizationResult(result);
   if (!authorize) {
     throw new ForbiddenOperationError(`Operation ${ operation } cannot be performed at this moment`);
   }

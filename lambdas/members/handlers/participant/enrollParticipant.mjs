@@ -66,7 +66,6 @@ const enrollParticipant = (workshopExecution, participantId, activities) => {
     if (!enrolledParticipantsIds.includes(participantId)) {
       workshopExecution.participants[participantId] = newEnrollment;
     } else if (shouldUpdateActivities(workshopExecution.participants[participantId].activities, activities)) {
-      console.log('Updating activities...');
       workshopExecution.participants[participantId].activities = activities;
     } else {
       throw new ResourceUnmodifiedError();
@@ -88,9 +87,6 @@ const shouldUpdateActivities = (oldActivities, newActivities) => {
   if (oldActivitiesValues.length !== newActivitiesValues.length) return true;
 
   for (let i = 0; i < oldActivitiesValues.length; i++) {
-    console.log(oldActivitiesValues[i]);
-    console.log(newActivitiesValues[i]);
-    console.log(oldActivitiesValues[i] !== newActivitiesValues[i]);
     if (oldActivitiesValues[i] !== newActivitiesValues[i]) {
       return true;
     }

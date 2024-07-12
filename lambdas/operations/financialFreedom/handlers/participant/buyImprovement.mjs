@@ -10,6 +10,7 @@ import { WORKSHOP_OPERATION_NAMES } from '../../definitions/operations.mjs';
 import { authorizeAndFindParticipant } from '../../../../members/authorizers/participantAuthorizer.mjs';
 import { execOnDatabase } from '../../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../../client/aws/utils/bodyExtractor.mjs';
+import { getAuthorizationResult } from '../../commons/getAuthorizationResult.mjs';
 import { getParticipantProgress } from '../../commons/getParticipantProgress.mjs';
 import { handleErrorResponse } from '../../../../commons/errorHandling.mjs';
 import { invokeLambda } from '../../../../../client/aws/clients/lambdaClient.mjs';
@@ -50,7 +51,6 @@ export const handle = async (event) => {
     await notifyEvent(workshopExecutionId, participant, requestedImprovements);
 
     return sendResponse(HttpResponseCodes.OK, savedProgress);
-
   } catch (error) {
     return handleErrorResponse(error);
   }
@@ -59,7 +59,7 @@ export const handle = async (event) => {
 const authorizeOperation = async (workshopExecutionId, participantId) => {
 
   const operation = WORKSHOP_OPERATION_NAMES.PARTICIPANT_BUY_IMPROVEMENT;
-  const { authorize } = await invokeLambda(
+  const result = await invokeLambda(
       AwsInfo.WORKSHOPS_OPERATIONS_AUTHORIZER,
       {
         operationName: operation,
@@ -67,6 +67,7 @@ const authorizeOperation = async (workshopExecutionId, participantId) => {
         workshopExecutionId: workshopExecutionId
       });
 
+  const authorize = getAuthorizationResult(result);
   if (!authorize) {
     throw new ForbiddenOperationError(`Operation ${ operation } cannot be performed at this moment`);
   }
