@@ -4,6 +4,7 @@ import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 import { WagesRepository } from '../../../../../persistence/repositories/wageRepository.mjs';
 
 import { authorizeAndFindMentor } from '../../../../members/authorizers/mentorAuthorizer.mjs';
+import { authorizeAndFindParticipant } from '../../../../members/authorizers/participantAuthorizer.mjs';
 import { getParticipantProgress } from '../../commons/getParticipantProgress.mjs';
 import { handleErrorResponse } from '../../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
@@ -15,11 +16,15 @@ let ALL_WAGES;
 
 export const handle = async (event) => {
   try {
-    const { mentorId, participantId, workshopExecutionId } = validateAndExtractParams(event);
-    await authorizeAndFindMentor(event, mentorId);
+    const { view, mentorId, participantId, workshopExecutionId } = validateAndExtractParams(event);
+    if (viewIsMentor(view)) {
+      await authorizeAndFindMentor(event, mentorId);
+    } else {
+      await authorizeAndFindParticipant(event, participantId);
+    }
 
     const progress = await getParticipantProgress(participantId, workshopExecutionId);
-    const currentActivityView = await createActivityView(progress.details);
+    const currentActivityView = await createActivityView(progress.details, view);
 
     return sendResponse(HttpResponseCodes.OK, currentActivityView);
   } catch (error) {
@@ -28,9 +33,17 @@ export const handle = async (event) => {
 };
 
 const validateAndExtractParams = (event) => {
-  const mentorId = event.headers.mentorid; // AWS lowercases all headers' names
-  if (!uuidValidate(mentorId)) {
-    throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (mentorId)}: ${ mentorId }`);
+  const view = event.queryStringParameters?.view;
+  if (!view) {
+    throw new InvalidInputError(`Falta valor de vista`);
+  }
+
+  let mentorId;
+  if (viewIsMentor(view)) {
+    mentorId = event.headers.mentorid; // AWS lowercases all headers' names
+    if (!uuidValidate(mentorId)) {
+      throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (mentorId)}: ${ mentorId }`);
+    }
   }
 
   const workshopExecutionId = event.pathParameters.workshopExecutionId;
@@ -43,30 +56,44 @@ const validateAndExtractParams = (event) => {
     throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (participantId): ${ participantId }`);
   }
 
-  return { mentorId, participantId, workshopExecutionId };
+  return { view, mentorId, participantId, workshopExecutionId };
 };
 
-const createActivityView = async (details) => {
+const viewIsMentor = (view) => view.toLowerCase() === 'mentor';
+
+const createActivityView = async (details, view) => {
 
   await initializeWages();
 
-  const { stats } = details;
+  const { currentActivity } = details.stats;
 
-  const [currentActivity] = await ActivityRepository.findById(stats.currentActivity.id);
+  const [foundActivity] = await ActivityRepository.findById(currentActivity.id);
 
-  const wage = ALL_WAGES.find(wage => wage.description === currentActivity.levels);
+  console.log('currentActivity', currentActivity);
+  console.log('foundActivity', foundActivity);
+  console.log('ALL_WAGES', ALL_WAGES);
+  const wage = ALL_WAGES.find(wage => wage.description === foundActivity.levels);
 
-  return {
-    id: stats.currentActivity.id,
-    level: stats.currentActivity.level,
-    supportMaterial: currentActivity.supportMaterial,
-    activitySolution: currentActivity.activitySolution,
-    wage: wage[`level${ stats.currentActivity.level }`]
+  console.log('wage', wage);
+  console.log('wage[`level${ currentActivity.level }`]', wage[`level${ currentActivity.level }`]);
+
+  const activityView = {
+    id: currentActivity.id,
+    level: currentActivity.level,
+    supportMaterial: foundActivity.supportMaterial,
+    wage: wage[`level${ currentActivity.level }`]
   };
-}
+
+  if (viewIsMentor(view)) {
+    activityView.activitySolution = foundActivity.activitySolution;
+  }
+
+  return activityView;
+};
 
 const initializeWages = async () => {
   if (!ALL_WAGES) {
     ALL_WAGES = (await WagesRepository.findAll());
   }
 };
+
