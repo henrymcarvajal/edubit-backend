@@ -1,5 +1,5 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { SignUpMessages } from './validations/messages.mjs';
+import { SignUpMessages } from '../../commons/messages.mjs';
 
 import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';

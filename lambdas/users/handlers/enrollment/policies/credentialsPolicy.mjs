@@ -1,4 +1,4 @@
-import { CredentialsPolicyMessages } from '../validations/messages.mjs';
+import { CredentialsPolicyMessages } from '../../../commons/messages.mjs';
 import { promises } from 'dns';
 
 import { CredentialsValidationError } from '../validations/error.mjs';

@@ -1,7 +1,7 @@
 import { AwsInfo } from '../enrollment/awsInfo.mjs';
 import { cognitoClient } from '../../../../client/aws/clients/cognitoClient.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { ChangePasswordMessages } from '../enrollment/validations/messages.mjs';
+import { ChangePasswordMessages } from '../../commons/messages.mjs';
 
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validatePassword } from '../enrollment/policies/credentialsPolicy.mjs';

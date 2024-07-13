@@ -1,4 +1,4 @@
-import { EmailsValidationMessages, GradeValidationMessages } from './messages.mjs';
+import { EmailsValidationMessages, GradeValidationMessages } from '../../../commons/messages.mjs';
 
 import { DuplicateEmailsError, InvalidGradeError } from './error.mjs';
 

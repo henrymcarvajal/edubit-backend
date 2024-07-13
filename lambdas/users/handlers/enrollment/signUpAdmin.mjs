@@ -1,6 +1,6 @@
 import { GenericMessages } from '../../../../util/messages.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { SignUpMessages } from './validations/messages.mjs';
+import { SignUpMessages } from '../../commons/messages.mjs';
 import { UserRepository } from '../../../../persistence/repositories/userRepository.mjs';
 import { UserRoles } from './constants.mjs';
 
