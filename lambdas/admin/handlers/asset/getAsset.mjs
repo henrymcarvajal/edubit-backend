@@ -2,7 +2,7 @@ import { AssetRepository } from '../../../../persistence/repositories/assetRepos
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
-import { handleAdminError } from '../errorHandling.mjs';
+import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
@@ -18,6 +18,6 @@ export const handle = async (event) => {
     return sendResponse(HttpResponseCodes.OK, asset);
 
   } catch (error) {
-    return handleAdminError(error);
+    return handleErrorResponse(error);
   }
 };

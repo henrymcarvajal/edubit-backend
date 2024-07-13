@@ -2,7 +2,7 @@ import { AssetRepository } from '../../../../persistence/repositories/assetRepos
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 
-import { handleAdminError } from '../errorHandling.mjs';
+import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 
 export const handle = async (event) => {
@@ -20,6 +20,6 @@ export const handle = async (event) => {
     return sendResponse(HttpResponseCodes.OK, assets);
 
   } catch (error) {
-    return handleAdminError(error);
+    return handleErrorResponse(error);
   }
 };

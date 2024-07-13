@@ -6,7 +6,7 @@ import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
-import { handleAdminError } from '../errorHandling.mjs';
+import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { setFields } from '../../../commons/fieldOperations.mjs';
 import { validate as uuidValidate } from 'uuid';
@@ -37,6 +37,6 @@ export const handle = async (event) => {
     return sendResponse(HttpResponseCodes.OK, ActivityTable.rowToObject(savedActivity));
 
   } catch (error) {
-    return handleAdminError(error);
+    return handleErrorResponse(error);
   }
 };
