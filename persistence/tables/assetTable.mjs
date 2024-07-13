@@ -15,7 +15,8 @@ export const  AssetTable = {
     id: 'id',
     title: 'title',
     description: 'description',
-    price: 'price'
+    price: 'price',
+    image_url: 'imageUrl'
   },
   columnTypes: {
     price: 'int'

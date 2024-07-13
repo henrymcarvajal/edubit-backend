@@ -19,6 +19,7 @@ export const ImprovementTable = {
     code: 'code',
     rate: 'rate',
     prerequisite: 'prerequisite',
+    image_url: 'imageUrl'
   },
   columnTypes: {
     price: 'int',
