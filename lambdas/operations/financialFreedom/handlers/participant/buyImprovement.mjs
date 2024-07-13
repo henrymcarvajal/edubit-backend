@@ -57,7 +57,6 @@ export const handle = async (event) => {
 };
 
 const authorizeOperation = async (workshopExecutionId, participantId) => {
-
   const operation = WORKSHOP_OPERATION_NAMES.PARTICIPANT_BUY_IMPROVEMENT;
   const result = await invokeLambda(
       AwsInfo.WORKSHOPS_OPERATIONS_AUTHORIZER,
@@ -80,20 +79,17 @@ const initializeImprovements = async () => {
 };
 
 const validateAndExtractParams = (event) => {
-
-  const { body } = extractBody(event);
   const participantId = event.pathParameters.participantId;
-  const workshopExecutionId = event.pathParameters.workshopExecutionId;
-  const improvementIds = body.improvementIds;
-
   if (!uuidValidate(participantId)) {
     throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (participantId)}: ${ participantId }`);
   }
 
+  const workshopExecutionId = event.pathParameters.workshopExecutionId;
   if (!uuidValidate(workshopExecutionId)) {
     throw new InvalidInputError(`${ ValueValidationMessages.VALUE_IS_NOT_UUID } (workshopExecutionId): ${ workshopExecutionId }`);
   }
 
+  const { body: {improvementIds} } = extractBody(event);
   return { participantId, workshopExecutionId, improvementIds };
 };
 
