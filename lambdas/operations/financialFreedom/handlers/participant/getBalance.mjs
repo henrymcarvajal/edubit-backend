@@ -50,7 +50,12 @@ const createProgressView = async (details) => {
     balanceView.improvements = [];
     const improvementsDetails = await ImprovementRepository.findByIdIn(improvements.map(i => i.id));
     improvementsDetails.forEach((improvementDetail) => {
-      balanceView.improvements.push({ id: improvementDetail.id, name: improvementDetail.name });
+      balanceView.improvements.push(
+          {
+            id: improvementDetail.id,
+            name: improvementDetail.name,
+            imageUrl: improvementDetail.imageUrl
+          });
     });
   }
 
@@ -58,7 +63,9 @@ const createProgressView = async (details) => {
     balanceView.assets = [];
     const assetsDetails = await AssetRepository.findByIdIn(assets.map(i => i.id));
     assets.forEach((asset) => {
-      asset.name = assetsDetails.find(a => a.id === asset.id).title;
+      const details = assetsDetails.find(a => a.id === asset.id);
+      asset.name = details.title;
+      asset.imageUrl = details.imageUrl;
       balanceView.assets.push(asset);
     });
   }
