@@ -31,7 +31,12 @@ custom:
   cognitoUserPoolArnImport:
     Fn::ImportValue: ${self:custom.cognitoStackName}-${self:custom.target-env}-cognitoUserPoolArn
   ## SQS
+  balanceCalculatorQueueName: ${self:custom.stack-name}-balance-calculator-queue
   eventRegistryQueueName: ${self:custom.stack-name}-event-registry-queue
+  ## Workshop Scheduler Queue
+  schedulersStackName: ${self:org}-schedulers
+  financialFreedomWorkshopQueueArnImport:
+    Fn::ImportValue: ${self:custom.schedulersStackName}-${self:custom.target-env}-financialFreedomWorkshopQueueArn
   ## Workshop Operations Authorizer
   workshopsStackName: ${self:org}-workshops
   workshopOperationsAuthorizerLambdaNameImport:
@@ -94,12 +99,46 @@ resources:
         ResponseType: DEFAULT_5XX
         RestApiId:
           Ref: 'ApiGatewayRestApi'
+    BalanceCalculatorQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.balanceCalculatorQueueName}
     EventRegistryQueue:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: ${self:custom.eventRegistryQueueName}
 
 functions:
+  progressInitializer:
+    name: ${self:custom.stack-name}-progress-initializer
+    description: lambda to initialize participants progress
+    handler: process/progressInitializer.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      balance_calculator_queue: ${self:custom.balanceCalculatorQueueName}
+    events:
+      - sqs:
+          arn: ${self:custom.financialFreedomWorkshopQueueArnImport}
+          batchSize: 1
+  balanceCalculator:
+    name: ${self:custom.stack-name}-balance-calculator
+    description: lambda to calculate participants balances
+    handler: process/calculators/balanceCalculator.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - BalanceCalculatorQueue
+              - Arn
+          batchSize: 1
   purchaseAsset:
     name: ${self:custom.stack-name}-purchase-asset-by-participant
     description: lambda to purchase assets by participants
@@ -385,6 +424,64 @@ functions:
       - http:
           path: ${self:custom.api-gateway-resource}/workshop-execution/today
           method: get
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  proposePartnership:
+    name: ${self:custom.stack-name}-propose-partnership
+    description: lambda to propose partnerships to other participants
+    handler: handlers/participant/proposePartnership.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      workshop_operations_authorizer: ${self:custom.workshopOperationsAuthorizerLambdaNameImport}
+      event_registry_queue: ${self:custom.eventRegistryQueueName}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/workshop-execution/{workshopExecutionId}/participant/{participantId}/partnership
+          method: post
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  updatePartnership:
+    name: ${self:custom.stack-name}-update-partnership
+    description: lambda to accept/reject partnerships with other participants
+    handler: handlers/participant/updatePartnership.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      workshop_operations_authorizer: ${self:custom.workshopOperationsAuthorizerLambdaNameImport}
+      event_registry_queue: ${self:custom.eventRegistryQueueName}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/workshop-execution/{workshopExecutionId}/participant/{participantId}/partnership/{partnerId}
+          method: post
           cors:
             origins:
               - ${self:custom.api-gateway-allowed-origins}

@@ -62,20 +62,15 @@ const validateAndExtractParams = (event) => {
 const viewIsMentor = (view) => view.toLowerCase() === 'mentor';
 
 const createActivityView = async (details, view) => {
+  const { currentActivity } = details.stats;
+  const [foundActivity] = await ActivityRepository.findById(currentActivity.id);
+  return await buildView(currentActivity, foundActivity, view);
+};
 
+const buildView = async (currentActivity, foundActivity, view) => {
   await initializeWages();
 
-  const { currentActivity } = details.stats;
-
-  const [foundActivity] = await ActivityRepository.findById(currentActivity.id);
-
-  console.log('currentActivity', currentActivity);
-  console.log('foundActivity', foundActivity);
-  console.log('ALL_WAGES', ALL_WAGES);
-  const wage = ALL_WAGES.find(wage => wage.description === foundActivity.levels);
-
-  console.log('wage', wage);
-  console.log('wage[`level${ currentActivity.level }`]', wage[`level${ currentActivity.level }`]);
+  const wage = ALL_WAGES.find(wage => wage.maxLevel === foundActivity.levels);
 
   const activityView = {
     id: currentActivity.id,
@@ -96,4 +91,3 @@ const initializeWages = async () => {
     ALL_WAGES = (await WagesRepository.findAll());
   }
 };
-

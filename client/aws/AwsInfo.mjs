@@ -10,5 +10,6 @@ export const AwsInfo = {
   CLEAN_SCHEDULER_TOPIC_NAME: process.env.clean_scheduler_topic_name,
   WORKSHOPS_TOPIC_NAME: process.env.workshops_topic_name,
   WORKSHOPS_OPERATIONS_AUTHORIZER: process.env.workshop_operations_authorizer,
-  EVENT_REGISTRY_QUEUE: process.env.event_registry_queue
+  EVENT_REGISTRY_QUEUE: process.env.event_registry_queue,
+  BALANCE_CALCULATOR_QUEUE: process.env.balance_calculator_queue
 }

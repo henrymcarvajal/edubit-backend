@@ -13,9 +13,10 @@ import { validate as uuidValidate } from 'uuid';
 import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
 import { WorkshopExecutionRepository } from '../../../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { ResourceNotFoundError } from '../../../../commons/errors/integrity/resources.mjs';
+import { arrayEmpty } from '../../../../../util/arrays.mjs';
 
-let ALL_WAGES;
-let ALL_ACTIVITIES;
+const ALL_WAGES = [];
+const ALL_ACTIVITIES = [];
 
 export const handle = async (event) => {
   try {
@@ -73,9 +74,9 @@ const createActivityWagesView = async (enrollment) => {
 
     const activityLevel = activity.levels;
 
+    const wage = ALL_WAGES.find(w => w.maxLevels === activityLevel);
     for (let i = 1; i <= activityLevel; i++) {
-      const wage = ALL_WAGES.find(w => parseInt(w.description) === i);
-      activityView[activityId].wages[`nivel${ i }`] = wage[`level${ activityLevel }`];
+      activityView[activityId].wages[`nivel_${ i }`] = wage[`level${ i }`];
     }
   });
 
@@ -83,13 +84,13 @@ const createActivityWagesView = async (enrollment) => {
 };
 
 const initializeWages = async () => {
-  if (!ALL_WAGES) {
-    ALL_WAGES = await WagesRepository.findAll();
+  if (arrayEmpty(ALL_WAGES)) {
+    ALL_WAGES.push(... await WagesRepository.findAll());
   }
 };
 
 const initializeActivities = async () => {
-  if (!ALL_ACTIVITIES) {
-    ALL_ACTIVITIES = await ActivityRepository.findAll();
+  if (arrayEmpty(ALL_ACTIVITIES)) {
+    ALL_ACTIVITIES.push(... await ActivityRepository.findAll());
   }
 };

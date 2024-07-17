@@ -115,7 +115,7 @@ const updateProgress = (progress, foundAssets, totalCost) => {
     if (index) {
       index.count++;
     } else {
-      progress.details.assets.push({ id: foundAsset.id, count: 1 });
+      progress.details.assets.push({ id: foundAsset.id, count: 1, type: foundAsset.type, value: foundAsset.price});
     }
   }
 
