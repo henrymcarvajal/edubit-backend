@@ -16,8 +16,8 @@ export const  InstitutionTable = {
     name: 'name'
   },
 
-  rowToObject: (row) => {
-    return rowToObject(row, InstitutionTable.columnToFieldMappings);
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
   }
 };
 

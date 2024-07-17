@@ -18,8 +18,8 @@ export const WorkshopDefinitionTable = {
     authorizer: 'authorizer',
   },
 
-  rowToObject: (row) => {
-    return rowToObject(row, WorkshopDefinitionTable.columnToFieldMappings);
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
   }
 };
 

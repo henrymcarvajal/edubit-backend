@@ -31,8 +31,8 @@ export const ImprovementTable = {
     'prerequisite desc'
   ],
 
-  rowToObject: (row) => {
-    return rowToObject(row, ImprovementTable.columnToFieldMappings);
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
   }
 };
 

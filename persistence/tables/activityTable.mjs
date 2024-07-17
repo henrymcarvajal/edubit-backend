@@ -21,6 +21,9 @@ export const  ActivityTable = {
     support_material: 'supportMaterial',
     activity_solution: 'activitySolution'
   },
+  columnTypes: {
+    levels: 'int'
+  },
 
   rowToObject: (row) => {
     return rowToObject(row, ActivityTable.columnToFieldMappings);

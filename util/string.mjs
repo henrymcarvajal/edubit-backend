@@ -1,0 +1,1 @@
+export const isEmptyString = (str) => (typeof str === 'string' && str === '')

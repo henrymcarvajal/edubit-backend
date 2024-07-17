@@ -19,7 +19,6 @@ export const  ParticipantEnrollmentTable = {
   },
 
   rowToObject: (row) => {
-    delete row.user_id;
     return rowToObject(row, ParticipantEnrollmentTable.columnToFieldMappings);
   }
 };

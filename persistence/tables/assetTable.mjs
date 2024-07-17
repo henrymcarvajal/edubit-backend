@@ -16,14 +16,16 @@ export const  AssetTable = {
     title: 'title',
     description: 'description',
     price: 'price',
-    image_url: 'imageUrl'
+    type: 'type',
+    image_url: 'imageUrl',
+    mortgageable: 'mortgageable'
   },
   columnTypes: {
     price: 'int'
   },
 
-  rowToObject: (row) => {
-    return rowToObject(row, AssetTable.columnToFieldMappings);
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
   }
 };
 

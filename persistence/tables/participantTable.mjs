@@ -21,8 +21,8 @@ export const  ParticipantTable = {
     parent_email: 'parentEmail'
   },
 
-  rowToObject: (row) => {
-    return rowToObject(row, ParticipantTable.columnToFieldMappings);
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
   }
 };
 

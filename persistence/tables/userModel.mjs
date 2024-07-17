@@ -17,8 +17,8 @@ export const UserModel = {
     email: 'email',
   },
 
-  rowToObject: (row) => {
-    return rowToObject(row, UserModel.columnToFieldMappings);
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
   }
 };
 

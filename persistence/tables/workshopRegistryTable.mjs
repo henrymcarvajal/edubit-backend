@@ -18,7 +18,7 @@ export const WorkshopRegistryTable = {
   ],
   limitRows: 10,
 
-  rowToObject: (row) => {
-    return rowToObject(row, WorkshopRegistryTable.columnToFieldMappings);
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
   }
 };

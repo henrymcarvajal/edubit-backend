@@ -13,14 +13,22 @@ export const  WagesTable = {
     //disabled_date: 'disabledDate',
     // business
     id: 'id',
-    description: 'description',
-    level_4: 'level4',
-    level_3: 'level3',
+    max_levels: 'maxLevels',
+    level_1: 'level1',
     level_2: 'level2',
+    level_3: 'level3',
+    level_4: 'level4',
+  },
+  columnTypes: {
+    max_levels: 'int',
+    level_1: 'int',
+    level_2: 'int',
+    level_3: 'int',
+    level_4: 'int'
   },
 
-  rowToObject: (row) => {
-    return rowToObject(row, WagesTable.columnToFieldMappings);
+  rowToObject(row) {
+    return rowToObject(row, this.columnToFieldMappings);
   }
 };
 

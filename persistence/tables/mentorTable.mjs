@@ -19,9 +19,9 @@ export const  MentorTable = {
     phone: 'phone',
   },
 
-  rowToObject: (row) => {
+  rowToObject(row) {
     delete row.user_id;
-    return rowToObject(row, MentorTable.columnToFieldMappings);
+    return rowToObject(row, this.columnToFieldMappings);
   }
 };
 
