@@ -29,8 +29,8 @@ export const CredentialsPolicyMessages = {
   EMAIL_EMPTY: 'Dirección de correo vacía',
   EMAIL_DOMAIN_NOT_FOUND: `Dominio de dirección de correo no encontrado`,
   EMAIL_FORMAT_INVALID: `Formato de dirección de correo inválido`,
-  PASSWORD_NOT_COMPLIANT_WITH_POLICY: `Contraseña no cumple requerimientos`,
-  PASSWORD_SHORTER_THAN_POLICY: `Contraseña no tiene tamaño mínimo`,
+  PASSWORD_NOT_COMPLIANT_WITH_POLICY: `Contraseña no cumple requerimientos: `,
+  PASSWORD_SHORTER_THAN_POLICY: `Contraseña no tiene tamaño mínimo (8)`,
 };
 
 export const EmailsValidationMessages = {

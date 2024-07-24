@@ -24,7 +24,7 @@ const validateEmail = async (email) => {
     console.log('e', e);
   }
 
-  throw new CredentialsValidationError(CredentialsPolicyMessages.EMAIL_DOMAIN_NOT_FOUND + `: ${domain}`);
+  throw new CredentialsValidationError(CredentialsPolicyMessages.EMAIL_DOMAIN_NOT_FOUND + `: ${ domain }`);
 };
 
 export const validatePassword = async (password) => {
@@ -40,7 +40,12 @@ export const validatePassword = async (password) => {
   }
 
   if (!password.match(passwordPolicy())) {
-    throw new CredentialsValidationError(CredentialsPolicyMessages.PASSWORD_NOT_COMPLIANT_WITH_POLICY);
+    const passwordPolicies = `mínimo una letra mayúscula,` +
+        `mínimo una letra minúscula,` +
+        `mínimo un dígito,` +
+        `mínimo un carácter especial !@#$%&,` +
+        `entre 8 y 64 carácteres`;
+    throw new CredentialsValidationError(CredentialsPolicyMessages.PASSWORD_NOT_COMPLIANT_WITH_POLICY + passwordPolicies);
   }
 };
 
