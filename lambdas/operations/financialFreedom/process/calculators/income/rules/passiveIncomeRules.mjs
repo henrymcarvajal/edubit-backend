@@ -1,5 +1,5 @@
 import { Engine, Rule } from 'json-rules-engine';
-import { arrayEmpty } from '../../../../../../util/arrays.mjs';
+import { arrayEmpty } from '../../../../../../../util/arrays.mjs';
 
 // Create engine
 const engine = new Engine([], { allowUndefinedFacts: true, replaceFactsInEventParams: true });

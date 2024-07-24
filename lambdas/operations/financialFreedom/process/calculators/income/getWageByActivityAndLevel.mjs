@@ -1,6 +1,6 @@
-import { WagesRepository } from '../../../../../persistence/repositories/wageRepository.mjs';
+import { WagesRepository } from '../../../../../../persistence/repositories/wageRepository.mjs';
 
-import { arrayEmpty } from '../../../../../util/arrays.mjs';
+import { arrayEmpty } from '../../../../../../util/arrays.mjs';
 
 const ALL_WAGES = [];
 

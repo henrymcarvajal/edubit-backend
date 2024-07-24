@@ -38,6 +38,8 @@ const validateAndExtractParams = (event) => {
 
 const verbalize = (participantName, operationName, complement) => {
 
+  console.log(participantName, operationName, complement);
+
   let playerName = participantName.split(' ')[0];
   let verb = '';
   let elements = ['', ''];
@@ -60,6 +62,18 @@ const verbalize = (participantName, operationName, complement) => {
       message = `${ playerName } acaba de subir al nivel ${ complement.level } de ${ complement.name }`;
       break;
     }
+    case WORKSHOP_OPERATION_NAMES.PARTICIPANT_PROPOSE_SOCIETY: {
+      const { firstName: firstParticipantName, email: participantEmail } = extractFirstNameAndEmail(participantName);
+      const { firstName: firstPartnerName, email: partnerEmail } = extractFirstNameAndEmail(complement.partnerName);
+      message = `${ firstParticipantName } ${ participantEmail } le propone la sociedad ${ complement.partnershipName } a ${ firstPartnerName } ${ partnerEmail }`;
+      break;
+    }
+    case WORKSHOP_OPERATION_NAMES.PARTICIPANT_ACCEPT_SOCIETY: {
+      const { firstName: firstParticipantName, email: fullPlayerEmail } = extractFirstNameAndEmail(participantName);
+      const { firstName: firstPartnerName, email: fullPartnerEmail } = extractFirstNameAndEmail(complement.partnerName);
+      message = `${ firstParticipantName } ${ fullPlayerEmail } acepta la sociedad ${ complement.partnershipName } a ${ firstPartnerName } ${ fullPartnerEmail }`;
+      break;
+    }
     default: {
       break;
     }
@@ -76,4 +90,11 @@ const saveEvent = async (workshopExecutionId, event) => {
       });
 
   await execOnDatabase({ statement: statement, parameters: entity });
+};
+
+const extractFirstNameAndEmail = (name) => {
+  let separator = name.lastIndexOf(' ');
+  const firstName = name.substring(0, separator).split(' ')[0];
+  const email = name.substring(separator + 1);
+  return { firstName, email };
 };

@@ -4,9 +4,9 @@ import {
 
 import { execOnDatabase } from '../../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../../client/aws/utils/bodyExtractor.mjs';
-import { calculateMonthlyActiveIncome } from './activeIncome.mjs';
-import { calculateMonthlyPassiveIncome } from './passiveIncome.mjs';
-import { calculateMonthlyExpenses } from './expenses.mjs';
+import { calculateMonthlyActiveIncome } from './income/activeIncome.mjs';
+import { calculateMonthlyPassiveIncome } from './income/passiveIncome.mjs';
+import { calculateMonthlyExpenses } from './expenses/expenses.mjs';
 
 export const handle = async (event) => {
   try {
@@ -28,24 +28,35 @@ const calculateMonthlyBalances = async (workshopExecutionId, elapsedTime) => {
 
   for await (const progress of progresses) {
     const activeIncome = await calculateMonthlyActiveIncome(progress.details);
+    console.log('activeIncome', activeIncome);
     const passiveIncome = await calculateMonthlyPassiveIncome(progress.details.assets, elapsedTime);
+    console.log('passiveIncome', passiveIncome);
 
     const expenses = await calculateMonthlyExpenses(progress.details.assets, elapsedTime);
+    console.log('expenses', expenses);
 
-    const totalIncome = (activeIncome || 0) + (passiveIncome || 0) - (expenses || 0);
-    if (totalIncome) {
-      updateBalance(progress.details, totalIncome);
-      await saveParticipantProgress(progress);
-    }
+    const totalRawIncome = (activeIncome || 0) + (passiveIncome || 0);
+    const totalRawExpenses = (expenses || 0);
+    console.log('totalNetIncome', totalRawIncome);
+
+    updateBalance(progress.details, totalRawIncome, totalRawExpenses);
+    await saveParticipantProgress(progress);
   }
 };
 
-const updateBalance = (details, income) => {
+const updateBalance = (details, totalRawIncome, totalRawExpenses) => {
   if (!details.history) {
     details.history = [];
   }
-  details.history.push(details.stats.balance);
-  details.stats.balance += income;
+
+  const final = details.stats.balance + (totalRawIncome + totalRawExpenses);
+  details.history.push({
+    income: totalRawIncome,
+    expenses: totalRawExpenses,
+    initial: details.stats.balance,
+    final: final,
+  });
+  details.stats.balance = final;
 };
 
 const saveParticipantProgress = async (progress) => {

@@ -1,28 +1,26 @@
 import { AwsInfo } from '../../../../../client/aws/AwsInfo.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
+import {
+  ParticipantProgressRepository
+} from '../../../../../persistence/repositories/participantProgressRepository.mjs';
+import { PartnershipMessages } from '../../commons/messages/partnership.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 import { WORKSHOP_OPERATION_NAMES } from '../../definitions/operations.mjs';
+import { PARTNERSHIP_STATUS } from '../../definitions/partnershipStatus.mjs';
 
 import { authorizeAndFindParticipant } from '../../../../members/authorizers/participantAuthorizer.mjs';
-import { extractBody } from '../../../../../client/aws/utils/bodyExtractor.mjs';
+import { execOnDatabase } from '../../../../../util/dbHelper.mjs';
 import { getAuthorizationResult } from '../../commons/getAuthorizationResult.mjs';
 import { getParticipantProgress } from '../../commons/getParticipantProgress.mjs';
 import { handleErrorResponse } from '../../../../commons/errorHandling.mjs';
 import { invokeLambda } from '../../../../../client/aws/clients/lambdaClient.mjs';
-import { messageQueue } from '../../../../../client/aws/clients/sqsClient.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
 import { ForbiddenOperationError } from '../../../../commons/errors/security/restrictedAccess.mjs';
 import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
-import { isEmptyString } from '../../../../../util/string.mjs';
-import { PARTNERSHIP_STATUS } from '../../definitions/partnershipStatus.mjs';
-import {
-  ParticipantProgressRepository
-} from '../../../../../persistence/repositories/participantProgressRepository.mjs';
-import { execOnDatabase } from '../../../../../util/dbHelper.mjs';
-import { ResourceStateError } from '../../../../commons/errors/integrity/resources.mjs';
-import { PartnershipMessages } from '../../commons/messages/messages.mjs';
+import { messageQueue } from '../../../../../client/aws/clients/sqsClient.mjs';
+import { ParticipantRepository } from '../../../../../persistence/repositories/participantRepository.mjs';
 
 export const handle = async (event) => {
   try {
@@ -32,11 +30,11 @@ export const handle = async (event) => {
     const participantProgress = await getParticipantProgress(participantId, workshopExecutionId);
     const partnerProgress = await getParticipantProgress(partnerId, workshopExecutionId);
 
-    updatePartnershipProposal(partnerProgress.details);
-    const partnerShip = createPartnership(participantProgress.details, participantId, partnerId);
+    updatePartnershipProposal(partnerProgress, participantProgress);
+    const partnerShip = createPartnership(participantProgress, partnerProgress);
     await updateProgresses(partnerProgress, participantProgress);
 
-    await notifyEvent(workshopExecutionId, participant, partnerShip);
+    await notifyEvent(workshopExecutionId, participantProgress, partnerProgress, partnerShip.partnershipName);
 
     return sendResponse(HttpResponseCodes.OK, partnerShip);
   } catch (error) {
@@ -80,40 +78,54 @@ const authorizeOperation = async (workshopExecutionId, participantId) => {
   }
 };
 
-const updatePartnershipProposal = (details) => {
-  details.society.status = PARTNERSHIP_STATUS.CONFIRMED
+const updatePartnershipProposal = (partnerProgress, participantProgress) => {
+  if (partnerProgress.details?.society?.partnerId !== participantProgress.participantId) {
+    throw new ForbiddenOperationError(PartnershipMessages.NOT_MEMBER_OF_MEMBERSHIP);
+  }
+  partnerProgress.details.society.status = PARTNERSHIP_STATUS.CONFIRMED;
 };
 
-const createPartnership = (details, partnerId) => {
-  details.society = {
-    partnerId,
-    status: PARTNERSHIP_STATUS.CONFIRMED
+const createPartnership = (participantProgress, partnerProgress) => {
+  participantProgress.details.society = {
+    partnerId: partnerProgress.participantId,
+    status: PARTNERSHIP_STATUS.CONFIRMED,
+    partnershipName: partnerProgress.details.society.partnershipName
   };
 
-  return details.society;
+  return participantProgress.details.society;
 };
 
 const updateProgresses = async (participantProgress, partnerProgress) => {
   participantProgress.modificationDate = new Date();
   partnerProgress.modificationDate = new Date();
 
-  const { entity: participantEntity, statement: participantStatement } = ParticipantProgressRepository.upsertStatement(participantProgress);
-  const { entity: partnerEntity, statement: partnerStatement } = ParticipantProgressRepository.upsertStatement(participantProgress);
+  const {
+    entity: participantEntity,
+    statement: participantStatement
+  } = ParticipantProgressRepository.upsertStatement(participantProgress);
+  const {
+    entity: partnerEntity,
+    statement: partnerStatement
+  } = ParticipantProgressRepository.upsertStatement(partnerProgress);
 
   await execOnDatabase(
       [{ statement: participantStatement, parameters: participantEntity },
-      { statement: partnerStatement, parameters: partnerEntity }]
+        { statement: partnerStatement, parameters: partnerEntity }]
   );
 };
 
 
-const notifyEvent = async (workshopExecutionId, participant, requestedImprovements) => {
-  /*const participantName = participant.name;
-  const improvementNames = requestedImprovements.map(i => i.name);
+const notifyEvent = async (workshopExecutionId, participantProgress, partnerProgress, partnershipName) => {
+  const [participant] = await ParticipantRepository.findById(participantProgress.participantId);
+  const participantName = `${ participant.name } (${ participant.email })`;
+
+  const [partner] = await ParticipantRepository.findById(partnerProgress.participantId);
+  const partnerName = `${ partner.name } (${ partner.email })`;
+
   await messageQueue(AwsInfo.EVENT_REGISTRY_QUEUE, {
     workshopExecutionId,
     participantName,
-    operationName: WORKSHOP_OPERATION_NAMES.PARTICIPANT_BUY_IMPROVEMENT,
-    improvementNames
-  });*/
+    operationName: WORKSHOP_OPERATION_NAMES.PARTICIPANT_ACCEPT_SOCIETY,
+    complement: { partnerName, partnershipName }
+  });
 };
