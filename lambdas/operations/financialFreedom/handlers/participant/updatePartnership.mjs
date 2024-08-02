@@ -1,9 +1,8 @@
+import ParticipantProgressRepository from '../../../../../persistence/repositories/participantProgressRepository.mjs';
+import ParticipantRepository from '../../../../../persistence/repositories/participantRepository.mjs';
 import { AwsInfo } from '../../../../../client/aws/AwsInfo.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
-import {
-  ParticipantProgressRepository
-} from '../../../../../persistence/repositories/participantProgressRepository.mjs';
-import { PartnershipMessages } from '../../commons/messages/partnership.mjs';
+import { PartnershipMessages } from '../../commons/messages/partnershipMessages.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 import { WORKSHOP_OPERATION_NAMES } from '../../definitions/operations.mjs';
 import { PARTNERSHIP_STATUS } from '../../definitions/partnershipStatus.mjs';
@@ -20,9 +19,8 @@ import { validate as uuidValidate } from 'uuid';
 import { ForbiddenOperationError } from '../../../../commons/errors/security/restrictedAccess.mjs';
 import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
 import { messageQueue } from '../../../../../client/aws/clients/sqsClient.mjs';
-import { ParticipantRepository } from '../../../../../persistence/repositories/participantRepository.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     const { workshopExecutionId, participantId, partnerId } = validateAndExtractParams(event);
     const participant = await authorizeAndFindParticipant(event, participantId);
@@ -34,7 +32,7 @@ export const handle = async (event) => {
     const partnerShip = createPartnership(participantProgress, partnerProgress);
     await updateProgresses(partnerProgress, participantProgress);
 
-    await notifyEvent(workshopExecutionId, participantProgress, partnerProgress, partnerShip.partnershipName);
+    await notifyEvent(workshopExecutionId, participantProgress, partnerProgress, partnerShip.name);
 
     return sendResponse(HttpResponseCodes.OK, partnerShip);
   } catch (error) {
@@ -79,20 +77,20 @@ const authorizeOperation = async (workshopExecutionId, participantId) => {
 };
 
 const updatePartnershipProposal = (partnerProgress, participantProgress) => {
-  if (partnerProgress.details?.society?.partnerId !== participantProgress.participantId) {
+  if (partnerProgress.details?.partnership?.partnerId !== participantProgress.participantId) {
     throw new ForbiddenOperationError(PartnershipMessages.NOT_MEMBER_OF_MEMBERSHIP);
   }
-  partnerProgress.details.society.status = PARTNERSHIP_STATUS.CONFIRMED;
+  partnerProgress.details.partnership.status = PARTNERSHIP_STATUS.CONFIRMED;
 };
 
 const createPartnership = (participantProgress, partnerProgress) => {
-  participantProgress.details.society = {
+  participantProgress.details.partnership = {
     partnerId: partnerProgress.participantId,
     status: PARTNERSHIP_STATUS.CONFIRMED,
-    partnershipName: partnerProgress.details.society.partnershipName
+    name: partnerProgress.details.partnership.name
   };
 
-  return participantProgress.details.society;
+  return participantProgress.details.partnership;
 };
 
 const updateProgresses = async (participantProgress, partnerProgress) => {
@@ -114,7 +112,6 @@ const updateProgresses = async (participantProgress, partnerProgress) => {
   );
 };
 
-
 const notifyEvent = async (workshopExecutionId, participantProgress, partnerProgress, partnershipName) => {
   const [participant] = await ParticipantRepository.findById(participantProgress.participantId);
   const participantName = `${ participant.name } (${ participant.email })`;
@@ -125,7 +122,7 @@ const notifyEvent = async (workshopExecutionId, participantProgress, partnerProg
   await messageQueue(AwsInfo.EVENT_REGISTRY_QUEUE, {
     workshopExecutionId,
     participantName,
-    operationName: WORKSHOP_OPERATION_NAMES.PARTICIPANT_ACCEPT_SOCIETY,
+    operationName: WORKSHOP_OPERATION_NAMES.PARTICIPANT_ACCEPT_PARTNERSHIP,
     complement: { partnerName, partnershipName }
   });
 };

@@ -1,11 +1,11 @@
-import { ActivityRepository } from '../../../../persistence/repositories/activityRepository.mjs';
+import ActivityRepository from '../../../../persistence/repositories/activityRepository.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 
 import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
 
   const encodedIds = event.pathParameters.ids;
   const roles = event.requestContext.authorizer.claims.profile;

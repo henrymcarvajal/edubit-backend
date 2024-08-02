@@ -1,12 +1,12 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
-import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
+import WorkshopExecutionRepository from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { calculateTiming } from './calculateWorkshopTiming.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
 
   const id = event.pathParameters.id;
   if (!uuidValidate(id)) return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: `${ ValueValidationMessages.VALUE_IS_NOT_UUID }: ${ id }` });

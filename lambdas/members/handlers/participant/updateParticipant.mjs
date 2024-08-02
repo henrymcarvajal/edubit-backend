@@ -1,6 +1,6 @@
+import ParticipantRepository from '../../../../persistence/repositories/participantRepository.mjs';
+import ParticipantTable from '../../../../persistence/tables/participantTable.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { ParticipantRepository } from '../../../../persistence/repositories/participantRepository.mjs';
-import { ParticipantTable } from '../../../../persistence/tables/participantTable.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
 import { authorizeAndFindParticipant } from '../../authorizers/participantAuthorizer.mjs';
@@ -14,7 +14,7 @@ import { validate as uuidValidate } from 'uuid';
 
 import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     const { participantId, modifiedParticipant } = validateAndExtractParams(event);
     const foundParticipant = await authorizeAndFindParticipant(event, participantId);

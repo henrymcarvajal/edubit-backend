@@ -1,9 +1,9 @@
-import { ActivityRepository } from '../../../../persistence/repositories/activityRepository.mjs';
+import ActivityRepository from '../../../../persistence/repositories/activityRepository.mjs';
+import ParticipantProgressRepository from '../../../../persistence/repositories/participantProgressRepository.mjs';
+import WorkshopExecutionRepository from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { AwsInfo } from '../../../../client/aws/AwsInfo.mjs';
-import { ParticipantProgressRepository } from '../../../../persistence/repositories/participantProgressRepository.mjs';
-import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
-import { arrayEmpty } from '../../../../util/arrays.mjs';
+import { arrayIsEmpty } from '../../../../util/arrays.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { messageQueue } from '../../../../client/aws/clients/sqsClient.mjs';
@@ -14,7 +14,7 @@ const ALL_ACTIVITIES = [];
 const STARTING_BALANCE = 10000000;
 const TRIGGER_INCOME_EVALUATION_MINUTES = 2;
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     const workshopExecutionId = validateAndExtractParams(event);
     const workshopExecution = await fetchWorkshopExecution(workshopExecutionId);
@@ -98,7 +98,7 @@ const getActivityMaxLevel = async (activityId) => {
 };
 
 const initializeActivities = async () => {
-  if (arrayEmpty(ALL_ACTIVITIES)) {
+  if (arrayIsEmpty(ALL_ACTIVITIES)) {
     ALL_ACTIVITIES.push(... await ActivityRepository.findAll());
   }
 };

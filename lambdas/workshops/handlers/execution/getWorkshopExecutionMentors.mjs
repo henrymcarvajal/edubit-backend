@@ -1,6 +1,6 @@
-import { MentorRepository } from '../../../../persistence/repositories/mentorRepository.mjs';
-import { ActivityRepository } from '../../../../persistence/repositories/activityRepository.mjs';
-import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
+import MentorRepository from '../../../../persistence/repositories/mentorRepository.mjs';
+import WorkshopExecutionRepository from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
+import ActivityRepository from '../../../../persistence/repositories/activityRepository.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
@@ -12,25 +12,22 @@ import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 
 let ALL_ACTIVITIES;
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
 
   try {
     const workshopExecutionId = validateAndExtractParams(event);
 
     const [workshopExecution] = await WorkshopExecutionRepository.findById(workshopExecutionId);
-    if (!workshopExecution) return sendResponse(HttpResponseCodes.NOT_FOUND);
+    if (!workshopExecution || !workshopExecution.mentors) return sendResponse(HttpResponseCodes.NOT_FOUND);
 
     const mentorsView = await processActivities(workshopExecution.mentors);
-
     return sendResponse(HttpResponseCodes.OK, mentorsView);
-
   } catch (error) {
     return handleErrorResponse(error);
   }
 };
 
 const initializeActivities = async () => {
-
   const toView = (activity) => ({
     id: activity.id,
     name: activity.name
@@ -62,17 +59,20 @@ const processActivities = async (mentors) => {
   for (let mentorId of Object.keys(mentors)) {
 
     const toActivity = (activityId) => {
+      const activity = ALL_ACTIVITIES.find(activity => activity.id === activityId);
       return {
         id: activityId,
-        name: ALL_ACTIVITIES.find(activity => activity.id === activityId).name
+        name: activity ? activity.name : 'ND'
       };
     };
 
     const activities = Object.values(mentors[mentorId].activities).map(toActivity);
 
+    const mentor = foundMentors.find((m) => m.id === mentorId).name;
+
     mappedMentors[mentorId] = {
       id: mentorId,
-      name: foundMentors.find((m) => m.id === mentorId).name,
+      name: mentor ? mentor.name : 'ND',
       activities: activities
     };
   }

@@ -1,6 +1,6 @@
+import WorkshopDefinitionRepository from '../../../../persistence/repositories/workshopDefinitionRepository.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
-import { WorkshopDefinitionRepository } from '../../../../persistence/repositories/workshopDefinitionRepository.mjs';
 
 import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
@@ -9,7 +9,7 @@ import { validate as uuidValidate } from 'uuid';
 import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 import { ResourceNotFoundError } from '../../../commons/errors/integrity/resources.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     const workshopDefinitionId = validateAndExtractParams(event);
     const foundWorkshopDefinition = await fetchWorkshopDefinition(workshopDefinitionId);

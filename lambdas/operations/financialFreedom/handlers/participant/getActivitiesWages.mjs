@@ -1,24 +1,22 @@
-import { ActivityRepository } from '../../../../../persistence/repositories/activityRepository.mjs';
+import ActivityRepository from '../../../../../persistence/repositories/activityRepository.mjs';
+import WagesRepository from '../../../../../persistence/repositories/wageRepository.mjs';
+import WorkshopExecutionRepository from '../../../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
-import { WagesRepository } from '../../../../../persistence/repositories/wageRepository.mjs';
 
-import { authorizeAndFindMentor } from '../../../../members/authorizers/mentorAuthorizer.mjs';
+import { arrayIsEmpty } from '../../../../../util/arrays.mjs';
 import { authorizeAndFindParticipant } from '../../../../members/authorizers/participantAuthorizer.mjs';
-import { getParticipantProgress } from '../../commons/getParticipantProgress.mjs';
 import { handleErrorResponse } from '../../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
 import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
-import { WorkshopExecutionRepository } from '../../../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { ResourceNotFoundError } from '../../../../commons/errors/integrity/resources.mjs';
-import { arrayEmpty } from '../../../../../util/arrays.mjs';
 
 const ALL_WAGES = [];
 const ALL_ACTIVITIES = [];
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     const { workshopExecutionId, participantId } = validateAndExtractParams(event);
     await authorizeAndFindParticipant(event, participantId);
@@ -58,7 +56,6 @@ const fetchParticipantEnrollment = async (workshopExecutionId, participantId) =>
   return workshopExecution.participants[key].activities;
 };
 
-
 const createActivityWagesView = async (enrollment) => {
 
   await initializeWages();
@@ -84,13 +81,13 @@ const createActivityWagesView = async (enrollment) => {
 };
 
 const initializeWages = async () => {
-  if (arrayEmpty(ALL_WAGES)) {
+  if (arrayIsEmpty(ALL_WAGES)) {
     ALL_WAGES.push(... await WagesRepository.findAll());
   }
 };
 
 const initializeActivities = async () => {
-  if (arrayEmpty(ALL_ACTIVITIES)) {
+  if (arrayIsEmpty(ALL_ACTIVITIES)) {
     ALL_ACTIVITIES.push(... await ActivityRepository.findAll());
   }
 };

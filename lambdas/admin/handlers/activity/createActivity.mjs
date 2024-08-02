@@ -1,5 +1,5 @@
-import { ActivityRepository } from '../../../../persistence/repositories/activityRepository.mjs';
-import { ActivityTable } from '../../../../persistence/tables/activityTable.mjs';
+import ActivityRepository from '../../../../persistence/repositories/activityRepository.mjs';
+import ActivityTable from '../../../../persistence/tables/activityTable.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 
@@ -9,7 +9,7 @@ import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
 
   const roles = event.requestContext.authorizer.claims.profile;
   if (roles !== UserRoles.ADMIN) return sendResponse(HttpResponseCodes.FORBIDDEN);

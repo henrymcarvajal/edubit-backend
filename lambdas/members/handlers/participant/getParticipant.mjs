@@ -8,7 +8,7 @@ import { validate as uuidValidate } from 'uuid';
 
 import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     const participantId = validateAndExtractParams(event);
     const foundParticipant = await authorizeAndFindParticipant(event, participantId);

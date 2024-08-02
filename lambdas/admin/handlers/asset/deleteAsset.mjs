@@ -1,5 +1,5 @@
-import { AssetRepository } from '../../../../persistence/repositories/assetRepository.mjs';
-import { AssetTable } from '../../../../persistence/tables/assetTable.mjs';
+import AssetRepository from '../../../../persistence/repositories/assetRepository.mjs';
+import AssetTable from '../../../../persistence/tables/assetTable.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
@@ -10,7 +10,7 @@ import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
 
   const roles = event.requestContext.authorizer.claims.profile;
   if (roles !== UserRoles.ADMIN) return sendResponse(HttpResponseCodes.FORBIDDEN);

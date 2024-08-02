@@ -1,5 +1,5 @@
 import { Engine, Rule } from 'json-rules-engine';
-import { arrayEmpty } from '../../../../../../../util/arrays.mjs';
+import { arrayIsEmpty } from '../../../../../../../util/arrays.mjs';
 
 // Create engine
 const engine = new Engine([], { allowUndefinedFacts: true, replaceFactsInEventParams: true });
@@ -255,7 +255,7 @@ engine.addRule(franchiseRule); // 11
 
 // Function to calculate monthly income
 export const calculatePassiveIncome = async (assets, elapsedTime) => {
-  if (arrayEmpty(assets)) return 0;
+  if (arrayIsEmpty(assets)) return 0;
 
   let totalMonthlyIncome = 0;
 

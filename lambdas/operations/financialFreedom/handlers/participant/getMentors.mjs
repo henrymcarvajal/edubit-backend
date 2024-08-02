@@ -1,8 +1,8 @@
-import { ActivityRepository } from '../../../../../persistence/repositories/activityRepository.mjs';
+import ActivityRepository from '../../../../../persistence/repositories/activityRepository.mjs';
+import MentorRepository from '../../../../../persistence/repositories/mentorRepository.mjs';
+import WorkshopExecutionRepository from '../../../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
-import { MentorRepository } from '../../../../../persistence/repositories/mentorRepository.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
-import { WorkshopExecutionRepository } from '../../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { handleErrorResponse } from '../../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
@@ -14,7 +14,7 @@ import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
 let ALL_ACTIVITIES;
 let ALL_MENTORS;
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     await initializeActivities();
     await initializeMentors();

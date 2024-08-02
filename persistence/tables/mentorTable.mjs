@@ -1,10 +1,10 @@
 import { DbConfig } from '../../lambdas/commons/database/handler/config.mjs';
 import { rowToObject } from '../ormMapper.mjs';
 
-export const  MentorTable = {
+const MentorTable = {
   schemaName: DbConfig.SCHEMA,
   tableName: 'mentor',
-  qualifiedTableName: `${DbConfig.SCHEMA}.mentor`,
+  qualifiedTableName: `${ DbConfig.SCHEMA }.mentor`,
   columnToFieldMappings: {
     // audit trails
     enabled: 'enabled',
@@ -25,4 +25,4 @@ export const  MentorTable = {
   }
 };
 
-
+export default MentorTable;

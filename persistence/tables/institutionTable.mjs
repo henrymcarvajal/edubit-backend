@@ -1,10 +1,10 @@
 import { DbConfig } from '../../lambdas/commons/database/handler/config.mjs';
 import { rowToObject } from '../ormMapper.mjs';
 
-export const  InstitutionTable = {
+const InstitutionTable = {
   schemaName: DbConfig.SCHEMA,
   tableName: 'institution',
-  qualifiedTableName: `${DbConfig.SCHEMA}.institution`,
+  qualifiedTableName: `${ DbConfig.SCHEMA }.institution`,
   columnToFieldMappings: {
     // audit trails
     enabled: 'enabled',
@@ -21,4 +21,4 @@ export const  InstitutionTable = {
   }
 };
 
-
+export default InstitutionTable;

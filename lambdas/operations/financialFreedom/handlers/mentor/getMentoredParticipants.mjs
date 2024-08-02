@@ -1,9 +1,7 @@
-import { ActivityRepository } from '../../../../../persistence/repositories/activityRepository.mjs';
+import ActivityRepository from '../../../../../persistence/repositories/activityRepository.mjs';
+import ParticipantProgressRepository from '../../../../../persistence/repositories/participantProgressRepository.mjs';
+import WorkshopExecutionRepository from '../../../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
-import { WorkshopExecutionRepository } from '../../../../../persistence/repositories/workshopExecutionRepository.mjs';
-import {
-  ParticipantProgressRepository
-} from '../../../../../persistence/repositories/participantProgressRepository.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 
 import { authorizeAndFindMentor } from '../../../../members/authorizers/mentorAuthorizer.mjs';
@@ -15,7 +13,7 @@ import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
 import { ResourceNotFoundError } from '../../../../commons/errors/integrity/resources.mjs';
 
 let ALL_ACTIVITIES;
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
 
     const { workshopExecutionId, mentorId } = validateAndExtractParams(event);

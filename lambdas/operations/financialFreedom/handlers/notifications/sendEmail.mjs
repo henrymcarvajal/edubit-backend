@@ -3,7 +3,7 @@ import { sendEmail } from '../../../../../util/emailHelper.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
 
   try {
     const { body } = extractBody(event);

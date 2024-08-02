@@ -1,10 +1,10 @@
 import { DbConfig } from '../../lambdas/commons/database/handler/config.mjs';
 import { rowToObject } from '../ormMapper.mjs';
 
-export const  ActivityTable = {
+const ActivityTable = {
   schemaName: DbConfig.SCHEMA,
   tableName: 'activity',
-  qualifiedTableName: `${DbConfig.SCHEMA}.activity`,
+  qualifiedTableName: `${ DbConfig.SCHEMA }.activity`,
   columnToFieldMappings: {
     // audit trails
     enabled: 'enabled',
@@ -30,4 +30,4 @@ export const  ActivityTable = {
   }
 };
 
-
+export default ActivityTable;

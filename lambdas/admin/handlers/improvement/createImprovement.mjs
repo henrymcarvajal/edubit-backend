@@ -1,6 +1,6 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { ImprovementRepository } from '../../../../persistence/repositories/improvementRepository.mjs';
-import { ImprovementTable } from '../../../../persistence/tables/improvementTable.mjs';
+import ImprovementRepository from '../../../../persistence/repositories/improvementRepository.mjs';
+import ImprovementTable from '../../../../persistence/tables/improvementTable.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
@@ -9,7 +9,7 @@ import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { checkProps } from '../../../../util/propsGetter.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
 
   const roles = event.requestContext.authorizer.claims.profile;
   if (roles !== UserRoles.ADMIN) return sendResponse(HttpResponseCodes.FORBIDDEN);

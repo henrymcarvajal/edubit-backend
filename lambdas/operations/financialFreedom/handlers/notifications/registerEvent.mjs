@@ -1,14 +1,14 @@
+import WorkshopRegistryRepository from '../../../../../persistence/repositories/workshopRegistryRepository.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
-import { WorkshopRegistryRepository } from '../../../../../persistence/repositories/workshopRegistryRepository.mjs';
+import { WORKSHOP_OPERATION_NAMES } from '../../definitions/operations.mjs';
 
 import { execOnDatabase } from '../../../../../util/dbHelper.mjs';
 import { extractBody } from '../../../../../client/aws/utils/bodyExtractor.mjs';
 import { validate as uuidValidate } from 'uuid';
 
 import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
-import { WORKSHOP_OPERATION_NAMES } from '../../definitions/operations.mjs';
 
-export const handle = async (lambdaEvent) => {
+exports.handle = async (lambdaEvent) => {
   try {
     const { workshopExecutionId, participantName, operationName, list } = validateAndExtractParams(lambdaEvent);
 
@@ -62,13 +62,13 @@ const verbalize = (participantName, operationName, complement) => {
       message = `${ playerName } acaba de subir al nivel ${ complement.level } de ${ complement.name }`;
       break;
     }
-    case WORKSHOP_OPERATION_NAMES.PARTICIPANT_PROPOSE_SOCIETY: {
+    case WORKSHOP_OPERATION_NAMES.PARTICIPANT_PROPOSE_PARTNERSHIP: {
       const { firstName: firstParticipantName, email: participantEmail } = extractFirstNameAndEmail(participantName);
       const { firstName: firstPartnerName, email: partnerEmail } = extractFirstNameAndEmail(complement.partnerName);
       message = `${ firstParticipantName } ${ participantEmail } le propone la sociedad ${ complement.partnershipName } a ${ firstPartnerName } ${ partnerEmail }`;
       break;
     }
-    case WORKSHOP_OPERATION_NAMES.PARTICIPANT_ACCEPT_SOCIETY: {
+    case WORKSHOP_OPERATION_NAMES.PARTICIPANT_ACCEPT_PARTNERSHIP: {
       const { firstName: firstParticipantName, email: fullPlayerEmail } = extractFirstNameAndEmail(participantName);
       const { firstName: firstPartnerName, email: fullPartnerEmail } = extractFirstNameAndEmail(complement.partnerName);
       message = `${ firstParticipantName } ${ fullPlayerEmail } acepta la sociedad ${ complement.partnershipName } a ${ firstPartnerName } ${ fullPartnerEmail }`;

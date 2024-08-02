@@ -1,56 +1,27 @@
+import Repository from './repository.mjs';
+import MentorTable from '../tables/mentorTable.mjs';
 import { DmlOperators } from '../dml/dmlOperators.mjs';
-import { MentorTable } from '../tables/mentorTable.mjs';
 
-import { insertClauseBuilder, parseCriteria, selectClauseBuilder, upsertClauseBuilder} from '../dml/dmlBuilders.mjs';
-import { invokeDatabaseLambda } from '../../util/dbHelper.mjs';
-import { objectToRow } from '../ormMapper.mjs';
+import { findByCriteria } from '../dml/findByCriteria.mjs';
 
-export const MentorRepository = {
+const MentorRepository = Object.create(Repository);
 
-  findById: async (id) => {
-    return MentorRepository.findByCriteria(['id', DmlOperators.EQUALS, id]);
-  },
+MentorRepository.table = MentorTable;
 
-  findByIdIn: async (ids) => {
-    return MentorRepository.findByCriteria(['id', DmlOperators.IN, ids]);
-  },
-
-  findAll: async () => {
-    return MentorRepository.findByCriteria(['id', DmlOperators.NOT_NULL]);
-  },
-
-  findByEmail: async (email) => {
-    return MentorRepository.findByCriteria(['email', DmlOperators.EQUALS, email]);
-  },
-
-  findByCriteria: async (...criteria) => {
-    const [keys, operators, values] = parseCriteria(criteria);
-
-    const statement = MentorRepository.selectStatement(keys, operators);
-
-    const rows = await invokeDatabaseLambda({statement: statement, parameters: values});
-
-    let result = [];
-    for (let row of rows) {
-      result.push(MentorTable.rowToObject(row));
-    }
-
-    return result;
-  },
-
-  selectStatement: (columns, operators) => {
-    return selectClauseBuilder(MentorTable, columns, operators);
-  },
-
-  insertStatement: (object) => {
-    const entity = objectToRow(object, MentorTable.columnToFieldMappings);
-    const statement = insertClauseBuilder(MentorTable.qualifiedTableName, MentorTable.columnToFieldMappings, entity);
-    return {entity: entity, statement: statement};
-  },
-
-  upsertStatement: (object) => {
-    const entity = objectToRow(object, MentorTable.columnToFieldMappings);
-    const statement = upsertClauseBuilder(MentorTable.qualifiedTableName, MentorTable.columnToFieldMappings, entity);
-    return {entity: entity, statement: statement};
-  }
+MentorRepository.findById = async function (id) {
+  return findByCriteria(MentorRepository, ['id', DmlOperators.EQUALS, id]);
 };
+
+MentorRepository.findByIdIn = async function (ids) {
+  return findByCriteria(this, ['id', DmlOperators.IN, ids]);
+};
+
+MentorRepository.findAll = async function () {
+  return findByCriteria(this,['id', DmlOperators.NOT_NULL]);
+};
+
+MentorRepository.findByEmail = async function (email) {
+  return findByCriteria(this,['email', DmlOperators.EQUALS, email]);
+};
+
+export default MentorRepository;

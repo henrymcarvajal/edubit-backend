@@ -1,5 +1,5 @@
-import { AssetRepository } from '../../../../../persistence/repositories/assetRepository.mjs';
-import { ImprovementRepository } from '../../../../../persistence/repositories/improvementRepository.mjs';
+import AssetRepository from '../../../../../persistence/repositories/assetRepository.mjs';
+import ImprovementRepository from '../../../../../persistence/repositories/improvementRepository.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 
@@ -11,7 +11,7 @@ import { validate as uuidValidate } from 'uuid';
 
 import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     const { participantId, workshopExecutionId } = validateAndExtractParams(event);
     await authorizeAndFindParticipant(event, participantId);

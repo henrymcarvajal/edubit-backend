@@ -1,95 +1,70 @@
+import Repository from './repository.mjs';
 import { DmlOperators } from '../dml/dmlOperators.mjs';
+import WorkshopExecutionTable from '../tables/workshopExecutionModel.mjs';
 import {
-  WorkshopExecutionTable,
   WorkshopExecution_InstitutionView,
   WorkshopExecution_ScheduleView,
   WorkshopExecution_DefinitionView, WorkshopExecution_FullDefinitionView
 } from '../tables/workshopExecutionModel.mjs';
 
-import { insertClauseBuilder, parseCriteria, selectClauseBuilder, upsertClauseBuilder } from '../dml/dmlBuilders.mjs';
-import { invokeDatabaseLambda } from '../../util/dbHelper.mjs';
-import { objectToRow } from '../ormMapper.mjs';
+import { findByCriteria, findViewByCriteria } from '../dml/findByCriteria.mjs';
+import { getRangeForToday, getAYearFromToday, getTomorrowAtMidnight } from '../../util/dates.js';
 
-export const WorkshopExecutionRepository = {
+const WorkshopExecutionRepository = Object.create(Repository);
+WorkshopExecutionRepository.table = WorkshopExecutionTable;
 
-  findById: async (id) => {
-    return WorkshopExecutionRepository.findByCriteria(['id', DmlOperators.EQUALS, id]);
-  },
-
-  findByIdIn: async (ids) => {
-    return WorkshopExecutionRepository.findByCriteria(['id', DmlOperators.IN, ids]);
-  },
-
-  findByInstitutionId: async (id) => {
-    return WorkshopExecutionRepository.findViewByCriteria(WorkshopExecution_InstitutionView, ['id', DmlOperators.EQUALS, id]);
-  },
-
-  findForToday: async () => {
-    const today = new Date();
-    const todayAtMidnight = new Date(new Date(today.getTime()).setHours(0,0,0,0));
-
-    return WorkshopExecutionRepository.findViewByCriteria(
-        WorkshopExecution_FullDefinitionView,
-        ['scheduled_date', DmlOperators.GREATER_THAN, todayAtMidnight],
-        ['end_timestamp', DmlOperators.NULL],
-    );
-  },
-
-  findScheduleById: async (id) => {
-    return WorkshopExecutionRepository.findViewByCriteria(WorkshopExecution_ScheduleView, ['id', DmlOperators.EQUALS, id]);
-  },
-
-  findEnrollmentByParticipantId: async (id) => {
-    return WorkshopExecutionRepository.findViewByCriteria(WorkshopExecution_DefinitionView,
-        ['participants', DmlOperators.HAS_AS_TOP_LEVEL_KEY, id],
-        ['scheduled_date', DmlOperators.GREATER_THAN_OR_EQUAL_TO, new Date(new Date().toISOString().slice(0, 10))]
-    );
-  },
-
-  findAll: async () => {
-    return WorkshopExecutionRepository.findByCriteria(['id', DmlOperators.NOT_NULL]);
-  },
-
-  findByCriteria: async (...criteria) => {
-    const [keys, operators, values] = parseCriteria(criteria);
-
-    const statement = WorkshopExecutionRepository.selectStatement(keys, operators);
-    const rows = await invokeDatabaseLambda({ statement: statement, parameters: values });
-
-    let result = [];
-    for (let row of rows) {
-      result.push(WorkshopExecutionTable.rowToObject(row));
-    }
-
-    return result;
-  },
-
-  findViewByCriteria: async (view, ...criteria) => {
-    const [_, __, values] = parseCriteria(criteria);
-
-    const rows = await invokeDatabaseLambda({ statement: view.selectStatement, parameters: values });
-
-    let result = [];
-    for (let row of rows) {
-      result.push(view.rowToObject(row));
-    }
-
-    return result;
-  },
-
-  selectStatement: (columns, operators) => {
-    return selectClauseBuilder(WorkshopExecutionTable, columns, operators);
-  },
-
-  insertStatement: (object) => {
-    const entity = objectToRow(object, WorkshopExecutionTable.columnToFieldMappings);
-    const statement = insertClauseBuilder(WorkshopExecutionTable.qualifiedTableName, WorkshopExecutionTable.columnToFieldMappings, entity);
-    return { entity: entity, statement: statement };
-  },
-
-  upsertStatement: (object) => {
-    const entity = objectToRow(object, WorkshopExecutionTable.columnToFieldMappings);
-    const statement = upsertClauseBuilder(WorkshopExecutionTable.qualifiedTableName, WorkshopExecutionTable.columnToFieldMappings, entity);
-    return { entity: entity, statement: statement };
-  }
+WorkshopExecutionRepository.findById = async function (id) {
+  return findByCriteria(this, ['id', DmlOperators.EQUALS, id]);
 };
+
+WorkshopExecutionRepository.findByIdIn = async function (ids) {
+  return findByCriteria(this, ['id', DmlOperators.IN, ids]);
+};
+
+WorkshopExecutionRepository.findByInstitutionId = async function (id) {
+  return findViewByCriteria(WorkshopExecution_InstitutionView, ['id', DmlOperators.EQUALS, id]);
+};
+
+WorkshopExecutionRepository.findForToday = async function () {
+  const [startOfDay, endOfDay] = getRangeForToday();
+
+  console.log('startOfDay', startOfDay)
+  console.log('endOfDay', endOfDay)
+
+  return findViewByCriteria(
+      WorkshopExecution_FullDefinitionView,
+      ['scheduled_date', DmlOperators.GREATER_THAN_OR_EQUAL_TO, startOfDay],
+      ['scheduled_date', DmlOperators.LESS_THAN, endOfDay],
+      ['end_timestamp', DmlOperators.NULL],
+  );
+};
+
+WorkshopExecutionRepository.findIncoming = async function () {
+  const tomorrowAtMidnight = getTomorrowAtMidnight();
+  const aYearFromToday = getAYearFromToday();
+
+  return findViewByCriteria(
+      WorkshopExecution_FullDefinitionView,
+      ['scheduled_date', DmlOperators.GREATER_THAN_OR_EQUAL_TO, tomorrowAtMidnight],
+      ['scheduled_date', DmlOperators.LESS_THAN, aYearFromToday],
+      ['end_timestamp', DmlOperators.NULL],
+  );
+};
+
+WorkshopExecutionRepository.findScheduleById = async function (id) {
+  return findViewByCriteria(WorkshopExecution_ScheduleView, ['id', DmlOperators.EQUALS, id]);
+};
+
+WorkshopExecutionRepository.findEnrollmentByParticipantId = async function (id) {
+  return findViewByCriteria(WorkshopExecution_DefinitionView,
+      ['participants', DmlOperators.HAS_AS_TOP_LEVEL_KEY, id],
+      ['scheduled_date', DmlOperators.GREATER_THAN_OR_EQUAL_TO, new Date(new Date().toISOString().slice(0, 10))]
+  );
+};
+
+WorkshopExecutionRepository.findAll = async function () {
+  return findByCriteria(this, ['id', DmlOperators.NOT_NULL]);
+};
+
+export default WorkshopExecutionRepository;
+

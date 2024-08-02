@@ -1,12 +1,12 @@
-import { ListSchedulesCommand } from '@aws-sdk/client-scheduler';
-
+import WorkshopExecutionRepository from '../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { HttpResponseCodes } from '../../../commons/web/webResponses.mjs';
 import { schedulerClient } from '../../../client/aws/clients/schedulerClient.mjs';
 import { UserRoles } from '../../users/handlers/enrollment/constants.mjs';
-import { WorkshopExecutionRepository } from '../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { createListSchedulesCommandInput, getScheduleId, getScheduleName } from './getSchedulerList.mjs';
 import { sendResponse } from '../../../util/responseHelper.mjs';
+
+import { ListSchedulesCommand } from '@aws-sdk/client-scheduler';
 
 exports.handle = async (event) => {
 

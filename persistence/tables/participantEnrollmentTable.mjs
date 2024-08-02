@@ -1,10 +1,10 @@
 import { DbConfig } from '../../lambdas/commons/database/handler/config.mjs';
 import { rowToObject } from '../ormMapper.mjs';
 
-export const  ParticipantEnrollmentTable = {
+const ParticipantEnrollmentTable = {
   schemaName: DbConfig.SCHEMA,
   tableName: 'participant_enrollment',
-  qualifiedTableName: `${DbConfig.SCHEMA}.participant_enrollment`,
+  qualifiedTableName: `${ DbConfig.SCHEMA }.participant_enrollment`,
   columnToFieldMappings: {
     // audit trails
     creation_date: 'creationDate',
@@ -23,4 +23,4 @@ export const  ParticipantEnrollmentTable = {
   }
 };
 
-
+export default ParticipantEnrollmentTable;

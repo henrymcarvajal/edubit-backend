@@ -1,7 +1,7 @@
 import { DbConfig } from '../../lambdas/commons/database/handler/config.mjs';
 import { rowToObject } from '../ormMapper.mjs';
 
-export const ImprovementTable = {
+const ImprovementTable = {
   schemaName: DbConfig.SCHEMA,
   tableName: 'improvement',
   qualifiedTableName: `${ DbConfig.SCHEMA }.improvement`,
@@ -36,4 +36,4 @@ export const ImprovementTable = {
   }
 };
 
-
+export default ImprovementTable;

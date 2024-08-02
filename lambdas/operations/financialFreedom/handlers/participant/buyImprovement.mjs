@@ -1,9 +1,7 @@
+import ImprovementRepository from '../../../../../persistence/repositories/improvementRepository.mjs';
+import ParticipantProgressRepository from '../../../../../persistence/repositories/participantProgressRepository.mjs';
 import { AwsInfo } from '../../../../../client/aws/AwsInfo.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
-import { ImprovementRepository } from '../../../../../persistence/repositories/improvementRepository.mjs';
-import {
-  ParticipantProgressRepository
-} from '../../../../../persistence/repositories/participantProgressRepository.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 import { WORKSHOP_OPERATION_NAMES } from '../../definitions/operations.mjs';
 
@@ -16,15 +14,15 @@ import { handleErrorResponse } from '../../../../commons/errorHandling.mjs';
 import { invokeLambda } from '../../../../../client/aws/clients/lambdaClient.mjs';
 import { messageQueue } from '../../../../../client/aws/clients/sqsClient.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
-import { validate as uuidValidate } from 'uuid';
 
 import { ForbiddenOperationError } from '../../../../commons/errors/security/restrictedAccess.mjs';
 import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
 import { ResourceNotFoundError, ResourceStateError } from '../../../../commons/errors/integrity/resources.mjs';
+import { validate as uuidValidate } from 'uuid';
 
 let ALL_IMPROVEMENTS;
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
 
   try {
     await initializeImprovements();

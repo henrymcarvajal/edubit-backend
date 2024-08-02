@@ -1,5 +1,5 @@
+import WorkshopExecutionRepository from '../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { AwsInfo } from '../../../client/aws/AwsInfo.mjs';
-import { WorkshopExecutionRepository } from '../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { extractBody } from '../../../client/aws/utils/bodyExtractor.mjs';
 import { execOnDatabase } from '../../../util/dbHelper.mjs';

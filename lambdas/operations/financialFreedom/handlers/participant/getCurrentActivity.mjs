@@ -1,7 +1,7 @@
-import { ActivityRepository } from '../../../../../persistence/repositories/activityRepository.mjs';
+import ActivityRepository from '../../../../../persistence/repositories/activityRepository.mjs';
+import WagesRepository from '../../../../../persistence/repositories/wageRepository.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
-import { WagesRepository } from '../../../../../persistence/repositories/wageRepository.mjs';
 
 import { authorizeAndFindMentor } from '../../../../members/authorizers/mentorAuthorizer.mjs';
 import { authorizeAndFindParticipant } from '../../../../members/authorizers/participantAuthorizer.mjs';
@@ -14,7 +14,7 @@ import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
 
 let ALL_WAGES;
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     const { view, mentorId, participantId, workshopExecutionId } = validateAndExtractParams(event);
     if (viewIsMentor(view)) {

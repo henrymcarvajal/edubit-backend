@@ -1,10 +1,9 @@
+import WorkshopRegistryRepository from '../../../../../persistence/repositories/workshopRegistryRepository.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
-import { WorkshopRegistryRepository } from '../../../../../persistence/repositories/workshopRegistryRepository.mjs';
 
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
 
-export const handle = async (event) => {
-
+exports.handle = async (event) => {
   try {
 
     const workshopExecutionId = event.pathParameters.workshopExecutionId;
