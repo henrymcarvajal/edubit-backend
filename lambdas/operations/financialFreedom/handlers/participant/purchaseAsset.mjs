@@ -19,7 +19,6 @@ import { getAuthorizationResult } from '../../commons/getAuthorizationResult.mjs
 import { getParticipantProgress } from '../../commons/getParticipantProgress.mjs';
 import { handleErrorResponse } from '../../../../commons/errorHandling.mjs';
 import { invokeLambda } from '../../../../../client/aws/clients/lambdaClient.mjs';
-import { messageQueue } from '../../../../../client/aws/clients/sqsClient.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
 
 import { validate as uuidValidate } from 'uuid';
@@ -137,76 +136,65 @@ const validateAssetsIds = async (assetIds) => {
   return foundAssets;
 };
 
-const processAssets = async (progresses, foundAssets, source, buyer) => {
-  const totalCost = makePurchase(progresses, foundAssets, source, buyer);
+const processAssets = async (progresses, foundAssets, source, receivedBuyer) => {
+  const buyer = receivedBuyer || BUYER_OPTIONS.PARTICIPANT;
+
+  const totalCostPerParticipant = makePurchase(progresses, foundAssets, source, buyer);
 
   updateAssets(progresses, foundAssets, buyer);
-  updateBalance(progresses, totalCost, buyer);
+  updateBalances(progresses, totalCostPerParticipant, buyer);
 
-  console.log('processAssets');
-
-  return saveProgresses(progresses);
+  return await saveProgresses(progresses);
 };
 
-const updateBalance = (progresses, totalCost, buyer) => {
-  const participationRate = buyer === BUYER_OPTIONS.PARTICIPANT ? 1.0 : 5.0;
+const updateBalances = (progresses, totalCostPerParticipant) => {
   for (const progress of progresses) {
-    progress.details.stats.balance -= roundTwoDecimalPositions(participationRate * totalCost);
+    progress.details.stats.balance -= totalCostPerParticipant;
   }
-  console.log('updateBalance');
 };
 
 const updateAssets = (progresses, foundAssets, buyer) => {
+
+  const addAssets = (assets, foundAssets) => {
+    for (const foundAsset of foundAssets) {
+      let index = assets.find(a => a.id === foundAsset.id);
+      if (index) {
+        index.count++;
+      } else {
+        assets.push({
+          id: foundAsset.id,
+          count: 1,
+          type: foundAsset.type,
+          value: foundAsset.price
+        });
+      }
+    }
+  };
+
   for (const progress of progresses) {
     if (buyer === BUYER_OPTIONS.PARTICIPANT) {
       if (!progress.details.assets) {
         progress.details.assets = [];
       }
 
-      for (const foundAsset of foundAssets) {
-        let index = progress.details.assets.find(a => a.id === foundAsset.id);
-        if (index) {
-          index.count++;
-        } else {
-          progress.details.assets.push({
-            id: foundAsset.id,
-            count: 1,
-            type: foundAsset.type,
-            value: foundAsset.price });
-        }
-      }
+      addAssets(progress.details.assets, foundAssets)
     } else {
       if (!progress.details.partnership.assets) {
         progress.details.partnership.assets = [];
       }
 
-      for (const foundAsset of foundAssets) {
-        let index = progress.details.partnership.assets.find(a => a.id === foundAsset.id);
-        if (index) {
-          index.count++;
-        } else {
-          progress.details.partnership.assets.push({
-            id: foundAsset.id,
-            count: 1,
-            type: foundAsset.type,
-            value: foundAsset.price
-          });
-        }
-      }
+      addAssets(progress.details.partnership.assets, foundAssets)
     }
   }
-  console.log('updateAssets');
 };
 
 const saveProgresses = async (progresses) => {
   const savedProgresses = [];
   for (const progress of progresses) {
     const { entity, statement } = ParticipantProgressRepository.upsertStatement(progress);
-    const savedProgress = await execOnDatabase({ statement: statement, parameters: entity });
-    console.log('savedProgress', savedProgress);
+    const [savedProgress] = await execOnDatabase({ statement: statement, parameters: entity });
     savedProgresses.push(savedProgress);
   }
-  console.log('saveProgresses', savedProgresses);
   return savedProgresses;
 };
 
