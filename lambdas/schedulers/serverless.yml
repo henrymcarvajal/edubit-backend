@@ -1,0 +1,442 @@
+service: edubit-schedulers
+org: edubit
+
+frameworkVersion: '3'
+configValidationMode: error
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+custom:
+  target-env: ${opt:stage, 'dev'}
+  stack-name: ${self:service}-${self:custom.target-env}
+  api-gateway-resource: schedulers
+  api-gateway-allowed-origins: '*'
+  # AWS Infrastructure stack names and imports
+  ## Database
+  commonsDatabaseStackName: ${self:org}-commons-database
+  commonsDatabaseLambdaNameImport:
+    Fn::ImportValue: ${self:custom.commonsDatabaseStackName}-${self:custom.target-env}-commonsDatabaseLambdaName
+  commonsDatabaseQueueNameImport:
+    Fn::ImportValue: ${self:custom.commonsDatabaseStackName}-${self:custom.target-env}-commonsDatabaseQueueName
+  ## Cognito
+  cognitoStackName: ${self:org}-security
+  cognitoUserPoolArnImport:
+    Fn::ImportValue: ${self:custom.cognitoStackName}-${self:custom.target-env}-cognitoUserPoolArn
+  ## SQS
+  schedulersTargetQueueName: ${self:custom.stack-name}-schedulers-target-queue
+  schedulersTargetQueueArn:
+    Fn::Join:
+      - ''
+      - - 'arn:aws:sqs:'
+        - Ref: AWS::Region
+        - ":"
+        - Ref: AWS::AccountId
+        - ":"
+        - ${self:custom.schedulersTargetQueueName}
+  timerCleanerQueueName: ${self:custom.stack-name}-timer-cleaner
+  financialFreedomWorkshopQueueName: ${self:custom.stack-name}-financial-freedom-workshop
+  incomeCalculatorQueueName: ${self:custom.stack-name}-income-calculator
+  expenseCalculatorQueueName: ${self:custom.stack-name}-expense-calculator
+  ## EventBridge Scheduler
+  schedulersExecutionRoleName: ${self:custom.stack-name}-schedulers-execution-role
+  schedulersExecutionRoleArn:
+    Fn::Join:
+      - ''
+      - - 'arn:aws:iam::'
+        - Ref: AWS::AccountId
+        - ":role/"
+        - ${self:custom.schedulersExecutionRoleName}
+  ## SNS
+  TimerNotificationTopicName: ${self:custom.stack-name}-timer-notification
+  TimerCleanerQueueSubscriptionFilterPolicyValue: cleanup
+  WorkshopsQueueSubscriptionFilterPolicyValue: workshops
+  # Packaging
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    #keepOutputDirectory: true
+  # Serverless offline
+  serverless-offline-sqs:
+    autoCreate: true
+    apiVersion: '2012-11-05'
+    endpoint: http://0.0.0.0:9324    # Endpoint where you will publish SQS message
+    region: eu-west-1            # Your preferred AWS region
+    accessKeyId: root
+    secretAccessKey: root
+    skipCacheInvalidation: false
+  serverless-offline:
+    httpPort: 4000
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs18.x
+  environment: ${file(./envs/${self:custom.target-env}.json)}
+  timeout: 15
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "lambda:InvokeFunction"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "sqs:SendMessage"
+            - "sqs:ReceiveMessage"
+            - "sqs:DeleteMessage"
+            - "sqs:GetQueueAttributes"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "sns:ConfirmSubscription"
+            - "sns:Publish"
+            - "sns:Subscribe"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "scheduler:CreateSchedule"
+            - "scheduler:DeleteSchedule"
+            - "scheduler:GetSchedule"
+            - "scheduler:ListSchedules"
+            - "scheduler:UpdateSchedule"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "iam:PassRole"
+          Resource: "*"
+
+resources:
+  Resources:
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    GatewayResponseDefault5XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'*'"
+        ResponseType: DEFAULT_5XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    SchedulersTargetQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.schedulersTargetQueueName}
+    SchedulersExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:custom.schedulersExecutionRoleName}
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                Service:
+                  - "scheduler.amazonaws.com"
+              Action:
+                - "sts:AssumeRole"
+        Policies:
+          - PolicyName: ${self:custom.stack-name}-scheduler-sendSqsMessage-policy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: "Allow"
+                  Action:
+                    - "sqs:SendMessage"
+                  Resource: "*"
+    TimerNotificationTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: ${self:custom.TimerNotificationTopicName}
+        TopicName: ${self:custom.TimerNotificationTopicName}
+    TimerCleanerQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.timerCleanerQueueName}
+    FinancialFreedomWorkshopQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.financialFreedomWorkshopQueueName}
+    TimerCleanerQueueSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint:
+          Fn::GetAtt:
+            - TimerCleanerQueue
+            - Arn
+        TopicArn:
+          Ref: TimerNotificationTopic
+        FilterPolicy:
+          topic:
+            - ${self:custom.TimerCleanerQueueSubscriptionFilterPolicyValue}
+    FinancialFreedomWorkshopQueueSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint:
+          Fn::GetAtt:
+            - FinancialFreedomWorkshopQueue
+            - Arn
+        TopicArn:
+          Ref: TimerNotificationTopic
+        FilterPolicy:
+          topic:
+            - ${self:custom.WorkshopsQueueSubscriptionFilterPolicyValue}
+    TimerNotificationTopicToQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: 'allow-sns-messages'
+              Effect: Allow
+              Principal:
+                Service: 'sns.amazonaws.com'
+              Resource:
+                - Fn::GetAtt:
+                  - TimerCleanerQueue
+                  - Arn
+                - Fn::GetAtt:
+                  - FinancialFreedomWorkshopQueue
+                  - Arn
+              Action: 'SQS:SendMessage'
+                # COMMENT THIS IN IF YOU WANT IT TO ONLY ALLOW A CERTAIN SNS TOPIC
+                # Condition:
+                # ArnEquals:
+                # 'aws:SourceArn':
+              # Ref: MySNSTopic
+        Queues:
+          - Ref: TimerCleanerQueue
+          - Ref: FinancialFreedomWorkshopQueue
+  Outputs:
+    financialFreedomWorkshopQueueArn:
+      Value:
+        Fn::GetAtt:
+          - FinancialFreedomWorkshopQueue
+          - Arn
+      Export:
+        Name: ${self:custom.stack-name}-financialFreedomWorkshopQueueArn
+
+functions:
+  updateTime:
+    name: ${self:custom.stack-name}-update-time
+    description: lambda to register time and notify the change
+    handler: handlers/updateTime.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      timer_notification_topic_arn: !Ref TimerNotificationTopic
+      clean_scheduler_topic_name: ${self:custom.TimerCleanerQueueSubscriptionFilterPolicyValue}
+      workshops_topic_name: ${self:custom.WorkshopsQueueSubscriptionFilterPolicyValue}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - SchedulersTargetQueue
+              - Arn
+          batchSize: 1
+  getScheduler:
+    name: ${self:custom.stack-name}-get-scheduler
+    description: lambda to get a scheduler
+    handler: handlers/getScheduler.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      schedulers_target_queue_arn: ${self:custom.schedulersTargetQueueArn}
+      schedulers_execution_role_arn: ${self:custom.schedulersExecutionRoleArn}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/{id}
+          method: get
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  getDeployedSchedulers:
+    name: ${self:custom.stack-name}-get-deployed-schedulers
+    description: lambda to get a list of deployed schedulers
+    handler: handlers/getDeployedSchedulers.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      schedulers_target_queue_arn: ${self:custom.schedulersTargetQueueArn}
+      schedulers_execution_role_arn: ${self:custom.schedulersExecutionRoleArn}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}
+          method: get
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  startScheduler:
+    name: ${self:custom.stack-name}-start-scheduler
+    description: lambda to start a scheduler
+    handler: handlers/startScheduler.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      schedulers_target_queue_arn: ${self:custom.schedulersTargetQueueArn}
+      schedulers_execution_role_arn: ${self:custom.schedulersExecutionRoleArn}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/{id}/start
+          method: post
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  pauseScheduler:
+    name: ${self:custom.stack-name}-pause-scheduler
+    description: lambda to pause a scheduler
+    handler: handlers/pauseScheduler.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      schedulers_target_queue_arn: ${self:custom.schedulersTargetQueueArn}
+      schedulers_execution_role_arn: ${self:custom.schedulersExecutionRoleArn}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/{id}/pause
+          method: patch
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  resumeScheduler:
+    name: ${self:custom.stack-name}-resume-scheduler
+    description: lambda to resume a scheduler
+    handler: handlers/resumeScheduler.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+      schedulers_target_queue_arn: ${self:custom.schedulersTargetQueueArn}
+      schedulers_execution_role_arn: ${self:custom.schedulersExecutionRoleArn}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/{id}/resume
+          method: patch
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  stopScheduler:
+    name: ${self:custom.stack-name}-stop-scheduler
+    description: lambda to stop a scheduler
+    handler: handlers/stopScheduler.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - http:
+          path: ${self:custom.api-gateway-resource}/{id}/stop
+          method: delete
+          cors:
+            origins:
+              - ${self:custom.api-gateway-allowed-origins}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Date
+              - X-Amz-Security-Token
+            allowCredentials: false
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognitoUserPoolArnImport}
+  cleanScheduler:
+    name: ${self:custom.stack-name}-clean-scheduler
+    description: lambda to clean up a scheduler
+    handler: handlers/cleanScheduler.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+      commons_database_lambda: ${self:custom.commonsDatabaseLambdaNameImport}
+      commons_database_queue: ${self:custom.commonsDatabaseQueueNameImport}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - TimerCleanerQueue
+              - Arn
+          batchSize: 1
+

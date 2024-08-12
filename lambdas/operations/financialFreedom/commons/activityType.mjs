@@ -1,0 +1,4 @@
+export const PHASE_TYPE = {
+  ACTIVITY: 'ACTIVITY',
+  ANALYSIS: 'ANALYSIS'
+}

@@ -1,0 +1,33 @@
+import { DbConfig } from '../../lambdas/commons/database/handler/config.mjs';
+import { rowToObject } from '../ormMapper.mjs';
+
+const ActivityTable = {
+  schemaName: DbConfig.SCHEMA,
+  tableName: 'activity',
+  qualifiedTableName: `${ DbConfig.SCHEMA }.activity`,
+  columnToFieldMappings: {
+    // audit trails
+    enabled: 'enabled',
+    creation_date: 'creationDate',
+    modification_date: 'modificationDate',
+    disabled_date: 'disabledDate',
+    // business
+    id: 'id',
+    name: 'name',
+    levels: 'levels',
+    abilities: 'abilities',
+    description: 'description',
+    image_url: 'imageUrl',
+    support_material: 'supportMaterial',
+    activity_solutions: 'activitySolutions'
+  },
+  columnTypes: {
+    levels: 'int'
+  },
+
+  rowToObject: (row) => {
+    return rowToObject(row, ActivityTable.columnToFieldMappings);
+  }
+};
+
+export default ActivityTable;

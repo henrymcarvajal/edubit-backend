@@ -1,0 +1,9 @@
+# files
+.DS_Store
+*.zip
+
+# folders
+.idea
+.serverless
+.webpack
+node_modules

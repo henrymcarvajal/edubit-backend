@@ -1,0 +1,106 @@
+service: edubit-juemadrejoda
+org: edubit
+
+frameworkVersion: '3'
+configValidationMode: error
+
+plugins:
+  - serverless-webpack
+
+custom:
+  target-env: ${opt:stage, 'dev'}
+  stack-name: ${self:service}-${self:custom.target-env}
+  ## SQS
+  incomeCalculatorQueueName: ${self:custom.stack-name}-income-calculator
+  ## SNS
+  TimerNotificationTopicName: ${self:custom.stack-name}-timer-notification
+  # Packaging
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    #keepOutputDirectory: true
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs18.x
+  environment: ${file(./envs/${self:custom.target-env}.json)}
+  timeout: 15
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "sqs:SendMessage"
+            - "sqs:ReceiveMessage"
+            - "sqs:DeleteMessage"
+            - "sqs:GetQueueAttributes"
+          Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - "sns:GetTopicAttributes"
+            - "sns:Subscribe"
+          Resource: "*"
+
+resources:
+  Resources:
+    TimerNotificationTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: ${self:custom.TimerNotificationTopicName}
+        TopicName: ${self:custom.TimerNotificationTopicName}
+    IncomeCalculatorQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.incomeCalculatorQueueName}
+    IncomeCalculatorQueueSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint:
+          Fn::GetAtt:
+            - IncomeCalculatorQueue
+            - Arn
+        TopicArn:
+          Ref: TimerNotificationTopic
+    SNSTopicToMyQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: 'allow-sns-messages'
+              Effect: Allow
+              Principal:
+                Service: 'sns.amazonaws.com'
+              Resource:
+                Fn::GetAtt:
+                  - IncomeCalculatorQueue
+                  - Arn
+              Action: 'SQS:SendMessage'
+                # COMMENT THIS IN IF YOU WANT IT TO ONLY ALLOW A CERTAIN SNS TOPIC
+                # Condition:
+                # ArnEquals:
+                # 'aws:SourceArn':
+              # Ref: MySNSTopic
+        Queues:
+          - Ref: IncomeCalculatorQueue
+
+functions:
+  incomeCalculator:
+    name: ${self:custom.stack-name}-income-calculator
+    description: lambda to calculate participants incomes
+    handler: handlers/incomeCalculator.handle
+    environment:
+      region: ${self:provider.region}
+      environment: ${self:custom.target-env}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - IncomeCalculatorQueue
+              - Arn
+          batchSize: 1
+
