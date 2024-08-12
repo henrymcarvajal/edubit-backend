@@ -1,86 +1,51 @@
 import { DmlOperators } from '../dml/dmlOperators.mjs';
-import {
-  ParticipantProgressTable,
+import ParticipantProgressTable, {
   ParticipantProgressTable_CurrentActivityView, ParticipantProgressTable_ParticipantView
-} from '../tables/ParticipantProgressTable.mjs';
+} from '../tables/participantProgressTable.mjs';
 
-import { insertClauseBuilder, parseCriteria, selectClauseBuilder, upsertClauseBuilder } from '../dml/dmlBuilders.mjs';
-import { invokeDatabaseLambda } from '../../util/dbHelper.mjs';
-import { objectToRow } from '../ormMapper.mjs';
+import Repository from './repository.mjs';
+import { findByCriteria, findViewByCriteria } from '../dml/findByCriteria.mjs';
 
-export const ParticipantProgressRepository = {
+const ParticipantProgressRepository = Object.create(Repository);
 
-  findById: async (id) => (
-    ParticipantProgressRepository.findByCriteria(['id', DmlOperators.EQUALS, id])
-  ),
+ParticipantProgressRepository.table = ParticipantProgressTable;
 
-  findByParticipantIdAndWorkshopExecutionId: async (participantId, workshopExecutionId) => (
-    ParticipantProgressRepository.findByCriteria(
-        ['participant_id', DmlOperators.EQUALS, participantId],
-        ['workshop_execution_id', DmlOperators.EQUALS, workshopExecutionId]
-    )
-  ),
-
-  findByWorkshopExecutionId: async (workshopExecutionId) => (
-      ParticipantProgressRepository.findByCriteria(
-          ['workshop_execution_id', DmlOperators.EQUALS, workshopExecutionId]
-      )
-  ),
-
-  findByWorkshopExecutionIdWithParticipantView: async (workshopExecutionId) => (
-     ParticipantProgressRepository.findViewByCriteria(
-          ParticipantProgressTable_ParticipantView,
-          ['workshop_execution_id', DmlOperators.EQUALS, workshopExecutionId]
-      )
-  ),
-
-  findCurrentActivityByParticipantIdAndWorkshopExecutionId: async (workshopExecutionId, participantId) => (
-     ParticipantProgressRepository.findViewByCriteria(
-         ParticipantProgressTable_CurrentActivityView,
-        ['participant_id', DmlOperators.EQUALS, participantId],
-        ['workshop_execution_id', DmlOperators.EQUALS, workshopExecutionId]
-    )
-  ),
-
-  findByCriteria: async (...criteria) => {
-    const [keys, operators, values] = parseCriteria(criteria);
-
-    const statement = ParticipantProgressRepository.selectStatement(keys, operators);
-
-    const rows = await invokeDatabaseLambda({ statement: statement, parameters: values });
-
-    let result = [];
-    for (let row of rows) {
-      result.push(ParticipantProgressTable.rowToObject(row));
-    }
-
-    return result;
-  },
-
-  findViewByCriteria: async (view, ...criteria) => {
-    const [_, __, values] = parseCriteria(criteria);
-
-    const rows = await invokeDatabaseLambda({statement: view.selectStatement, parameters: values});
-
-    let result = [];
-    for (let row of rows) {
-      result.push(view.rowToObject(row));
-    }
-
-    return result;
-  },
-
-  selectStatement: (columns, operators) => (selectClauseBuilder(ParticipantProgressTable, columns, operators)),
-
-  insertStatement: (object) => {
-    const entity = objectToRow(object, ParticipantProgressTable.columnToFieldMappings);
-    const statement = insertClauseBuilder(ParticipantProgressTable.qualifiedTableName, ParticipantProgressTable.columnToFieldMappings, entity);
-    return { entity: entity, statement: statement };
-  },
-
-  upsertStatement: (object) => {
-    const entity = objectToRow(object, ParticipantProgressTable.columnToFieldMappings);
-    const statement = upsertClauseBuilder(ParticipantProgressTable.qualifiedTableName, ParticipantProgressTable.columnToFieldMappings, entity);
-    return { entity: entity, statement: statement };
-  }
+ParticipantProgressRepository.findById = async function (id) {
+  return findByCriteria(this, ['id', DmlOperators.EQUALS, id]);
 };
+
+ParticipantProgressRepository.findByParticipantIdAndWorkshopExecutionId = async function (participantId, workshopExecutionId) {
+  return findByCriteria(this,
+      ['participant_id', DmlOperators.EQUALS, participantId],
+      ['workshop_execution_id', DmlOperators.EQUALS, workshopExecutionId]
+  );
+};
+
+ParticipantProgressRepository.findByParticipantIdInAndWorkshopExecutionId = async function (participantIds, workshopExecutionId) {
+  return findByCriteria(this,
+      ['participant_id', DmlOperators.IN, participantIds],
+      ['workshop_execution_id', DmlOperators.EQUALS, workshopExecutionId]
+  );
+};
+
+ParticipantProgressRepository.findByWorkshopExecutionId = async function (workshopExecutionId) {
+  return findByCriteria(this, ['workshop_execution_id', DmlOperators.EQUALS, workshopExecutionId]
+  );
+};
+
+ParticipantProgressRepository.findByWorkshopExecutionIdWithParticipantView = async function (workshopExecutionId) {
+  return findViewByCriteria(
+      ParticipantProgressTable_ParticipantView,
+      ['workshop_execution_id', DmlOperators.EQUALS, workshopExecutionId]
+  );
+};
+
+ParticipantProgressRepository.findCurrentActivityByParticipantIdAndWorkshopExecutionId = async function (workshopExecutionId, participantId) {
+  return findViewByCriteria(
+      ParticipantProgressTable_CurrentActivityView,
+      ['participant_id', DmlOperators.EQUALS, participantId],
+      ['workshop_execution_id', DmlOperators.EQUALS, workshopExecutionId]
+  );
+};
+
+export default ParticipantProgressRepository;

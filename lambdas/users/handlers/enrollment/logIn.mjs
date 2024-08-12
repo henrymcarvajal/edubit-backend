@@ -1,9 +1,9 @@
+import UserRepository from '../../../../persistence/repositories/userRepository.mjs';
 import { AwsInfo } from './awsInfo.mjs';
 import { CognitoIdentityServiceProvider } from 'aws-sdk';
 import { decode } from 'jsonwebtoken';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { LoginMessages } from '../../commons/messages.mjs';
-import { UserRepository } from '../../../../persistence/repositories/userRepository.mjs';
 import { UserRoles } from './constants.mjs';
 
 import { sendResponse } from '../../../../util/responseHelper.mjs';

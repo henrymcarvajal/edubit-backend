@@ -1,5 +1,5 @@
+import ActivityRepository from '../../../persistence/repositories/activityRepository.mjs';
 import { ActivitiesValidationMessages } from './messages.mjs';
-import { ActivityRepository } from '../../../persistence/repositories/activityRepository.mjs';
 import { DmlOperators } from '../../../persistence/dml/dmlOperators.mjs';
 import { ValueValidationMessages } from '../../../commons/messages.mjs';
 

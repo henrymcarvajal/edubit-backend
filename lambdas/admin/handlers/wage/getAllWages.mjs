@@ -1,11 +1,11 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
-import { WagesRepository } from '../../../../persistence/repositories/wageRepository.mjs';
+import WagesRepository from '../../../../persistence/repositories/wageRepository.mjs';
 
 import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
 
   try {
     const roles = event.requestContext.authorizer.claims.profile;

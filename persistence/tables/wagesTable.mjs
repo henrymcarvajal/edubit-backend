@@ -1,10 +1,10 @@
 import { DbConfig } from '../../lambdas/commons/database/handler/config.mjs';
 import { rowToObject } from '../ormMapper.mjs';
 
-export const  WagesTable = {
+const WagesTable = {
   schemaName: DbConfig.SCHEMA,
   tableName: 'wages',
-  qualifiedTableName: `${DbConfig.SCHEMA}.wages`,
+  qualifiedTableName: `${ DbConfig.SCHEMA }.wages`,
   columnToFieldMappings: {
     // audit trails
     enabled: 'enabled',
@@ -32,4 +32,4 @@ export const  WagesTable = {
   }
 };
 
-
+export default WagesTable;

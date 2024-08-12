@@ -1,6 +1,6 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { ImprovementRepository } from '../../../../persistence/repositories/improvementRepository.mjs';
-import { ImprovementTable } from '../../../../persistence/tables/improvementTable.mjs';
+import ImprovementRepository from '../../../../persistence/repositories/improvementRepository.mjs';
+import ImprovementTable from '../../../../persistence/tables/improvementTable.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
@@ -11,7 +11,7 @@ import { sendResponse } from '../../../../util/responseHelper.mjs';
 import { setFields } from '../../../commons/fieldOperations.mjs';
 import { validate as uuidValidate } from 'uuid';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
 
   const roles = event.requestContext.authorizer.claims.profile;
   if (roles !== UserRoles.ADMIN) return sendResponse(HttpResponseCodes.FORBIDDEN);

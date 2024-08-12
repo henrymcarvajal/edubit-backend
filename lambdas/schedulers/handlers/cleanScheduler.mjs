@@ -1,12 +1,12 @@
-import { DeleteScheduleCommand } from '@aws-sdk/client-scheduler';
-
+import WorkshopExecutionRepository from '../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { schedulerClient } from '../../../client/aws/clients/schedulerClient.mjs';
 import { SchedulerMessages } from './messages.mjs';
-import { WorkshopExecutionRepository } from '../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { execOnDatabase } from '../../../util/dbHelper.mjs';
 import { getDeployedSchedulesNames, getScheduleName } from './getSchedulerList.mjs';
 import { extractBody } from '../../../client/aws/utils/bodyExtractor.mjs';
+
+import { DeleteScheduleCommand } from '@aws-sdk/client-scheduler';
 
 const createDeleteScheduleCommandInput = (id) => {
   return {

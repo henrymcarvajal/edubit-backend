@@ -1,7 +1,7 @@
+import ParticipantRepository from '../../../../persistence/repositories/participantRepository.mjs';
+import UserRepository from '../../../../persistence/repositories/userRepository.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { ParticipantRepository } from '../../../../persistence/repositories/participantRepository.mjs';
 import { SignUpMessages } from '../../commons/messages.mjs';
-import { UserRepository } from '../../../../persistence/repositories/userRepository.mjs';
 import { UserRoles } from './constants.mjs';
 
 import { checkDuplicateEmails, checkGrade } from './validations/validations.mjs';

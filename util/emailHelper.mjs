@@ -11,15 +11,10 @@ export const sendEmail = async (messages, wait = true) => {
 };
 
 export const invokeEmailLambda = async (messages) => {
-
   const emailResult = await invokeLambda(AwsInfo.COMMONS_EMAIL_QUEUE, messages);
-
-  console.log('emailResult', emailResult)
-
   if (emailResult.failed) {
     throw emailResult;
   }
-
   return emailResult;
 };
 

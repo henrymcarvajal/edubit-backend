@@ -1,3 +1,5 @@
+const endedPhase = { description: 'End of event' };
+
 export const calculateTiming = (workshopExecution) => {
 
   let currentPhase;
@@ -11,10 +13,14 @@ export const calculateTiming = (workshopExecution) => {
       if (i + 1 < entries.length) {
         nextPhase = workshopExecution.schedule[entries[i + 1][0]];
       } else {
-        nextPhase = { description: 'End of event' };
+        nextPhase = endedPhase;
       }
       break;
     }
+  }
+
+  if (workshopExecution.remainingTime === 0) {
+    return { currentPhase: endedPhase };
   }
 
   return {

@@ -1,7 +1,7 @@
+import WorkshopDefinitionRepository from '../../../../persistence/repositories/workshopDefinitionRepository.mjs';
+import WorkshopExecutionRepository from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
-import { WorkshopDefinitionRepository } from '../../../../persistence/repositories/workshopDefinitionRepository.mjs';
-import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
 import { calculateTiming } from '../execution/calculateWorkshopTiming.mjs';
@@ -14,7 +14,7 @@ import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 
 let engineTable;
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     const { workshopExecutionId, operationName } = validateAndExtractParams(event);
 

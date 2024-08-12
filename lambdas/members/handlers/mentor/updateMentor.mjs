@@ -1,6 +1,6 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { MentorRepository } from '../../../../persistence/repositories/mentorRepository.mjs';
-import { MentorTable } from '../../../../persistence/tables/mentorTable.mjs';
+import MentorRepository from '../../../../persistence/repositories/mentorRepository.mjs';
+import MentorTable from '../../../../persistence/tables/mentorTable.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
 import { authorizeAndFindMentor } from '../../authorizers/mentorAuthorizer.mjs';
@@ -13,7 +13,7 @@ import { validate as uuidValidate } from 'uuid';
 
 import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     const { mentorId, modifiedMentor } = validateAndExtractParams(event);
     const foundMentor = await authorizeAndFindMentor(event, mentorId);

@@ -1,6 +1,6 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
-import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
+import WorkshopExecutionRepository from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { authorizeAndFindMentor } from '../../authorizers/mentorAuthorizer.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
@@ -13,7 +13,7 @@ import { validateEnrollmentActivities } from '../../../commons/validations/enrol
 import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 import { ResourceNotFoundError, ResourceUnmodifiedError } from '../../../commons/errors/integrity/resources.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     const { mentorId, enrollment } = validateAndExtractParams(event);
     await authorizeAndFindMentor(event, mentorId);

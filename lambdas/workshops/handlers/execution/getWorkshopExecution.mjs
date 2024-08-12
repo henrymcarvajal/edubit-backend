@@ -1,5 +1,5 @@
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
+import WorkshopExecutionRepository from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
 
 import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
@@ -9,7 +9,7 @@ import { validate as uuidValidate } from 'uuid';
 import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 import { ResourceNotFoundError } from '../../../commons/errors/integrity/resources.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     const workshopExecutionId = validateAndExtractParams(event);
     const foundWorkshopExecution = await fetchWorkshopExecution(workshopExecutionId);

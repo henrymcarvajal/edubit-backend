@@ -1,7 +1,7 @@
+import WorkshopDefinitionRepository from '../../../../persistence/repositories/workshopDefinitionRepository.mjs';
+import WorkshopExecutionTable from '../../../../persistence/tables/workshopExecutionModel.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { WorkshopDefinitionRepository } from '../../../../persistence/repositories/workshopDefinitionRepository.mjs';
-import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
-import { WorkshopExecutionTable } from '../../../../persistence/tables/workshopExecutionModel.mjs';
+import WorkshopExecutionRepository from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { authorizeAdmin } from '../../../members/authorizers/adminAuthorizer.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
@@ -13,14 +13,14 @@ import { validateWorkshopExecutionData } from '../../validations/validateWorksho
 import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 import { ResourceNotFoundError } from '../../../commons/errors/integrity/resources.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     authorizeAdmin(event);
 
     const workshopExecution = validateAndExtractParams(event);
     await validateWorkshopExecutionData(
         workshopExecution,
-        ['scheduledDate', 'institutionId', 'workshopDefinitionId', 'activities']
+        ['name', 'scheduledDate', 'institutionId', 'workshopDefinitionId', 'activities']
     );
 
     const workshopDefinition = await fetchWorkshopDefinition(workshopExecution.workshopDefinitionId);

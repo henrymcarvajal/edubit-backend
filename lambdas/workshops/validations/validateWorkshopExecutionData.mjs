@@ -1,4 +1,4 @@
-import { ActivityRepository } from '../../../persistence/repositories/activityRepository.mjs';
+import ActivityRepository from '../../../persistence/repositories/activityRepository.mjs';
 
 import { checkProps } from '../../../util/propsGetter.mjs';
 

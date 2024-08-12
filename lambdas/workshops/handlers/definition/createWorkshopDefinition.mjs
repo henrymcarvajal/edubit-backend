@@ -1,6 +1,6 @@
+import WorkshopDefinitionRepository from '../../../../persistence/repositories/workshopDefinitionRepository.mjs';
+import WorkshopDefinitionTable from '../../../../persistence/tables/workshopDefinitionTable.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { WorkshopDefinitionRepository } from '../../../../persistence/repositories/workshopDefinitionRepository.mjs';
-import { WorkshopDefinitionTable } from '../../../../persistence/tables/workshopDefinitionTable.mjs';
 
 import { authorizeAdmin } from '../../../members/authorizers/adminAuthorizer.mjs';
 import { execOnDatabase } from '../../../../util/dbHelper.mjs';
@@ -11,7 +11,7 @@ import { validateWorkshopDefinitionData } from '../../validations/validateWorksh
 
 import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     authorizeAdmin(event);
 

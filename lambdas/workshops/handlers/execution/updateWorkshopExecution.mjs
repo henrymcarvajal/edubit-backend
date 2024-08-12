@@ -1,7 +1,7 @@
+import WorkshopExecutionRepository from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
+import WorkshopExecutionTable from '../../../../persistence/tables/workshopExecutionModel.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { ValueValidationMessages } from '../../../../commons/messages.mjs';
-import { WorkshopExecutionRepository } from '../../../../persistence/repositories/workshopExecutionRepository.mjs';
-import { WorkshopExecutionTable } from '../../../../persistence/tables/workshopExecutionModel.mjs';
 
 import { authorizeAdmin } from '../../../members/authorizers/adminAuthorizer.mjs';
 import { extractBody } from '../../../../client/aws/utils/bodyExtractor.mjs';
@@ -15,7 +15,7 @@ import { validateWorkshopExecutionData } from '../../validations/validateWorksho
 import { InvalidInputError } from '../../../commons/errors/data/input.mjs';
 import { ResourceNotFoundError, ResourceStateError } from '../../../commons/errors/integrity/resources.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
 
   try {
     authorizeAdmin(event);

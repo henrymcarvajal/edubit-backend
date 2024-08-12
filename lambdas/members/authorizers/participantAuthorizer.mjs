@@ -1,4 +1,4 @@
-import { ParticipantRepository } from '../../../persistence/repositories/participantRepository.mjs';
+import ParticipantRepository from '../../../persistence/repositories/participantRepository.mjs';
 import { UserRoles } from '../../users/handlers/enrollment/constants.mjs';
 
 import { ForbiddenOperationError } from '../../commons/errors/security/restrictedAccess.mjs';

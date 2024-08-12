@@ -1,9 +1,7 @@
+import ParticipantProgressRepository from '../../../../../persistence/repositories/participantProgressRepository.mjs';
+import ParticipantRepository from '../../../../../persistence/repositories/participantRepository.mjs';
 import { AwsInfo } from '../../../../../client/aws/AwsInfo.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
-import {
-  ParticipantProgressRepository
-} from '../../../../../persistence/repositories/participantProgressRepository.mjs';
-import { ParticipantRepository } from '../../../../../persistence/repositories/participantRepository.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 import { WORKSHOP_OPERATION_NAMES } from '../../definitions/operations.mjs';
 
@@ -21,7 +19,7 @@ import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
 import { ForbiddenOperationError } from '../../../../commons/errors/security/restrictedAccess.mjs';
 import { ResourceNotFoundError, ResourceStateError } from '../../../../commons/errors/integrity/resources.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
 
   try {
 

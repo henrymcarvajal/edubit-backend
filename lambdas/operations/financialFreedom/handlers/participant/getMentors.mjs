@@ -1,8 +1,8 @@
-import { ActivityRepository } from '../../../../../persistence/repositories/activityRepository.mjs';
+import ActivityRepository from '../../../../../persistence/repositories/activityRepository.mjs';
+import MentorRepository from '../../../../../persistence/repositories/mentorRepository.mjs';
+import WorkshopExecutionRepository from '../../../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
-import { MentorRepository } from '../../../../../persistence/repositories/mentorRepository.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
-import { WorkshopExecutionRepository } from '../../../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { handleErrorResponse } from '../../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
@@ -14,7 +14,7 @@ import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
 let ALL_ACTIVITIES;
 let ALL_MENTORS;
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     await initializeActivities();
     await initializeMentors();
@@ -22,7 +22,8 @@ export const handle = async (event) => {
     const { workshopExecutionId, participantId } = validateAndExtractParams(event);
 
     const workshopExecution = await getWorkshopExecution(workshopExecutionId);
-    const mentorsView = createMentorsView(workshopExecution, participantId);
+    const mentorsView =
+        createMentorsView(workshopExecution.mentors, workshopExecution.participants[participantId].activities);
 
     return sendResponse(HttpResponseCodes.OK, mentorsView);
   } catch (error) {
@@ -74,12 +75,14 @@ const getWorkshopExecution = async (workshopExecutionId) => {
   return workshopExecution;
 };
 
-const createMentorsView = (workshopExecution, participantId) => {
-  const mentorEntries = Object.entries(workshopExecution.mentors);
-  const activities = Object.entries(workshopExecution.participants[participantId].activities);
+const createMentorsView = (mentors, activities) => {
+  if (mentors) {
+    const mentorEntries = Object.entries(mentors);
+    const activitiesEntries = Object.entries(activities);
 
-  return getMentorsView(activities, mentorEntries);
-}
+    return getMentorsView(activitiesEntries, mentorEntries);
+  }
+};
 
 const getMentorsView = (activities, mentorEntries) => {
   const mentorsView = {};

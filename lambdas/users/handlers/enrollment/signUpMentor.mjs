@@ -1,8 +1,8 @@
+import MentorRepository from '../../../../persistence/repositories/mentorRepository.mjs';
+import UserRepository from '../../../../persistence/repositories/userRepository.mjs';
 import { DmlOperators } from '../../../../persistence/dml/dmlOperators.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { MentorRepository } from '../../../../persistence/repositories/mentorRepository.mjs';
 import { SignUpMessages } from '../../commons/messages.mjs';
-import { UserRepository } from '../../../../persistence/repositories/userRepository.mjs';
 import { UserRoles } from './constants.mjs';
 
 import { checkMobileNumberFormat } from '../../../../util/generalValidations.mjs';

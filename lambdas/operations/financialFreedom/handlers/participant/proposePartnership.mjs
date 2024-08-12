@@ -1,11 +1,9 @@
+import ParticipantProgressRepository from '../../../../../persistence/repositories/participantProgressRepository.mjs';
+import ParticipantRepository from '../../../../../persistence/repositories/participantRepository.mjs';
 import { AwsInfo } from '../../../../../client/aws/AwsInfo.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
-import { ParticipantRepository } from '../../../../../persistence/repositories/participantRepository.mjs';
 import { PARTNERSHIP_STATUS } from '../../definitions/partnershipStatus.mjs';
-import {
-  ParticipantProgressRepository
-} from '../../../../../persistence/repositories/participantProgressRepository.mjs';
-import { PartnershipMessages } from '../../commons/messages/partnership.mjs';
+import { PartnershipMessages } from '../../commons/messages/partnershipMessages.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
 import { WORKSHOP_OPERATION_NAMES } from '../../definitions/operations.mjs';
 
@@ -18,16 +16,16 @@ import { handleErrorResponse } from '../../../../commons/errorHandling.mjs';
 import { invokeLambda } from '../../../../../client/aws/clients/lambdaClient.mjs';
 import { isEmptyString } from '../../../../../util/string.mjs';
 import { messageQueue } from '../../../../../client/aws/clients/sqsClient.mjs';
+import { sendEmail } from '../../../../../util/emailHelper.mjs';
 import { sendResponse } from '../../../../../util/responseHelper.mjs';
-import { validate as uuidValidate } from 'uuid';
 import { validateEmail } from '../../../../../util/generalValidations.mjs';
 
 import { ForbiddenOperationError } from '../../../../commons/errors/security/restrictedAccess.mjs';
 import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
 import { ResourceNotFoundError, ResourceStateError } from '../../../../commons/errors/integrity/resources.mjs';
-import { sendEmail } from '../../../../../util/emailHelper.mjs';
+import { validate as uuidValidate } from 'uuid';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     const { participantId, workshopExecutionId, partnerEmail, partnershipName } = await validateAndExtractParams(event);
     const participant = await authorizeAndFindParticipant(event, participantId);
@@ -36,7 +34,9 @@ export const handle = async (event) => {
     const partnerProgress = await getPartnerProgress(partnerEmail, workshopExecutionId);
 
     const partnerShip = await createPartnershipProposal(participantProgress, partnerProgress, partnershipName);
+    addPartnershipProposal(partnerProgress, participantId, partnershipName);
     await updateProgress(participantProgress);
+    await updateProgress(partnerProgress);
 
     await notifyEvent(workshopExecutionId, participantProgress, partnerProgress, partnershipName);
 
@@ -87,33 +87,43 @@ const authorizeOperation = async (workshopExecutionId, participantId) => {
 export const getPartnerProgress = async (participantEmail, workshopExecutionId) => {
   const [participant] = await ParticipantRepository.findByEmail(participantEmail);
   if (!participant) {
-    throw new ResourceNotFoundError(`Participant with email ${ participantEmail } not found`);
+    throw new ResourceNotFoundError(PartnershipMessages.PARTICIPANT_NOT_FOUND(participantEmail));
   }
 
   const [progress] = await ParticipantProgressRepository.findByParticipantIdAndWorkshopExecutionId(participant.id, workshopExecutionId);
   if (!progress) {
-    throw new ResourceNotFoundError(`Participant progress not found: ${ participant.id }, ${ workshopExecutionId }`);
+    throw new ResourceNotFoundError(PartnershipMessages.PARTICIPANT_PROGRESS_NOT_FOUND( participant.id , workshopExecutionId ));
   }
   return progress;
 };
 
-const createPartnershipProposal = async (participantProgress, partnerProgress, partnershipName) => {
+const createPartnershipProposal = (participantProgress, partnerProgress, partnershipName) => {
   if (participantProgress.participantId === partnerProgress.participantId) {
-    throw new InvalidInputError(`Participant cannot create a partnership with himself`);
+    throw new InvalidInputError(PartnershipMessages.PARTNER_CANNOT_PARTNER_WITH_HIMSELF);
   }
 
   const { details } = participantProgress;
-  if (details.society?.status && details.society.status === PARTNERSHIP_STATUS.CONFIRMED) {
+  if (details.partnership?.status && details.partnership.status === PARTNERSHIP_STATUS.CONFIRMED) {
     throw new ResourceStateError(PartnershipMessages.PARTNERSHIP_ALREADY_CONFIRMED);
   }
 
-  details.society = {
+  details.partnership = {
     partnerId: partnerProgress.participantId,
-    partnershipName,
+    name: partnershipName,
     status: PARTNERSHIP_STATUS.PENDING
   };
 
-  return details.society;
+  return details.partnership;
+};
+
+const addPartnershipProposal = (participantProgress, partnerId, partnershipName) => {
+  const { details } = participantProgress;
+
+  details.partnership = {
+    partnerId,
+    name: partnershipName,
+    status: PARTNERSHIP_STATUS.PENDING
+  };
 };
 
 const updateProgress = async (progress) => {
@@ -137,7 +147,7 @@ const sendEventNotification = async (workshopExecutionId, participantName, partn
   await messageQueue(AwsInfo.EVENT_REGISTRY_QUEUE, {
         workshopExecutionId,
         participantName,
-        operationName: WORKSHOP_OPERATION_NAMES.PARTICIPANT_PROPOSE_SOCIETY,
+        operationName: WORKSHOP_OPERATION_NAMES.PARTICIPANT_PROPOSE_PARTNERSHIP,
         complement: { partnerName, partnershipName }
       }
   );

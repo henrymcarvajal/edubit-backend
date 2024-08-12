@@ -1,11 +1,11 @@
+import InstitutionRepository from '../../../../persistence/repositories/institutionRepository.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
-import { InstitutionRepository } from '../../../../persistence/repositories/institutionRepository.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 
 import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
 
   try {
 

@@ -1,7 +1,7 @@
-import { ActivityRepository } from '../../../../../persistence/repositories/activityRepository.mjs';
+import ActivityRepository from '../../../../../persistence/repositories/activityRepository.mjs';
+import WagesRepository from '../../../../../persistence/repositories/wageRepository.mjs';
 import { HttpResponseCodes } from '../../../../../commons/web/webResponses.mjs';
 import { ValueValidationMessages } from '../../../../../commons/messages.mjs';
-import { WagesRepository } from '../../../../../persistence/repositories/wageRepository.mjs';
 
 import { authorizeAndFindMentor } from '../../../../members/authorizers/mentorAuthorizer.mjs';
 import { authorizeAndFindParticipant } from '../../../../members/authorizers/participantAuthorizer.mjs';
@@ -14,7 +14,7 @@ import { InvalidInputError } from '../../../../commons/errors/data/input.mjs';
 
 let ALL_WAGES;
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
   try {
     const { view, mentorId, participantId, workshopExecutionId } = validateAndExtractParams(event);
     if (viewIsMentor(view)) {
@@ -24,7 +24,7 @@ export const handle = async (event) => {
     }
 
     const progress = await getParticipantProgress(participantId, workshopExecutionId);
-    const currentActivityView = await createActivityView(progress.details, view);
+    const currentActivityView = await createActivityView(progress.details.currentActivity, view);
 
     return sendResponse(HttpResponseCodes.OK, currentActivityView);
   } catch (error) {
@@ -61,8 +61,7 @@ const validateAndExtractParams = (event) => {
 
 const viewIsMentor = (view) => view.toLowerCase() === 'mentor';
 
-const createActivityView = async (details, view) => {
-  const { currentActivity } = details.stats;
+const createActivityView = async (currentActivity, view) => {
   const [foundActivity] = await ActivityRepository.findById(currentActivity.id);
   return await buildView(currentActivity, foundActivity, view);
 };
@@ -70,11 +69,13 @@ const createActivityView = async (details, view) => {
 const buildView = async (currentActivity, foundActivity, view) => {
   await initializeWages();
 
-  const wage = ALL_WAGES.find(wage => wage.maxLevel === foundActivity.levels);
+  const wage = ALL_WAGES.find(wage => wage.maxLevels === foundActivity.levels);
 
   const activityView = {
     id: currentActivity.id,
     level: currentActivity.level,
+    description: foundActivity.description,
+    name: foundActivity.name,
     supportMaterial: foundActivity.supportMaterial,
     wage: wage[`level${ currentActivity.level }`]
   };

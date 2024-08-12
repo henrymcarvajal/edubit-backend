@@ -1,7 +1,7 @@
 import { DbConfig } from '../../lambdas/commons/database/handler/config.mjs';
 import { rowToObject } from '../ormMapper.mjs';
 
-export const WorkshopRegistryTable = {
+const WorkshopRegistryTable = {
   schemaName: DbConfig.SCHEMA,
   tableName: 'workshop_registry',
   qualifiedTableName: `${ DbConfig.SCHEMA }.workshop_registry`,
@@ -22,3 +22,5 @@ export const WorkshopRegistryTable = {
     return rowToObject(row, this.columnToFieldMappings);
   }
 };
+
+export default WorkshopRegistryTable;

@@ -1,10 +1,10 @@
 import { DbConfig } from '../../lambdas/commons/database/handler/config.mjs';
 import { rowToObject } from '../ormMapper.mjs';
 
-export const  AssetTable = {
+const AssetTable = {
   schemaName: DbConfig.SCHEMA,
   tableName: 'asset',
-  qualifiedTableName: `${DbConfig.SCHEMA}.asset`,
+  qualifiedTableName: `${ DbConfig.SCHEMA }.asset`,
   columnToFieldMappings: {
     // audit trails
     enabled: 'enabled',
@@ -29,4 +29,4 @@ export const  AssetTable = {
   }
 };
 
-
+export default AssetTable;

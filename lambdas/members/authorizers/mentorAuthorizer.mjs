@@ -1,4 +1,4 @@
-import { MentorRepository } from '../../../persistence/repositories/mentorRepository.mjs';
+import MentorRepository from '../../../persistence/repositories/mentorRepository.mjs';
 import { UserRoles } from '../../users/handlers/enrollment/constants.mjs';
 
 import { ForbiddenOperationError } from '../../commons/errors/security/restrictedAccess.mjs';

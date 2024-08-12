@@ -1,15 +1,15 @@
-import { GetScheduleCommand } from '@aws-sdk/client-scheduler';
-
+import WorkshopExecutionRepository from '../../../persistence/repositories/workshopExecutionRepository.mjs';
 import { HttpResponseCodes } from '../../../commons/web/webResponses.mjs';
 import { schedulerClient } from '../../../client/aws/clients/schedulerClient.mjs';
 import { SchedulerMessages } from './messages.mjs';
 import { UserRoles } from '../../users/handlers/enrollment/constants.mjs';
 import { ValueValidationMessages } from '../../../commons/messages.mjs';
-import { WorkshopExecutionRepository } from '../../../persistence/repositories/workshopExecutionRepository.mjs';
 
 import { getDeployedSchedulesNames, getScheduleName } from './getSchedulerList.mjs';
 import { sendResponse } from '../../../util/responseHelper.mjs';
 import { validate as uuidValidate } from 'uuid';
+
+import { GetScheduleCommand } from '@aws-sdk/client-scheduler';
 
 const createGetScheduleCommandInput = (id) => {
   return {

@@ -1,5 +1,5 @@
-import { ActivityRepository } from '../../../../persistence/repositories/activityRepository.mjs';
-import { ActivityTable } from '../../../../persistence/tables/activityTable.mjs';
+import ActivityRepository from '../../../../persistence/repositories/activityRepository.mjs';
+import ActivityTable from '../../../../persistence/tables/activityTable.mjs';
 import { HttpResponseCodes } from '../../../../commons/web/webResponses.mjs';
 import { UserRoles } from '../../../users/handlers/enrollment/constants.mjs';
 
@@ -9,23 +9,23 @@ import { execOnDatabase } from '../../../../util/dbHelper.mjs';
 import { handleErrorResponse } from '../../../commons/errorHandling.mjs';
 import { sendResponse } from '../../../../util/responseHelper.mjs';
 
-export const handle = async (event) => {
+exports.handle = async (event) => {
 
   const roles = event.requestContext.authorizer.claims.profile;
   if (roles !== UserRoles.ADMIN) return sendResponse(HttpResponseCodes.FORBIDDEN);
 
-  const {body: newActivity} = extractBody(event);
-  if (!newActivity) return sendResponse(HttpResponseCodes.BAD_REQUEST, {message: 'Missing data'});
+  const { body: newActivity } = extractBody(event);
+  if (!newActivity) return sendResponse(HttpResponseCodes.BAD_REQUEST, { message: 'Missing data' });
 
   try {
 
-    const props = ['name', 'levels', 'abilities', 'description'];
+    const props = ['name', 'levels', 'abilities', 'description', 'imageUrl', 'supportMaterial', 'activitySolutions'];
     checkProps(newActivity, props);
 
-    const {entity, statement} = ActivityRepository.insertStatement(newActivity);
+    const { entity, statement } = ActivityRepository.insertStatement(newActivity);
 
     const [savedActivity] =
-        await execOnDatabase({statement: statement, parameters: entity});
+        await execOnDatabase({ statement: statement, parameters: entity });
 
     return sendResponse(HttpResponseCodes.OK, ActivityTable.rowToObject(savedActivity));
 

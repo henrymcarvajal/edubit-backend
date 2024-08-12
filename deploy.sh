@@ -33,15 +33,15 @@ echo
 echo "${GREEN}+ Database stack deployed.${NC}"
 echo
 
-cd "${BASE_PATH}"/lambdas/admin/ || exit
-echo "${CYAN}Deploying Admin stack...${NC}"
+cd "${BASE_PATH}"/lambdas/commons/email/ || exit
+echo "${CYAN}Deploying email stack...${NC}"
 echo "${YELLOW}> Updating Node dependencies...${NC}"
 npm install
 echo
 echo "${YELLOW}> Running serverless profile...${NC}"
 $serverless
 echo
-echo "${GREEN}+ Admin stack deployed.${NC}"
+echo "${GREEN}+ Email stack deployed.${NC}"
 echo
 
 cd "${BASE_PATH}"/lambdas/users/ || exit
@@ -53,6 +53,17 @@ echo "${YELLOW}> Running serverless profile...${NC}"
 $serverless
 echo
 echo "${GREEN}+ Users stack deployed.${NC}"
+echo
+
+cd "${BASE_PATH}"/lambdas/admin/ || exit
+echo "${CYAN}Deploying Admin stack...${NC}"
+echo "${YELLOW}> Updating Node dependencies...${NC}"
+npm install
+echo
+echo "${YELLOW}> Running serverless profile...${NC}"
+$serverless
+echo
+echo "${GREEN}+ Admin stack deployed.${NC}"
 echo
 
 cd "${BASE_PATH}"/lambdas/workshops/ || exit
@@ -86,6 +97,17 @@ echo "${YELLOW}> Running serverless profile...${NC}"
 $serverless
 echo
 echo "${GREEN}+ Members stack deployed.${NC}"
+echo
+
+cd "${BASE_PATH}"/lambdas/operations/financialFreedom || exit
+echo "${CYAN}Deploying Financial Freedom stack...${NC}"
+echo "${YELLOW}> Updating Node dependencies...${NC}"
+npm install
+echo
+echo "${YELLOW}> Running serverless profile...${NC}"
+$serverless
+echo
+echo "${GREEN}+ Financial Freedom stack deployed.${NC}"
 echo
 
 date '+%Y-%m-%d %H:%M:%S'

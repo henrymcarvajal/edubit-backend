@@ -1,10 +1,10 @@
 import { DbConfig } from '../../lambdas/commons/database/handler/config.mjs';
 import { rowToObject } from '../ormMapper.mjs';
 
-export const WorkshopDefinitionTable = {
+const WorkshopDefinitionTable = {
   schemaName: DbConfig.SCHEMA,
   tableName: 'workshop_definition',
-  qualifiedTableName: `${DbConfig.SCHEMA}.workshop_definition`,
+  qualifiedTableName: `${ DbConfig.SCHEMA }.workshop_definition`,
   columnToFieldMappings: {
     // audit trails
     enabled: 'enabled',
@@ -13,9 +13,10 @@ export const WorkshopDefinitionTable = {
     disabled_date: 'disabledDate',
     // business
     id: 'id',
-    name:  'name',
+    name: 'name',
     schedule: 'schedule',
     authorizer: 'authorizer',
+    config: 'config'
   },
 
   rowToObject(row) {
@@ -33,16 +34,18 @@ export const WorkshopDefinition_WorkshopExecutionView = {
     disabled_date: 'disabledDate',
     // business
     id: 'id',
-    name:  'name',
+    name: 'name',
     schedule: 'schedule',
     authorizer: 'authorizer'
   },
   selectStatement: `select wd.*
-                    from ${DbConfig.SCHEMA}.workshop_execution we
-                    join ${DbConfig.SCHEMA}.workshop_definition wd on wd.id = we.workshop_definition_id
+                    from ${ DbConfig.SCHEMA }.workshop_execution we
+                             join ${ DbConfig.SCHEMA }.workshop_definition wd on wd.id = we.workshop_definition_id
                     where we.id = $1`,
 
   rowToObject: (row) => {
     return rowToObject(row, WorkshopDefinitionTable.columnToFieldMappings);
   }
 };
+
+export default WorkshopDefinitionTable;
